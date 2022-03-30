@@ -36,6 +36,7 @@ PID pid(PID_Kp, PID_Ki, PID_Kd, &pidInput, &pidSetpoint);
 Debounce startFinish(markerLowThreshold, markerHighThreshold, false);
 int startFinishCount = 0;
 int maxRunSpeed = 48;
+bool manualAutoSteer = false;
 
 void setup() 
 {
@@ -106,22 +107,25 @@ void initialMenu()
       switch(++menuSelected)
       {
       case 1:
-        tft.print("Manual");
+        tft.print("Manual\n(manual)");
         break;
       case 2:
-        tft.print("Race (slow)");
-        maxRunSpeed = 48;
+        tft.print("Manual\n(auto)");
         break;
       case 3:
-        tft.print("Race (med)");
-        maxRunSpeed = 64;
+        tft.print("Race\n(slow)");
+        maxRunSpeed = 48;
         break;
       case 4:
-        tft.print("Race (fast)");
-        maxRunSpeed = 80;
+        tft.print("Race\n(med)");
+        maxRunSpeed = 64;
         break;
       case 5:
-        tft.print("Race (silly)");
+        tft.print("Race\n(fast)");
+        maxRunSpeed = 80;
+        break;
+      case 6:
+        tft.print("Race\n(crazy)");
         maxRunSpeed = 127;
         break;
       default:
@@ -137,12 +141,17 @@ void initialMenu()
       switch(menuSelected)
       {
       case 1:
+        manualAutoSteer = false;
         startManualControl();
         break;
       case 2:
+        manualAutoSteer = true;
+        startManualControl();
+        break;
       case 3:
       case 4:
       case 5:
+      case 6:
         startDisarmed();
         break;
       }
@@ -159,7 +168,7 @@ void waitForPS4Controller()
       tft.fillScreen(TFT_BLACK);
       tft.setCursor(0,0);
       tft.setTextSize(4);
-      tft.print("Connect   Controller");
+      tft.print("Connect\nController");
       
       Serial.println("Waiting for PS4 controller...");
       while(!PS4.isConnected()) 
@@ -247,39 +256,45 @@ void manualControl()
     }
 
     // Steering
-    int steer = PS4.RStickX();
-    int steerServoPos =  steeringServoCentre - steer;
-    steeringServo.write(steerServoPos);
-  }
+    if(!manualAutoSteer)
+    {
+      int steer = PS4.RStickX();
+      int steerServoPos =  steeringServoCentre - steer;
+      steeringServo.write(steerServoPos);
+    }
   
-  // Get the current sensor data
-  int sensorStartFinish = analogRead(gpioSensorStartFinish);
-  int sensorRightLine = analogRead(gpioSensorRightLine);
-  int sensorLeftLine = analogRead(gpioSensorLeftLine);
-  int sensorRadius = analogRead(gpioSensorRadius);
-
-  // Calculate the steering error
-  int steeringError = sensorLeftLine - sensorRightLine;
-  pidInput = steeringError;
-  float pidOutput = pid.compute();
-  //Serial.printf("PID in = %f, out = %f\n", pidInput, pidOutput);
-
- // int steer = (int)pidOutput;
-//  int steerServoPos =  steeringServoCentre + steer;
-//  steeringServo.write(steerServoPos);
-
-  // Display the sensors
-  value[0] = map(sensorStartFinish, 0, 4095, 0, 100);
-  value[1] = map(sensorRightLine, 0, 4095, 0, 100);
-  value[2] = map(sensorLeftLine, 0, 4095, 0, 100);
-  value[3] = map(sensorRadius, 0, 4095, 0, 100);
-  plotPointers();
-
-  // Check start/finish sensor
-  if(startFinish.isTriggered(sensorStartFinish))
-  {
-    ++startFinishCount;
-    Serial.printf("Start/Finish triggered %d times\n", startFinishCount);
+    // Get the current sensor data
+    int sensorStartFinish = analogRead(gpioSensorStartFinish);
+    int sensorRightLine = analogRead(gpioSensorRightLine);
+    int sensorLeftLine = analogRead(gpioSensorLeftLine);
+    int sensorRadius = analogRead(gpioSensorRadius);
+    
+    if(manualAutoSteer)
+    {
+      // Calculate the steering error
+      int steeringError = sensorLeftLine - sensorRightLine;
+      pidInput = steeringError;
+      float pidOutput = pid.compute();
+      //Serial.printf("PID in = %f, out = %f\n", pidInput, pidOutput);
+      
+      int steer = (int)pidOutput;
+      int steerServoPos = (forward >= -2 ? steeringServoCentre + steer : steeringServoCentre - steer);
+      steeringServo.write(steerServoPos);
+    }
+    
+    // Display the sensors
+    value[0] = map(sensorStartFinish, 0, 4095, 0, 100);
+    value[1] = map(sensorRightLine, 0, 4095, 0, 100);
+    value[2] = map(sensorLeftLine, 0, 4095, 0, 100);
+    value[3] = map(sensorRadius, 0, 4095, 0, 100);
+    plotPointers();
+    
+    // Check start/finish sensor
+    if(startFinish.isTriggered(sensorStartFinish))
+    {
+      ++startFinishCount;
+      Serial.printf("Start/Finish triggered %d times\n", startFinishCount);
+    }
   }
 }
 
@@ -412,7 +427,7 @@ void startDisarmed()
   tft.fillScreen(TFT_BLACK);
   tft.setCursor(0,0);
   tft.setTextSize(4);
-  tft.print("Press []  to arm");
+  tft.print("Press []\nto arm");
 
   state = STATE_DISARMED;
 }
@@ -424,7 +439,7 @@ void startArmed()
   tft.setCursor(0,0);
   tft.setTextSize(4);
   tft.setTextColor(TFT_BLACK, TFT_ORANGE);
-  tft.print("Press O   to start");
+  tft.print("Press O\nto start");
   tft.setTextColor(TFT_GREEN, TFT_BLACK);
 
   state = STATE_ARMED;
@@ -470,86 +485,42 @@ void startStop()
 // Accelerate up to speed 1
 void accelerating1()
 {
-  // Abort run if lose PS4 controller connection
-  if (!PS4.isConnected()) 
-  {
-    stopAll();
-    delay(500);
-  }
-  else
-  {
     // Check if we've gone far enough
     if(accelTimeout <= millis())
       startAccelerate2();
     else
       steer();
-  }
 }
 
 void accelerating2()
 {
-  // Abort run if lose PS4 controller connection
-  if (!PS4.isConnected()) 
-  {
-    stopAll();
-    delay(500);
-  }
-  else
-  {
     // Check if we've gone far enough
     if(accelTimeout <= millis())
       startAccelerateMax();
     else
       steer();
-  }
 }
 
 void acceleratingMax()
 {
-  // Abort run if lose PS4 controller connection
-  if (!PS4.isConnected()) 
-  {
-    stopAll();
-    delay(500);
-  }
-  else
-  {
     // Check if we've gone far enough
     if(accelTimeout <= millis())
       startDecelerate();
     else
       steer();
-  }
 }
 
 void decelerating()
 {
-  // Abort run if lose PS4 controller connection
-  if (!PS4.isConnected()) 
-  {
-    stopAll();
-    delay(500);
-  }
-  else
-  {
     // Check if we've gone far enough
     if(accelTimeout <= millis())
       startStop();
     else
       steer();
-  }
 }
 
 void fastStopping()
 {
-  // Abort run if lose PS4 controller connection
-  if (!PS4.isConnected()) 
-  {
-    stopAll();
-    delay(500);
-  }
-  else
-  {
     // Check if we've gone far enough
     if(accelTimeout <= millis())
     {
@@ -557,20 +528,11 @@ void fastStopping()
     }
     else
       steer();
-  }
 }
 
 
 void stopping()
 {
-  // Abort run if lose PS4 controller connection
-  if (!PS4.isConnected()) 
-  {
-    stopAll();
-    delay(500);
-  }
-  else
-  {
     // Check if we've gone far enough
     if(accelTimeout <= millis())
     {
@@ -579,7 +541,6 @@ void stopping()
     }
     else
       steer();
-  }
 }
 
 
@@ -632,7 +593,7 @@ void loop()
     break;
   default:
     state = STATE_INITIAL;
-    
+    break;
   }
   
   delay(1);

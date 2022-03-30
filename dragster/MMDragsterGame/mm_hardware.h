@@ -34,6 +34,6 @@ const int gpioIlluminationLED = 25;
 const float LOOP_INTERVAL = 0.003;  // 1mS
 const float LOOP_FREQUENCY = 1/LOOP_INTERVAL;  // Hz
 const float MAX_MOTOR_VOLTS = 100.0;
-const float PID_Kp = 0.03;
+const float PID_Kp = 0.02;
 const float PID_Ki = 0.0;
 const float PID_Kd = 0.0003;
