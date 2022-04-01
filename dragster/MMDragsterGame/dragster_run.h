@@ -1,5 +1,10 @@
 // Parameters for the Dragster run
 
+static const int MAX_SPEED_SLOW = 32;
+static const int MAX_SPEED_MED = 56;
+static const int MAX_SPEED_FAST = 80;
+static const int MAX_SPEED_CRAZY = 128;
+
 #define SPEED_A1 (maxRunSpeed / 4)
 static const int TIME_SPEED_A1_mS = 200;
 #define SPEED_A2 (maxRunSpeed / 2)

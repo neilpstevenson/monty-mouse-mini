@@ -28,6 +28,7 @@ typedef enum
 EStates state;
 
 unsigned long accelTimeout;
+unsigned long startTime;
 
 Servo steeringServo;
 float pidInput = 0.0;
@@ -35,7 +36,7 @@ float pidSetpoint = 0.0;
 PID pid(PID_Kp, PID_Ki, PID_Kd, &pidInput, &pidSetpoint);
 Debounce startFinish(markerLowThreshold, markerHighThreshold, false);
 int startFinishCount = 0;
-int maxRunSpeed = 48;
+int maxRunSpeed = MAX_SPEED_SLOW;
 bool manualAutoSteer = false;
 
 void setup() 
@@ -114,19 +115,19 @@ void initialMenu()
         break;
       case 3:
         tft.print("Race\n(slow)");
-        maxRunSpeed = 48;
+        maxRunSpeed = MAX_SPEED_SLOW;
         break;
       case 4:
         tft.print("Race\n(med)");
-        maxRunSpeed = 64;
+        maxRunSpeed = MAX_SPEED_MED;
         break;
       case 5:
         tft.print("Race\n(fast)");
-        maxRunSpeed = 80;
+        maxRunSpeed = MAX_SPEED_FAST;
         break;
       case 6:
         tft.print("Race\n(crazy)");
-        maxRunSpeed = 127;
+        maxRunSpeed = MAX_SPEED_CRAZY;
         break;
       default:
         menuSelected = 0;
@@ -190,10 +191,16 @@ void startManualControl()
   // Draw 4 linear meters
   tft.fillScreen(TFT_BLACK);
   byte d = 60;
-  plotLinear("S-F", 0, 0);
-  plotLinear(" R", 1 * d, 0);
-  plotLinear(" L", 2 * d, 0);
-  plotLinear("Rad", 3 * d, 0);
+  plotLinear("Rad", 0, 0);
+  plotLinear(" L", 1 * d, 0);
+  plotLinear(" R", 2 * d, 0);
+  plotLinear("StFi", 3 * d, 0);
+  // Ensure we reset pointer positions shown
+  value[0] = 0;
+  value[1] = 0;
+  value[2] = 0;
+  value[3] = 0;
+  plotPointers();
 
   state = STATE_MANUAL;
 }
@@ -283,10 +290,10 @@ void manualControl()
     }
     
     // Display the sensors
-    value[0] = map(sensorStartFinish, 0, 4095, 0, 100);
-    value[1] = map(sensorRightLine, 0, 4095, 0, 100);
-    value[2] = map(sensorLeftLine, 0, 4095, 0, 100);
-    value[3] = map(sensorRadius, 0, 4095, 0, 100);
+    value[0] = map(sensorRadius, 0, 4095, 0, 100);
+    value[1] = map(sensorLeftLine, 0, 4095, 0, 100);
+    value[2] = map(sensorRightLine, 0, 4095, 0, 100);
+    value[3] = map(sensorStartFinish, 0, 4095, 0, 100);
     plotPointers();
     
     // Check start/finish sensor
@@ -416,6 +423,13 @@ void steer()
       {
         startFastStop();
         tft.fillScreen(TFT_BLUE);
+        // Show elapsed time
+        tft.setCursor(0,0);
+        tft.setTextSize(4);
+        tft.setTextColor(TFT_BLACK, TFT_BLUE);
+        tft.print(millis() - startTime);
+        tft.print("mS");
+        tft.setTextColor(TFT_GREEN, TFT_BLACK);
       }
     }
   }
@@ -447,6 +461,7 @@ void startArmed()
 
 void startAccelerate1()
 {
+  startTime = millis();
   startAccelerate(SPEED_A1, TIME_SPEED_A1_mS);
   state = STATE_ACCEL1;
   startFinishCount = 0;
