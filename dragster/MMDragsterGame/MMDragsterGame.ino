@@ -529,7 +529,7 @@ void decelerating()
 {
     // Check if we've gone far enough
     if(accelTimeout <= millis())
-      startStop();
+      startFastStop();
     else
       steer();
 }
