@@ -23,8 +23,18 @@ static const int TIME_STOPPING_mS = 4000;
 static const int startFinishCountLimit = 2;
 
 // Marker thresholds
-const int markerLowThreshold = 3400;
-const int markerHighThreshold = 3600;
+const int markerHighThreshold = (int)(0.45 * 4096); //3400;
+const int markerLowThreshold = (int)(0.35 * 4096); //2900;
 
 // Max valid line detectors before we abort the run
 const int maxLineDetectorThreshold = 4000;
+
+typedef struct RunProfile
+{
+  uint8_t flags;      // TBD
+  uint16_t runTimeMs; // Milliseconds
+  int16_t startSpeed;
+  int16_t endSpeed;   // So acceleration is (endSpeed - startSpeed)/runTimeMs/1000
+  struct RunProfile *pNext;
+  struct RunProfile *pStop;
+} RunProfile_t;
