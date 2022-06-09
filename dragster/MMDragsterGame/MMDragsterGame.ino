@@ -47,6 +47,158 @@ int maxRunSpeed = MAX_SPEED_SLOW;
 bool manualAutoSteer = false;
 DRAGSTER_NVRAM_T hwconfig;
 
+
+// Crazy (max) speed
+RunProfile_t crazyRunProfileStopDone = {
+    0,
+    5000,
+    -5,
+    0,
+    0,
+    0
+};
+RunProfile_t crazyRunProfileStop = {
+    0,
+    700,
+    -80,
+    -30,
+    &crazyRunProfileStopDone,
+    0
+};
+RunProfile_t crazyRunProfileCoast = {
+    0,
+    2000,
+    30,
+    30,
+    0,
+    &crazyRunProfileStop
+};
+RunProfile_t crazyRunProfileDecel = {
+    0,
+    250,
+    -30,
+    30,
+    &crazyRunProfileCoast,
+    &crazyRunProfileStop
+};
+RunProfile_t crazyRunProfileSteady = {
+    0,
+    900,
+    100,
+    100,
+    &crazyRunProfileDecel,
+    &crazyRunProfileStop
+};
+RunProfile_t crazyRunProfile = {
+    0,
+    200,
+    30,
+    100,
+    &crazyRunProfileSteady,
+    &crazyRunProfileStop
+};
+
+// Fast speed
+RunProfile_t fastRunProfileStopDone = {
+    0,
+    5000,
+    0,
+    0,
+    0,
+    0
+};
+RunProfile_t fastRunProfileStop = {
+    0,
+    800,
+    -60,
+    -20,
+    &fastRunProfileStopDone,
+    0
+};
+RunProfile_t fastRunProfileCoast = {
+    0,
+    2000,
+    15,
+    15,
+    0,
+    &fastRunProfileStop
+};
+RunProfile_t fastRunProfileDecel = {
+    0,
+    150,
+    -15,
+    15,
+    &fastRunProfileCoast,
+    &fastRunProfileStop
+};
+RunProfile_t fastRunProfileSteady = {
+    0,
+    1450,
+    60,
+    60,
+    &fastRunProfileDecel,
+    &fastRunProfileStop
+};
+RunProfile_t fastRunProfile = {
+    0,
+    100,
+    30,
+    60,
+    &fastRunProfileSteady,
+    &fastRunProfileStop
+};
+
+// Medium speed
+RunProfile_t mediumRunProfileStopDone = {
+    0,
+    5000,
+    0,
+    0,
+    0,
+    0
+};
+RunProfile_t mediumRunProfileStop = {
+    0,
+    700,
+    -15,
+    -53,
+    &mediumRunProfileStopDone,
+    0
+};
+RunProfile_t mediumRunProfileCoast = {
+    0,
+    2000,
+    13,
+    13,
+    0,
+    &mediumRunProfileStop
+};
+RunProfile_t mediumRunProfileDecel = {
+    0,
+    150,
+    -15,
+    13,
+    &mediumRunProfileCoast,
+    &mediumRunProfileStop
+};
+RunProfile_t mediumRunProfileSteady = {
+    0,
+    1600,
+    52,
+    52,
+    &mediumRunProfileDecel,
+    &mediumRunProfileStop
+};
+RunProfile_t mediumRunProfile = {
+    0,
+    150,
+    13,
+    53,
+    &mediumRunProfileSteady,
+    &mediumRunProfileStop
+};
+
+// Slow speed
 RunProfile_t slowRunProfileStopDone = {
     0,
     5000,
@@ -58,8 +210,8 @@ RunProfile_t slowRunProfileStopDone = {
 RunProfile_t slowRunProfileStop = {
     0,
     1000,
-    -10,
     -20,
+    -5,
     &slowRunProfileStopDone,
     0
 };
@@ -73,18 +225,26 @@ RunProfile_t slowRunProfileCoast = {
 };
 RunProfile_t slowRunProfileDecel = {
     0,
-    2000,
-    40,
+    200,
+    -5,
     10,
     &slowRunProfileCoast,
     &slowRunProfileStop
 };
-RunProfile_t slowRunProfile = {
+RunProfile_t slowRunProfileSteady = {
     0,
-    2000,
-    10,
+    1800,
+    40,
     40,
     &slowRunProfileDecel,
+    &slowRunProfileStop
+};
+RunProfile_t slowRunProfile = {
+    0,
+    200,
+    10,
+    40,
+    &slowRunProfileSteady,
     &slowRunProfileStop
 };
 
@@ -175,7 +335,11 @@ void initialMenu()
   tft.setTextSize(4);
   tft.print("Mode?");
 
-  int menuSelected = 0;
+  static int menuSelected = 0;
+
+  // Ensure repeat last menu
+  if(menuSelected)
+    menuSelected--;
   
   Debounce selectSwitch(LOW, HIGH, false);
   Debounce enterSwitch(LOW, HIGH, false);
@@ -199,16 +363,19 @@ void initialMenu()
         pCurrentRunProfile = &slowRunProfile;
         break;
       case 4:
-        tft.print("Race\n(med)");
-        maxRunSpeed = MAX_SPEED_MED;
+        tft.print("Race\n(new med)");
+        //maxRunSpeed = MAX_SPEED_MED;
+        pCurrentRunProfile = &mediumRunProfile;
         break;
       case 5:
-        tft.print("Race\n(fast)");
-        maxRunSpeed = MAX_SPEED_FAST;
+        tft.print("Race\n(new fast)");
+        //maxRunSpeed = MAX_SPEED_FAST;
+        pCurrentRunProfile = &fastRunProfile;
         break;
       case 6:
-        tft.print("Race\n(crazy)");
-        maxRunSpeed = MAX_SPEED_CRAZY;
+        tft.print("Race\n(new crazy)");
+        //maxRunSpeed = MAX_SPEED_CRAZY;
+        pCurrentRunProfile = &crazyRunProfile;
         break;
       case 7:
         tft.print("Steering\ncalibrate");
@@ -234,13 +401,13 @@ void initialMenu()
         startManualControl();
         break;
       case 3:
-        startProfileDisarmed();
-        break;
       case 4:
       case 5:
       case 6:
-        startDisarmed();
+        startProfileDisarmed();
         break;
+//        startDisarmed();
+//        break;
       case 7:
         manualAutoSteer = false;
         startSteeringCalibrate();
@@ -832,16 +999,22 @@ void startProfileArmed()
 
 void startProfileRun()
 {
+  startTime = millis();
+  startFinishCount = 0;
+  state = STATE_PROFILE_RUN;
+  startProfileRunSegment();
+}
+
+void startProfileRunSegment()
+{
   segmentStartTime = millis();
   setSpeed(pCurrentRunProfile->startSpeed);
-  state = STATE_PROFILE_RUN;
 }
 
 void startProfileStopping()
 {
-  segmentStartTime = millis();
-  setSpeed(pCurrentRunProfile->startSpeed);
   state = STATE_PROFILE_STOPPING;
+  startProfileRunSegment();
 }
 
 void waitForProfileArmed()
@@ -867,8 +1040,6 @@ void waitForProfileGo()
     // Wait for Circle button
     if(PS4.Circle())
     {
-      startTime = millis();
-      startFinishCount = 0;
       startProfileRun();
       tft.fillScreen(TFT_GREEN);
     }
@@ -890,7 +1061,7 @@ void profileRun()
       if(pCurrentRunProfile->pNext)
       {
         pCurrentRunProfile = pCurrentRunProfile->pNext;
-        startProfileRun();
+        startProfileRunSegment();
       }
       else
       {
