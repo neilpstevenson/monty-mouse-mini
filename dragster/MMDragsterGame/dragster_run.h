@@ -1,24 +1,24 @@
 // Parameters for the Dragster run
 
-static const int MAX_SPEED_SLOW = 40;
-static const int MAX_SPEED_MED = 52;
-static const int MAX_SPEED_FAST = 60;
-static const int MAX_SPEED_CRAZY = 128;
+//static const int MAX_SPEED_SLOW = 40;
+//static const int MAX_SPEED_MED = 52;
+//static const int MAX_SPEED_FAST = 60;
+//static const int MAX_SPEED_CRAZY = 128;
 
-#define SPEED_A1 (maxRunSpeed / 4)
-static const int TIME_SPEED_A1_mS = 200;
-#define SPEED_A2 (maxRunSpeed / 2)
-static const int TIME_SPEED_A2_mS = 200;
-#define SPEED_MAX maxRunSpeed
-static const int TIME_SPEED_MAX_mS = 1500;
+//#define SPEED_A1 (maxRunSpeed / 4)
+//static const int TIME_SPEED_A1_mS = 200;
+//#define SPEED_A2 (maxRunSpeed / 2)
+//static const int TIME_SPEED_A2_mS = 200;
+//#define SPEED_MAX maxRunSpeed
+//static const int TIME_SPEED_MAX_mS = 1500;
 
-#define SPEED_DECEL (maxRunSpeed / 4)
-static const int TIME_SPEED_DECEL_mS = 2000;
+//#define SPEED_DECEL (maxRunSpeed / 4)
+//static const int TIME_SPEED_DECEL_mS = 2000;
 
-static const int SPEED_FAST_STOP_REVSERSE = 32;
-static const int TIME_FAST_STOP_mS = 800;
+//static const int SPEED_FAST_STOP_REVSERSE = 32;
+//static const int TIME_FAST_STOP_mS = 800;
 
-static const int TIME_STOPPING_mS = 4000;
+//static const int TIME_STOPPING_mS = 4000;
 
 static const int startFinishCountLimit = 2;
 
@@ -28,6 +28,9 @@ const int markerLowThreshold = (int)(0.35 * 4096); //2900;
 
 // Max valid line detectors before we abort the run
 const int maxLineDetectorThreshold = (int)(0.8 * 4096); //4000;
+
+// Flags
+const uint8_t FLAG_DISPLAY_LAST_RUN = 0x01;
 
 typedef struct RunProfile
 {
