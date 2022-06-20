@@ -1,3 +1,5 @@
+//#define DEBUG_MOTORS   
+
 // Stop the motors to idle (non-breaking)
 void stopAll()
 {
@@ -14,9 +16,8 @@ void stopAll()
 // Set both motors to speed
 void setSpeed(int forwardSpeed)
 {
-//#define DEBUG_MOTORS   
-   Serial.printf("Speed: %d\n", forwardSpeed);
 #ifdef DEBUG_MOTORS
+   Serial.printf("Speed: %d\n", forwardSpeed);
 #else //DEBUG_MOTORS
    if(forwardSpeed >= 0)
     {

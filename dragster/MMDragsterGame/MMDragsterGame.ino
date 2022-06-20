@@ -14,22 +14,11 @@ extern int value[6];
 extern void plotPointers(void);
 extern void plotLinear(const char *label, int x, int y);
 
-typedef enum
-{
-  STATE_INITIAL,
-  STATE_MANUAL,
-  STATE_STEER_CALIBRATE,
-  STATE_PROFILE_DISARMED,
-  STATE_PROFILE_ARMED,
-  STATE_PROFILE_RUN,
-  STATE_PROFILE_STOPPING
-} EStates;
-EStates state;
-
 unsigned long accelTimeout;
 unsigned long startTime;
 unsigned long segmentStartTime;
 unsigned long lastRunTime;
+unsigned long segmentLoopCount;
 
 Servo steeringServo;
 float pidInput = 0.0;
@@ -40,22 +29,23 @@ int startFinishCount = 0;
 bool manualAutoSteer = false;
 DRAGSTER_NVRAM_T hwconfig;
 
-
-// Crazy (max) speed
-RunProfile_t crazyRunProfileStopDone = {
-    FLAG_DISPLAY_LAST_RUN,
-    5000,
+// Common profiles
+RunProfile_t allRunProfileStopDone = {
+    FLAG_DISPLAY_LAST_RUN | FLAG_IGNORE_MARKERS,
+    10000,
     -5,
     0,
     0,
     0
 };
+
+// Crazy Max speed
 RunProfile_t crazyRunProfileStop = {
-    0,
+    FLAG_IGNORE_MARKERS,
     800,
     -80,
     -30,
-    &crazyRunProfileStopDone,
+    &allRunProfileStopDone,
     0
 };
 RunProfile_t crazyRunProfileCoast = {
@@ -68,7 +58,7 @@ RunProfile_t crazyRunProfileCoast = {
 };
 RunProfile_t crazyRunProfileDecel = {
     0,
-    350,
+    400,
     -50,
     30,
     &crazyRunProfileCoast,
@@ -76,36 +66,112 @@ RunProfile_t crazyRunProfileDecel = {
 };
 RunProfile_t crazyRunProfileSteady = {
     0,
-    900,
-    100,
-    100,
+    950, //650,
+    128,
+    128,
     &crazyRunProfileDecel,
     &crazyRunProfileStop
 };
 RunProfile_t crazyRunProfile = {
-    0,
+    FLAG_IGNORE_MARKERS,
     200,
-    30,
-    100,
+    50,
+    128,
     &crazyRunProfileSteady,
     &crazyRunProfileStop
 };
 
-// Fast speed
-RunProfile_t fastRunProfileStopDone = {
-    FLAG_DISPLAY_LAST_RUN,
-    5000,
-    0,
-    0,
-    0,
+// Very fast speed
+RunProfile_t veryFastRunProfileStop = {
+    FLAG_IGNORE_MARKERS,
+    800,
+    -80,
+    -30,
+    &allRunProfileStopDone,
     0
 };
-RunProfile_t fastRunProfileStop = {
+RunProfile_t veryFastRunProfileCoast = {
     0,
+    2000,
+    30,
+    30,
+    0,
+    &veryFastRunProfileStop
+};
+RunProfile_t veryFastRunProfileDecel = {
+    0,
+    400, //350,
+    -50,
+    30,
+    &veryFastRunProfileCoast,
+    &veryFastRunProfileStop
+};
+RunProfile_t veryFastRunProfileSteady = {
+    0,
+    1100, //900,
+    100,
+    100,
+    &veryFastRunProfileDecel,
+    &veryFastRunProfileStop
+};
+RunProfile_t veryFastRunProfile = {
+    FLAG_IGNORE_MARKERS,
+    200,
+    30,
+    100,
+    &veryFastRunProfileSteady,
+    &veryFastRunProfileStop
+};
+
+// Very fast speed - short course
+RunProfile_t veryFastShortRunProfileStop = {
+    FLAG_IGNORE_MARKERS,
+    800,
+    -80,
+    -30,
+    &allRunProfileStopDone,
+    0
+};
+RunProfile_t veryFastShortRunProfileCoast = {
+    0,
+    2000,
+    30,
+    30,
+    0,
+    &veryFastShortRunProfileStop
+};
+RunProfile_t veryFastShortRunProfileDecel = {
+    0,
+    350,
+    -50,
+    30,
+    &veryFastShortRunProfileCoast,
+    &veryFastShortRunProfileStop
+};
+RunProfile_t veryFastShortRunProfileSteady = {
+    0,
+    900,
+    100,
+    100,
+    &veryFastShortRunProfileDecel,
+    &veryFastShortRunProfileStop
+};
+RunProfile_t veryFastShortRunProfile = {
+    FLAG_IGNORE_MARKERS,
+    200,
+    30,
+    100,
+    &veryFastShortRunProfileSteady,
+    &veryFastShortRunProfileStop
+};
+
+// Fast speed
+RunProfile_t fastRunProfileStop = {
+    FLAG_IGNORE_MARKERS,
     800,
     -60,
     -30,
-    &fastRunProfileStopDone,
+    &allRunProfileStopDone,
     0
 };
 RunProfile_t fastRunProfileCoast = {
@@ -126,15 +192,15 @@ RunProfile_t fastRunProfileDecel = {
 };
 RunProfile_t fastRunProfileSteady = {
     0,
-    1450,
+    1700, //1450,
     60,
     60,
     &fastRunProfileDecel,
     &fastRunProfileStop
 };
 RunProfile_t fastRunProfile = {
-    0,
-    100,
+    FLAG_IGNORE_MARKERS,
+    150,
     30,
     60,
     &fastRunProfileSteady,
@@ -142,20 +208,12 @@ RunProfile_t fastRunProfile = {
 };
 
 // Medium speed
-RunProfile_t mediumRunProfileStopDone = {
-    FLAG_DISPLAY_LAST_RUN,
-    5000,
-    0,
-    0,
-    0,
-    0
-};
 RunProfile_t mediumRunProfileStop = {
-    0,
+    FLAG_IGNORE_MARKERS,
     700,
     -15,
     -53,
-    &mediumRunProfileStopDone,
+    &allRunProfileStopDone,
     0
 };
 RunProfile_t mediumRunProfileCoast = {
@@ -176,14 +234,14 @@ RunProfile_t mediumRunProfileDecel = {
 };
 RunProfile_t mediumRunProfileSteady = {
     0,
-    1600,
+    2500, //1600,
     52,
     52,
     &mediumRunProfileDecel,
     &mediumRunProfileStop
 };
 RunProfile_t mediumRunProfile = {
-    0,
+    FLAG_IGNORE_MARKERS,
     150,
     13,
     53,
@@ -192,20 +250,12 @@ RunProfile_t mediumRunProfile = {
 };
 
 // Slow speed
-RunProfile_t slowRunProfileStopDone = {
-    FLAG_DISPLAY_LAST_RUN,
-    5000,
-    0,
-    0,
-    0,
-    0
-};
 RunProfile_t slowRunProfileStop = {
-    0,
+    FLAG_IGNORE_MARKERS,
     1000,
     -20,
     -5,
-    &slowRunProfileStopDone,
+    &allRunProfileStopDone,
     0
 };
 RunProfile_t slowRunProfileCoast = {
@@ -233,7 +283,7 @@ RunProfile_t slowRunProfileSteady = {
     &slowRunProfileStop
 };
 RunProfile_t slowRunProfile = {
-    0,
+    FLAG_IGNORE_MARKERS,
     200,
     10,
     40,
@@ -246,11 +296,14 @@ RunProfile_t *pCurrentRunProfile;
 void readConfig()
 {
   EEPROM.get(0, hwconfig);
-  if(hwconfig.magic != 0x2244)
+  if(hwconfig.magic != DRAGSTER_NVRAM_T::nvramMagic)
   {
     // Initialise the data
     hwconfig.steer_centre = default_steeringServoCentre;
-    hwconfig.magic = 0x2244;
+    hwconfig.magic = DRAGSTER_NVRAM_T::nvramMagic;
+    hwconfig.Kp = PID_Kp;
+    hwconfig.Ki = PID_Ki;
+    hwconfig.Kd = PID_Kd;
     writeConfig();
     Serial.println("Initialised NVRAM");
   }
@@ -260,6 +313,7 @@ void readConfig()
     Serial.print("  Steering centre = ");
     Serial.println(hwconfig.steer_centre);
   }
+  pid.set_tunings(hwconfig.Kp, hwconfig.Ki, hwconfig.Kd);
 }
 
 void writeConfig()
@@ -310,7 +364,7 @@ void setup()
   // Steering 
   ESP32PWM::allocateTimer(2);
   steeringServo.setPeriodHertz(steeringServoFreq);
-  steeringServo.attach(gpioSteeringServo, 1000, 2000);
+  steeringServo.attach(gpioSteeringServo, 500, 2500);
 
   // PS4 controller
   //PS4.begin("44:17:93:89:84:6a"); // this esp32
@@ -345,29 +399,40 @@ void initialMenu()
       switch(++menuSelected)
       {
       case 1:
-        tft.print("Manual\n(manual)");
+        tft.print("Manual\nControl");
         break;
       case 2:
-        tft.print("Manual\n(auto)");
+        tft.print("Manual\nAuto steer");
         break;
       case 3:
-        tft.print("Race\n(new slow)");
+        tft.print("Race\nSlow");
         pCurrentRunProfile = &slowRunProfile;
         break;
       case 4:
-        tft.print("Race\n(new med)");
+        tft.print("Race\nMedium");
         pCurrentRunProfile = &mediumRunProfile;
         break;
       case 5:
-        tft.print("Race\n(new fast)");
+        tft.print("Race\nFast");
         pCurrentRunProfile = &fastRunProfile;
         break;
       case 6:
-        tft.print("Race\n(new crazy)");
-        pCurrentRunProfile = &crazyRunProfile;
+        tft.print("Race\nVery Fast");
+        pCurrentRunProfile = &veryFastRunProfile;
         break;
       case 7:
+        tft.print("Race\nCrazy Fast");
+        pCurrentRunProfile = &crazyRunProfile;
+        break;
+      case 8:
+        tft.print("Race\nVery Fast\nShort");
+        pCurrentRunProfile = &veryFastShortRunProfile;
+        break;
+      case 9:
         tft.print("Steering\ncalibrate");
+        break;
+      case 10:
+        tft.print("PID\ncalibrate");
         break;
       default:
         menuSelected = 0;
@@ -393,11 +458,16 @@ void initialMenu()
       case 4:
       case 5:
       case 6:
+      case 7:
+      case 8:
         startProfileDisarmed();
         break;
-      case 7:
+      case 9:
         manualAutoSteer = false;
         startSteeringCalibrate();
+        break;
+      case 10:
+        startCalibratePID();
         break;
       }
     }
@@ -509,9 +579,10 @@ void manualControl()
     // Steering
     if(!manualAutoSteer)
     {
-      int steer = PS4.RStickX();
+      int steer = steeringGainManual * PS4.RStickX();
       int steerServoPos =  hwconfig.steer_centre - steer;
-      steeringServo.write(steerServoPos);
+      steeringServo.write(steerServoPos > 500 ? steerServoPos : 500);
+      Serial.printf("Steer: %d\n", steerServoPos);
     }
   
     // Get the current sensor data
@@ -530,7 +601,7 @@ void manualControl()
       
       int steer = (int)pidOutput;
       int steerServoPos = (forward >= -2 ? hwconfig.steer_centre + steer : hwconfig.steer_centre - steer);
-      steeringServo.write(steerServoPos);
+      steeringServo.write(steerServoPos > 500 ? steerServoPos : 500);
     }
     
     // Display the sensors
@@ -559,23 +630,18 @@ void startSteeringCalibrate()
   tft.print(hwconfig.steer_centre);
   manualAutoSteer  = false;
   state = STATE_STEER_CALIBRATE;
+  // Wait for menu button to be released
+  while(PS4.Right())
+    delay(10);
 }
 
 void steeringCalibrate()
 {
   if (!PS4.isConnected()) 
   {
-     // Stop motors
-    digitalWrite(gpioMotorA1, LOW);
-    digitalWrite(gpioMotorA2, LOW);
-    digitalWrite(gpioMotorB1, LOW);
-    digitalWrite(gpioMotorB2, LOW);
-    ledcWrite(motorRPwmChannel, 0);
-    ledcWrite(motorLPwmChannel, 0);
-    //digitalWrite(gpioIlluminationLED, LOW);
-    
-    Serial.println("Waiting for PS4 controller...");
-    delay(500);
+    stopAll();
+    state = STATE_INITIAL;
+    return;
   }
   else if(PS4.Left())
   {
@@ -587,7 +653,7 @@ void steeringCalibrate()
     tft.print("Centre:\n");
     tft.print(hwconfig.steer_centre);
     tft.print("\nA to save");
-    delay(200);
+    delay(100);
   }
   else if(PS4.Right())
   {
@@ -599,7 +665,7 @@ void steeringCalibrate()
     tft.print("Centre:\n");
     tft.print(hwconfig.steer_centre);
     tft.print("\nA to save");
-    delay(200);
+    delay(100);
   }
   else if(PS4.Triangle())
   {
@@ -650,7 +716,7 @@ void steeringCalibrate()
     {
       int steer = PS4.RStickX();
       int steerServoPos =  hwconfig.steer_centre - steer;
-      steeringServo.write(steerServoPos);
+      steeringServo.write(steerServoPos > 500 ? steerServoPos : 500);
     }
   
     // Get the current sensor data
@@ -669,11 +735,143 @@ void steeringCalibrate()
       
       int steer = (int)pidOutput;
       int steerServoPos = (forward >= -2 ? hwconfig.steer_centre + steer : hwconfig.steer_centre - steer);
-      steeringServo.write(steerServoPos);
+      steeringServo.write(steerServoPos > 500 ? steerServoPos : 500);
     }
     
     // Print the sensors
     Serial.printf("%d %d %d %d\n", sensorRadius, sensorLeftLine, sensorRightLine, sensorStartFinish);
+  }
+}
+
+void startCalibratePID()
+{
+  waitForPS4Controller();
+  manualAutoSteer = true;
+  displayPID();
+  state = STATE_PID_CALIBRATE;
+  // Wait for menu button to be released
+  while(PS4.Right())
+    delay(10);
+}
+
+void displayPID()
+{
+  // Display current
+  tft.fillScreen(TFT_BLACK);
+  tft.setCursor(0,0);
+  tft.setTextSize(4);
+  tft.printf("P: %6.4f\n", pid.mKP);
+  tft.printf("I: %6.4f\n", pid.mKI);
+  tft.printf("D: %6.4f\n", pid.mKD);
+}
+
+void calibratePID()
+{
+  if (!PS4.isConnected()) 
+  {
+    stopAll();
+    state = STATE_INITIAL;
+    return;
+  }
+  else if(PS4.Right())
+  {
+    pid.mKP += 0.001;
+    displayPID();
+    delay(100);
+  }
+  else if(PS4.Left() && pid.mKP > 0.001)
+  {
+    pid.mKP -= 0.001;
+    displayPID();
+    delay(100);
+  }
+  else if(PS4.Up())
+  {
+    pid.mKD += 0.0002;
+    displayPID();
+    delay(100);
+  }
+  else if(PS4.Down() && pid.mKD > 0.0002)
+  {
+    pid.mKD -= 0.0002;
+    displayPID();
+    delay(100);
+  }
+  else if(PS4.Triangle())
+  {
+    // Commit any changes
+    hwconfig.Kp = pid.mKP;
+    hwconfig.Ki = pid.mKI;
+    hwconfig.Kd = pid.mKD;
+    writeConfig();
+   
+    stopAll();
+    state = STATE_INITIAL;
+    return;
+  }
+  else
+  {
+    digitalWrite(gpioIlluminationLED, HIGH);
+    
+    int forward = PS4.LStickY();
+    if(forward > 2)
+    {
+      // Forward
+      int dutyCycle = forward*2;
+      digitalWrite(gpioMotorA1, HIGH);
+      digitalWrite(gpioMotorA2, LOW);
+      digitalWrite(gpioMotorB1, HIGH);
+      digitalWrite(gpioMotorB2, LOW);
+      ledcWrite(motorRPwmChannel, dutyCycle);
+      ledcWrite(motorLPwmChannel, dutyCycle);
+    }
+    else if(forward < -2)
+    {
+      // Reverse
+      int dutyCycle = (-forward-1)*2;
+      digitalWrite(gpioMotorA1, LOW);
+      digitalWrite(gpioMotorA2, HIGH);
+      digitalWrite(gpioMotorB1, LOW);
+      digitalWrite(gpioMotorB2, HIGH);
+      ledcWrite(motorRPwmChannel, dutyCycle);
+      ledcWrite(motorLPwmChannel, dutyCycle);
+    }
+    else
+    {
+      // Stop
+      ledcWrite(motorRPwmChannel, 0);
+      ledcWrite(motorLPwmChannel, 0);
+    }
+
+    // Steering
+    if(!manualAutoSteer)
+    {
+      int steer = PS4.RStickX();
+      int steerServoPos =  hwconfig.steer_centre - steer;
+      steeringServo.write(steerServoPos > 500 ? steerServoPos : 500);
+    }
+  
+    // Get the current sensor data
+    int sensorStartFinish = analogRead(gpioSensorStartFinish);
+    int sensorRightLine = analogRead(gpioSensorRightLine);
+    int sensorLeftLine = analogRead(gpioSensorLeftLine);
+    int sensorRadius = analogRead(gpioSensorRadius);
+    
+    if(manualAutoSteer)
+    {
+      // Calculate the steering error
+      int steeringError = sensorLeftLine - sensorRightLine;
+      pidInput = steeringError;
+      float pidOutput = pid.compute();
+      //Serial.printf("PID in = %f, out = %f\n", pidInput, pidOutput);
+      
+      int steer = (int)pidOutput;
+      int steerServoPos = (forward >= -2 ? hwconfig.steer_centre + steer : hwconfig.steer_centre - steer);
+      steeringServo.write(steerServoPos > 500 ? steerServoPos : 500);
+    }
+    
+    // Print the sensors
+    //Serial.printf("%d %d %d %d\n", sensorRadius, sensorLeftLine, sensorRightLine, sensorStartFinish);
   }
 }
 
@@ -714,6 +912,7 @@ void startProfileRun()
 void startProfileRunSegment()
 {
   segmentStartTime = millis();
+  segmentLoopCount = 0;
   setSpeed(pCurrentRunProfile->startSpeed);
   if(lastRunTime && (pCurrentRunProfile->flags & FLAG_DISPLAY_LAST_RUN))
     displayLastRunTime();
@@ -749,22 +948,36 @@ void waitForProfileGo()
     if(PS4.Circle())
     {
       startProfileRun();
-      tft.fillScreen(TFT_GREEN);
+      //tft.fillScreen(TFT_GREEN);
     }
     else
     {
       // Get initial steer
       profileSensorActions();
+      // Display steering error
+      float pidOutput = pid.compute();
+      tft.setCursor(0,80);
+      tft.setTextSize(4);
+      if(pidOutput < 1.0 && pidOutput > -1.0)
+        tft.setTextColor(TFT_GREEN, TFT_ORANGE);
+      else
+        tft.setTextColor(TFT_RED, TFT_ORANGE);
+      tft.printf("%8.2f",pidOutput);
+      tft.setTextColor(TFT_GREEN, TFT_BLACK);
     }
 }
 
 // Accelerate up to speed
 void profileRun()
 {
+    segmentLoopCount++;
+    
     // Check if we've gone far enough
     int32_t elapsed = millis() - segmentStartTime;
     if(elapsed >= pCurrentRunProfile->runTimeMs)
     {
+      printf("Loop: %ul in %ulmS => %fmS/loop\n", segmentLoopCount, elapsed, ((float)elapsed)/segmentLoopCount);
+      
       // Next stage
       if(pCurrentRunProfile->pNext)
       {
@@ -805,9 +1018,10 @@ void profileSensorActions()
   int steer = (int)pidOutput;
   int steerServoPos =  hwconfig.steer_centre + steer;
   steeringServo.write(steerServoPos);
+  steeringServo.write(steerServoPos > 500 ? steerServoPos : 500);
 
   // End or abort run?
-  if(state != STATE_PROFILE_STOPPING && state != STATE_PROFILE_ARMED)
+  if( !(pCurrentRunProfile->flags & FLAG_IGNORE_MARKERS) && state != STATE_PROFILE_ARMED)
   {
     // Check to abort run if off line
     if( sensorRightLine >= maxLineDetectorThreshold && sensorLeftLine >= maxLineDetectorThreshold)
@@ -827,6 +1041,7 @@ void profileSensorActions()
         state = STATE_INITIAL;
       }
       tft.fillScreen(TFT_RED);
+      lastRunTime = 0;
     }
     else
     {
@@ -883,9 +1098,6 @@ void loop()
   case STATE_MANUAL:
     manualControl();
     break;
-  case STATE_STEER_CALIBRATE:
-    steeringCalibrate();
-    break;
   case STATE_PROFILE_DISARMED:
     waitForProfileArmed();
     break;
@@ -896,10 +1108,18 @@ void loop()
   case STATE_PROFILE_STOPPING:
     profileRun();
     break;
+    
+  case STATE_STEER_CALIBRATE:
+    steeringCalibrate();
+    break;
+  case STATE_PID_CALIBRATE:
+    calibratePID();
+    break;
+
   default:
     state = STATE_INITIAL;
     break;
   }
   
-  delay(1);
+  delay(3);
 }

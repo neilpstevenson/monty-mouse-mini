@@ -18,7 +18,7 @@ const int gpioEnterButton = 0;
 
 // Connected Servos
 const int gpioSteeringServo = 26;
-const int default_steeringServoCentre = 120; // Nominally 100 = mid range of movement (bigger = steer more left)
+const int default_steeringServoCentre = 1500; // Nominally 1500 = mid range of movement (bigger = steer more left)
 const int steeringServoFreq = 333;  // Servo refresh rate (50Hz to about 300Hz for most digial servos)
 
 // Sensors
@@ -33,7 +33,7 @@ const int gpioIlluminationLED = 25;
 // PID values
 const float LOOP_INTERVAL = 0.003;  // 1mS
 const float LOOP_FREQUENCY = 1/LOOP_INTERVAL;  // Hz
-const float MAX_MOTOR_VOLTS = 100.0;
-const float PID_Kp = 0.005; //0.01;// 0.007;
+const float MAX_MOTOR_VOLTS = 300.0;
+const float PID_Kp = 0.02; //0.005; //0.01;// 0.007;
 const float PID_Ki = 0.0;
-const float PID_Kd = 0.002;
+const float PID_Kd = 0.001; //0.002;
