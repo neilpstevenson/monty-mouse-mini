@@ -34,6 +34,7 @@ const int gpioIlluminationLED = 25;
 const float LOOP_INTERVAL = 0.003;  // 1mS
 const float LOOP_FREQUENCY = 1/LOOP_INTERVAL;  // Hz
 const float MAX_MOTOR_VOLTS = 300.0;
-const float PID_Kp = 0.02; //0.005; //0.01;// 0.007;
+// Defaults (actual from NVRam
+const float PID_Kp = 0.03; //0.005; //0.01;// 0.007;
 const float PID_Ki = 0.0;
-const float PID_Kd = 0.001; //0.002;
+const float PID_Kd = 0.005; //0.002;

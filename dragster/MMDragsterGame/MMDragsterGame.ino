@@ -524,14 +524,7 @@ void manualControl()
   if (!PS4.isConnected()) 
   {
      // Stop motors
-    digitalWrite(gpioMotorA1, LOW);
-    digitalWrite(gpioMotorA2, LOW);
-    digitalWrite(gpioMotorB1, LOW);
-    digitalWrite(gpioMotorB2, LOW);
-    ledcWrite(motorRPwmChannel, 0);
-    ledcWrite(motorLPwmChannel, 0);
-    //digitalWrite(gpioIlluminationLED, LOW);
-    
+    stopAll();
     Serial.println("Waiting for PS4 controller...");
     delay(500);
   }
@@ -547,35 +540,16 @@ void manualControl()
     digitalWrite(gpioIlluminationLED, HIGH);
     
     int forward = PS4.LStickY();
-    if(forward > 2)
+    if(forward > 2 || forward < -2)
     {
-      // Forward
-      int dutyCycle = forward*2;
-      digitalWrite(gpioMotorA1, HIGH);
-      digitalWrite(gpioMotorA2, LOW);
-      digitalWrite(gpioMotorB1, HIGH);
-      digitalWrite(gpioMotorB2, LOW);
-      ledcWrite(motorRPwmChannel, dutyCycle);
-      ledcWrite(motorLPwmChannel, dutyCycle);
-    }
-    else if(forward < -2)
-    {
-      // Reverse
-      int dutyCycle = (-forward-1)*2;
-      digitalWrite(gpioMotorA1, LOW);
-      digitalWrite(gpioMotorA2, HIGH);
-      digitalWrite(gpioMotorB1, LOW);
-      digitalWrite(gpioMotorB2, HIGH);
-      ledcWrite(motorRPwmChannel, dutyCycle);
-      ledcWrite(motorLPwmChannel, dutyCycle);
+      setSpeed(forward);
     }
     else
     {
       // Stop
-      ledcWrite(motorRPwmChannel, 0);
-      ledcWrite(motorLPwmChannel, 0);
+      breakStop();
     }
-
+    
     // Steering
     if(!manualAutoSteer)
     {
@@ -682,33 +656,14 @@ void steeringCalibrate()
     digitalWrite(gpioIlluminationLED, HIGH);
     
     int forward = PS4.LStickY();
-    if(forward > 2)
+    if(forward > 2 || forward < -2)
     {
-      // Forward
-      int dutyCycle = forward*2;
-      digitalWrite(gpioMotorA1, HIGH);
-      digitalWrite(gpioMotorA2, LOW);
-      digitalWrite(gpioMotorB1, HIGH);
-      digitalWrite(gpioMotorB2, LOW);
-      ledcWrite(motorRPwmChannel, dutyCycle);
-      ledcWrite(motorLPwmChannel, dutyCycle);
-    }
-    else if(forward < -2)
-    {
-      // Reverse
-      int dutyCycle = (-forward-1)*2;
-      digitalWrite(gpioMotorA1, LOW);
-      digitalWrite(gpioMotorA2, HIGH);
-      digitalWrite(gpioMotorB1, LOW);
-      digitalWrite(gpioMotorB2, HIGH);
-      ledcWrite(motorRPwmChannel, dutyCycle);
-      ledcWrite(motorLPwmChannel, dutyCycle);
+      setSpeed(forward);
     }
     else
     {
       // Stop
-      ledcWrite(motorRPwmChannel, 0);
-      ledcWrite(motorLPwmChannel, 0);
+      breakStop();
     }
 
     // Steering
@@ -814,33 +769,14 @@ void calibratePID()
     digitalWrite(gpioIlluminationLED, HIGH);
     
     int forward = PS4.LStickY();
-    if(forward > 2)
+    if(forward > 2 || forward < -2)
     {
-      // Forward
-      int dutyCycle = forward*2;
-      digitalWrite(gpioMotorA1, HIGH);
-      digitalWrite(gpioMotorA2, LOW);
-      digitalWrite(gpioMotorB1, HIGH);
-      digitalWrite(gpioMotorB2, LOW);
-      ledcWrite(motorRPwmChannel, dutyCycle);
-      ledcWrite(motorLPwmChannel, dutyCycle);
-    }
-    else if(forward < -2)
-    {
-      // Reverse
-      int dutyCycle = (-forward-1)*2;
-      digitalWrite(gpioMotorA1, LOW);
-      digitalWrite(gpioMotorA2, HIGH);
-      digitalWrite(gpioMotorB1, LOW);
-      digitalWrite(gpioMotorB2, HIGH);
-      ledcWrite(motorRPwmChannel, dutyCycle);
-      ledcWrite(motorLPwmChannel, dutyCycle);
+      setSpeed(forward);
     }
     else
     {
       // Stop
-      ledcWrite(motorRPwmChannel, 0);
-      ledcWrite(motorLPwmChannel, 0);
+      breakStop();
     }
 
     // Steering
@@ -954,16 +890,24 @@ void waitForProfileGo()
     {
       // Get initial steer
       profileSensorActions();
-      // Display steering error
-      float pidOutput = pid.compute();
-      tft.setCursor(0,80);
-      tft.setTextSize(4);
-      if(pidOutput < 1.0 && pidOutput > -1.0)
-        tft.setTextColor(TFT_GREEN, TFT_ORANGE);
-      else
-        tft.setTextColor(TFT_RED, TFT_ORANGE);
-      tft.printf("%8.2f",pidOutput);
-      tft.setTextColor(TFT_GREEN, TFT_BLACK);
+
+      static int loopCount;
+      if(loopCount++ % 20 == 0)
+      {
+        // Display steering error
+        float pidOutput = pid.output();
+        tft.setCursor(0,80);
+        tft.setTextSize(4);
+        if(pidOutput < 10.0 && pidOutput > -10.0)
+          tft.setTextColor(TFT_GREEN, TFT_ORANGE);
+        else
+          tft.setTextColor(TFT_RED, TFT_ORANGE);
+        tft.printf("%8.2f",pidOutput);
+        tft.setTextColor(TFT_GREEN, TFT_BLACK);
+
+        // Recompute PID to avoid display code disrupting the I & D parts on next cycle
+        pid.compute();
+      }
     }
 }
 
@@ -1013,7 +957,7 @@ void profileSensorActions()
   int steeringError = sensorLeftLine - sensorRightLine;
   pidInput = steeringError;
   float pidOutput = pid.compute();
-  //Serial.printf("PID in = %f, out = %f\n", pidInput, pidOutput);
+  //Serial.printf("PID in = %f (%d-%d), out = %f\n", pidInput, sensorLeftLine, sensorRightLine, pidOutput);
 
   int steer = (int)pidOutput;
   int steerServoPos =  hwconfig.steer_centre + steer;
