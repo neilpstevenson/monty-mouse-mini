@@ -86,7 +86,7 @@ RunProfile_t veryFastRunProfileStop = {
     FLAG_IGNORE_MARKERS,
     800,
     -80,
-    -30,
+    -40,
     &allRunProfileStopDone,
     0
 };
@@ -100,7 +100,7 @@ RunProfile_t veryFastRunProfileCoast = {
 };
 RunProfile_t veryFastRunProfileDecel = {
     0,
-    400, //350,
+    500, //350,
     -50,
     30,
     &veryFastRunProfileCoast,
@@ -108,7 +108,7 @@ RunProfile_t veryFastRunProfileDecel = {
 };
 RunProfile_t veryFastRunProfileSteady = {
     0,
-    1100, //900,
+    1150, //900,
     100,
     100,
     &veryFastRunProfileDecel,
@@ -169,8 +169,8 @@ RunProfile_t veryFastShortRunProfile = {
 RunProfile_t fastRunProfileStop = {
     FLAG_IGNORE_MARKERS,
     800,
-    -60,
-    -30,
+    -40,
+    -70,
     &allRunProfileStopDone,
     0
 };
@@ -184,25 +184,25 @@ RunProfile_t fastRunProfileCoast = {
 };
 RunProfile_t fastRunProfileDecel = {
     0,
-    150,
-    -15,
+    400,
+    -40,
     15,
     &fastRunProfileCoast,
     &fastRunProfileStop
 };
 RunProfile_t fastRunProfileSteady = {
     0,
-    1700, //1450,
-    60,
-    60,
+    1500, //1450,
+    70,
+    70,
     &fastRunProfileDecel,
     &fastRunProfileStop
 };
 RunProfile_t fastRunProfile = {
     FLAG_IGNORE_MARKERS,
-    150,
+    200,
     30,
-    60,
+    70,
     &fastRunProfileSteady,
     &fastRunProfileStop
 };
