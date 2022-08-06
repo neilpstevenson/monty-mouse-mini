@@ -20,6 +20,7 @@ unsigned long startTime;
 unsigned long segmentStartTime;
 unsigned long lastRunTime;
 unsigned long segmentLoopCount;
+Motors motors;
 
 Servo steeringServo;
 float pidInput = 0.0;
@@ -348,34 +349,7 @@ void setup()
   digitalWrite(gpioIlluminationLED, LOW);
   
   // configure motor PWM output
-#ifdef MOTORCTRL_TB6612
-
-  ledcSetup(motorRPwmChannel, pwmFreq, pwmResolution);
-  ledcAttachPin(gpioMotorAPwm, motorRPwmChannel);
-  pinMode(gpioMotorA1, OUTPUT);
-  digitalWrite(gpioMotorA1, LOW);
-  pinMode(gpioMotorA2, OUTPUT);
-  digitalWrite(gpioMotorA2, LOW);
-
-  ledcSetup(motorLPwmChannel, pwmFreq, pwmResolution);
-  ledcAttachPin(gpioMotorBPwm, motorLPwmChannel);
-  pinMode(gpioMotorB1, OUTPUT);
-  digitalWrite(gpioMotorB1, LOW);
-  pinMode(gpioMotorB2, OUTPUT);
-  digitalWrite(gpioMotorB2, LOW);
-#endif //MOTORCTRL_TB6612
-
-#ifdef MOTORCTRL_DRV8833
-  ledcSetup(motorA1PwmChannel, pwmFreq, pwmResolution);
-  ledcAttachPin(gpioMotorA1, motorA1PwmChannel);
-  ledcSetup(motorA2PwmChannel, pwmFreq, pwmResolution);
-  ledcAttachPin(gpioMotorA2, motorA2PwmChannel);
-
-  ledcSetup(motorB1PwmChannel, pwmFreq, pwmResolution);
-  ledcAttachPin(gpioMotorB1, motorB1PwmChannel);
-  ledcSetup(motorB2PwmChannel, pwmFreq, pwmResolution);
-  ledcAttachPin(gpioMotorB2, motorB2PwmChannel);
-#endif //MOTORCTRL_DRV8833
+  motors.initHardware();
 
   // Steering 
   ESP32PWM::allocateTimer(2);
@@ -546,14 +520,14 @@ void manualControl()
   if (!PS4.isConnected()) 
   {
      // Stop motors
-    stopAll();
+    motors.stopAll();
     Serial.println("Waiting for PS4 controller...");
     delay(500);
   }
   else if(PS4.Cross())
   {
     // Switch to Race mode
-    stopAll();
+    motors.stopAll();
     state = STATE_INITIAL;
     return;
   }
@@ -564,12 +538,12 @@ void manualControl()
     int forward = PS4.LStickY();
     if(forward > 2 || forward < -2)
     {
-      setSpeed(forward);
+      motors.setSpeed(forward);
     }
     else
     {
       // Stop
-      breakStop();
+      motors.breakStop();
     }
     
     // Steering
@@ -635,7 +609,7 @@ void steeringCalibrate()
 {
   if (!PS4.isConnected()) 
   {
-    stopAll();
+    motors.stopAll();
     state = STATE_INITIAL;
     return;
   }
@@ -669,7 +643,7 @@ void steeringCalibrate()
     writeConfig();
     
     // Switch to Race mode
-    stopAll();
+    motors.stopAll();
     state = STATE_INITIAL;
     return;
   }
@@ -680,12 +654,12 @@ void steeringCalibrate()
     int forward = PS4.LStickY();
     if(forward > 2 || forward < -2)
     {
-      setSpeed(forward);
+      motors.setSpeed(forward);
     }
     else
     {
       // Stop
-      breakStop();
+      motors.breakStop();
     }
 
     // Steering
@@ -746,7 +720,7 @@ void calibratePID()
 {
   if (!PS4.isConnected()) 
   {
-    stopAll();
+    motors.stopAll();
     state = STATE_INITIAL;
     return;
   }
@@ -782,7 +756,7 @@ void calibratePID()
     hwconfig.Kd = pid.mKD;
     writeConfig();
    
-    stopAll();
+    motors.stopAll();
     state = STATE_INITIAL;
     return;
   }
@@ -793,12 +767,12 @@ void calibratePID()
     int forward = PS4.LStickY();
     if(forward > 2 || forward < -2)
     {
-      setSpeed(forward);
+      motors.setSpeed(forward);
     }
     else
     {
       // Stop
-      breakStop();
+      motors.breakStop();
     }
 
     // Steering
@@ -871,7 +845,7 @@ void startProfileRunSegment()
 {
   segmentStartTime = millis();
   segmentLoopCount = 0;
-  setSpeed(pCurrentRunProfile->startSpeed);
+  motors.setSpeed(pCurrentRunProfile->startSpeed);
   if(lastRunTime && (pCurrentRunProfile->flags & FLAG_DISPLAY_LAST_RUN))
     displayLastRunTime();
 }
@@ -953,7 +927,7 @@ void profileRun()
       else
       {
         // Taken too long, abort
-        breakStop();
+        motors.breakStop();
         // Restart
         state = STATE_INITIAL;
       }
@@ -962,7 +936,7 @@ void profileRun()
     {
       // Accelerate to required new speed
       int32_t newSpeed = (pCurrentRunProfile->startSpeed + ((int32_t)pCurrentRunProfile->endSpeed - (int32_t)pCurrentRunProfile->startSpeed) * elapsed / pCurrentRunProfile->runTimeMs);
-      setSpeed(newSpeed);
+      motors.setSpeed(newSpeed);
       profileSensorActions();
     }
 }
@@ -1002,7 +976,7 @@ void profileSensorActions()
       else
       {
         // Default stop action
-        breakStop();
+        motors.breakStop();
         // Restart
         state = STATE_INITIAL;
       }
@@ -1032,7 +1006,7 @@ void profileSensorActions()
         else
         {
           // Default stop action
-          breakStop();
+          motors.breakStop();
           // Restart
           state = STATE_INITIAL;
         }

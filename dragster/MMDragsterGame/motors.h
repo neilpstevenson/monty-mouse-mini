@@ -1,7 +1,47 @@
 //#define DEBUG_MOTORS   
 
+class Motors
+{
+  public:
+    void initHardware();
+    void setSpeed(int forwardSpeed);
+    void stopAll();
+    void breakStop();  
+};
+
+void Motors::initHardware()
+{
+#ifdef MOTORCTRL_TB6612
+  ledcSetup(motorRPwmChannel, pwmFreq, pwmResolution);
+  ledcAttachPin(gpioMotorAPwm, motorRPwmChannel);
+  pinMode(gpioMotorA1, OUTPUT);
+  digitalWrite(gpioMotorA1, LOW);
+  pinMode(gpioMotorA2, OUTPUT);
+  digitalWrite(gpioMotorA2, LOW);
+
+  ledcSetup(motorLPwmChannel, pwmFreq, pwmResolution);
+  ledcAttachPin(gpioMotorBPwm, motorLPwmChannel);
+  pinMode(gpioMotorB1, OUTPUT);
+  digitalWrite(gpioMotorB1, LOW);
+  pinMode(gpioMotorB2, OUTPUT);
+  digitalWrite(gpioMotorB2, LOW);
+#endif //MOTORCTRL_TB6612
+
+#ifdef MOTORCTRL_DRV8833
+  ledcSetup(motorA1PwmChannel, pwmFreq, pwmResolution);
+  ledcAttachPin(gpioMotorA1, motorA1PwmChannel);
+  ledcSetup(motorA2PwmChannel, pwmFreq, pwmResolution);
+  ledcAttachPin(gpioMotorA2, motorA2PwmChannel);
+
+  ledcSetup(motorB1PwmChannel, pwmFreq, pwmResolution);
+  ledcAttachPin(gpioMotorB1, motorB1PwmChannel);
+  ledcSetup(motorB2PwmChannel, pwmFreq, pwmResolution);
+  ledcAttachPin(gpioMotorB2, motorB2PwmChannel);
+#endif //MOTORCTRL_DRV8833
+}
+
 // Stop the motors to idle (non-breaking)
-void stopAll()
+void Motors::stopAll()
 {
     // Stop motors
 #ifdef MOTORCTRL_TB6612
@@ -22,7 +62,7 @@ void stopAll()
 }
 
 // Set both motors to speed
-void setSpeed(int forwardSpeed)
+void Motors::setSpeed(int forwardSpeed)
 {
 #ifdef DEBUG_MOTORS
    Serial.printf("Speed: %d\n", forwardSpeed);
@@ -69,7 +109,7 @@ void setSpeed(int forwardSpeed)
 }
 
 // Stop using electronic braking
-void breakStop()
+void Motors::breakStop()
 {
 #ifdef MOTORCTRL_TB6612
     digitalWrite(gpioMotorA1, HIGH);
