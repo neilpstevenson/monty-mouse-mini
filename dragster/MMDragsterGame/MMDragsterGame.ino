@@ -13,6 +13,7 @@ extern TFT_eSPI tft;
 extern int value[6];
 extern void plotPointers(void);
 extern void plotLinear(const char *label, int x, int y);
+extern "C" void pairBluetooth(void);
 
 unsigned long accelTimeout;
 unsigned long startTime;
@@ -347,19 +348,34 @@ void setup()
   digitalWrite(gpioIlluminationLED, LOW);
   
   // configure motor PWM output
+#ifdef MOTORCTRL_TB6612
+
   ledcSetup(motorRPwmChannel, pwmFreq, pwmResolution);
   ledcAttachPin(gpioMotorAPwm, motorRPwmChannel);
   pinMode(gpioMotorA1, OUTPUT);
   digitalWrite(gpioMotorA1, LOW);
   pinMode(gpioMotorA2, OUTPUT);
   digitalWrite(gpioMotorA2, LOW);
-  
+
   ledcSetup(motorLPwmChannel, pwmFreq, pwmResolution);
   ledcAttachPin(gpioMotorBPwm, motorLPwmChannel);
   pinMode(gpioMotorB1, OUTPUT);
   digitalWrite(gpioMotorB1, LOW);
   pinMode(gpioMotorB2, OUTPUT);
   digitalWrite(gpioMotorB2, LOW);
+#endif //MOTORCTRL_TB6612
+
+#ifdef MOTORCTRL_DRV8833
+  ledcSetup(motorA1PwmChannel, pwmFreq, pwmResolution);
+  ledcAttachPin(gpioMotorA1, motorA1PwmChannel);
+  ledcSetup(motorA2PwmChannel, pwmFreq, pwmResolution);
+  ledcAttachPin(gpioMotorA2, motorA2PwmChannel);
+
+  ledcSetup(motorB1PwmChannel, pwmFreq, pwmResolution);
+  ledcAttachPin(gpioMotorB1, motorB1PwmChannel);
+  ledcSetup(motorB2PwmChannel, pwmFreq, pwmResolution);
+  ledcAttachPin(gpioMotorB2, motorB2PwmChannel);
+#endif //MOTORCTRL_DRV8833
 
   // Steering 
   ESP32PWM::allocateTimer(2);
@@ -434,6 +450,9 @@ void initialMenu()
       case 10:
         tft.print("PID\ncalibrate");
         break;
+      case 11:
+        tft.print("Pair\nBluetooth");
+        break;
       default:
         menuSelected = 0;
         tft.print("Mode?");
@@ -468,6 +487,9 @@ void initialMenu()
         break;
       case 10:
         startCalibratePID();
+        break;
+      case 11:
+        pairBluetooth();
         break;
       }
     }
