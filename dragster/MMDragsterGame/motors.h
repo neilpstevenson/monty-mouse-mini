@@ -80,10 +80,17 @@ void Motors::setSpeed(int forwardSpeed)
       ledcWrite(motorLPwmChannel, dutyCycle);
 #endif //MOTORCTRL_TB6612
 #ifdef MOTORCTRL_DRV8833
+#ifdef MOTORCTRL_WITHBREAK
+      ledcWrite(motorA1PwmChannel, 256);
+      ledcWrite(motorA2PwmChannel, 255-dutyCycle);
+      ledcWrite(motorB1PwmChannel, 256);
+      ledcWrite(motorB2PwmChannel, 255-dutyCycle);
+#else //MOTORCTRL_WITHBREAK
       ledcWrite(motorA1PwmChannel, dutyCycle);
       ledcWrite(motorA2PwmChannel, 0);
       ledcWrite(motorB1PwmChannel, dutyCycle);
       ledcWrite(motorB2PwmChannel, 0);
+#endif //MOTORCTRL_WITHBREAK
 #endif //MOTORCTRL_DRV8833
     }
     else
@@ -99,10 +106,17 @@ void Motors::setSpeed(int forwardSpeed)
       ledcWrite(motorLPwmChannel, dutyCycle);
 #endif //MOTORCTRL_TB6612
 #ifdef MOTORCTRL_DRV8833
+#ifdef MOTORCTRL_WITHBREAK
+      ledcWrite(motorA1PwmChannel, 255-dutyCycle);
+      ledcWrite(motorA2PwmChannel, 256);
+      ledcWrite(motorB1PwmChannel, 255-dutyCycle);
+      ledcWrite(motorB2PwmChannel, 256);
+#else //MOTORCTRL_WITHBREAK
       ledcWrite(motorA1PwmChannel, 0);
       ledcWrite(motorA2PwmChannel, dutyCycle);
       ledcWrite(motorB1PwmChannel, 0);
       ledcWrite(motorB2PwmChannel, dutyCycle);
+#endif //MOTORCTRL_WITHBREAK
 #endif //MOTORCTRL_DRV8833
     }
 #endif // DEBUG_MOTORS
