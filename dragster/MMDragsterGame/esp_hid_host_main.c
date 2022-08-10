@@ -123,19 +123,19 @@ void hid_demo_task(void *pvParameters)
     vTaskDelete(NULL);
 }
 
-extern void pairBluetooth(void)
+extern void scanAndPairBluetooth(void)
 {
     esp_err_t ret;
 #if HID_HOST_MODE == HIDH_IDLE_MODE
     ESP_LOGE(TAG, "Please turn on BT HID host or BLE!");
     return;
 #endif
-    ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK( ret );
+//    ret = nvs_flash_init();
+//    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+//        ESP_ERROR_CHECK(nvs_flash_erase());
+//        ret = nvs_flash_init();
+//    }
+//    ESP_ERROR_CHECK( ret );
     ESP_LOGI(TAG, "setting hid gap, mode:%d", HID_HOST_MODE);
     ESP_ERROR_CHECK( esp_hid_gap_init(HID_HOST_MODE) );
 #if CONFIG_BT_BLE_ENABLED

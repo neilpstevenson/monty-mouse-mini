@@ -13,7 +13,7 @@ extern TFT_eSPI tft;
 extern int value[6];
 extern void plotPointers(void);
 extern void plotLinear(const char *label, int x, int y);
-extern "C" void pairBluetooth(void);
+extern void pairBluetooth(void);
 
 unsigned long accelTimeout;
 unsigned long startTime;
@@ -464,6 +464,8 @@ void initialMenu()
         break;
       case 11:
         pairBluetooth();
+        tft.fillScreen(TFT_GREEN);
+        delay(250);
         break;
       }
     }
