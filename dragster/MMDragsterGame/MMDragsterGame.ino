@@ -370,6 +370,7 @@ void initialMenu()
   tft.fillScreen(TFT_BLACK);
   tft.setCursor(0,0);
   tft.setTextSize(4);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);
   tft.print("Mode?");
 
   static int menuSelected = 0;
@@ -464,7 +465,6 @@ void initialMenu()
         break;
       case 11:
         pairBluetooth();
-        tft.fillScreen(TFT_GREEN);
         delay(250);
         break;
       }

@@ -9,9 +9,10 @@
 #include"esp_gap_bt_api.h"
 #include "esp_err.h"
 #include <BluetoothSerial.h>
+#include <TFT_eSPI.h> // TTGO T-Display library
+extern TFT_eSPI tft;
 
-extern "C" void scanAndPairBluetooth(void);
-
+#define BT_DISCOVER_TIME  5000
 #define REMOVE_BONDED_DEVICES 1   // <- Set to 0 to view all paired devices addresses, set to 1 to remove
 
 #define PAIR_MAX_DEVICES 20
@@ -75,38 +76,57 @@ BluetoothSerial SerialBT;
 extern void pairBluetooth(void)
 {
   removedPairedDevices(!REMOVE_BONDED_DEVICES);
-  //scanAndPairBluetooth();
 
-  SerialBT.begin("ESP32test", true); //Bluetooth device name
+  // Perform discovery. BluetoothSerial is used for convenience only
+  tft.fillScreen(TFT_BLACK);
+  tft.setCursor(0,0);
+  tft.setTextSize(4);
+  tft.setTextColor(TFT_GREEN, TFT_BLACK);
+  tft.print("Searching ...");
 
   // Scan synchronously
-  #define BT_DISCOVER_TIME  10000
   Serial.println("Starting discover...");
+  
+  SerialBT.begin("HammerTime", true); //Bluetooth device name
   BTScanResults *pResults = SerialBT.discover(BT_DISCOVER_TIME);
-  if (pResults)
+  
+  tft.fillScreen(TFT_BLACK);
+  tft.setCursor(0,0);
+  tft.setTextSize(4);
+  if (pResults && pResults->getCount())
   {
     pResults->dump(&Serial);
 
-    esp_err_t tError = esp_spp_connect(ESP_SPP_SEC_AUTHORIZE, ESP_SPP_ROLE_MASTER, 1, // remoteScn
-                                        *pResults->getDevice(0)->getAddress().getNative());
+    // Attempt to connect to the first
+    BTAdvertisedDevice* dev = pResults->getDevice(0);
+
+    esp_err_t tError = esp_spp_connect(ESP_SPP_SEC_AUTHENTICATE, ESP_SPP_ROLE_SLAVE, 1, // remoteScn
+                                        *dev->getAddress().getNative());
     if(ESP_OK == tError) 
     {
+      tft.setTextColor(TFT_GREEN, TFT_BLACK);
+      tft.print("Connected\n");
+      tft.setTextColor(TFT_WHITE, TFT_BLACK);
+      tft.print(dev->getName().c_str());
       Serial.println("Connected to device ok"); 
     } 
     else 
     {
+      tft.setTextColor(TFT_RED, TFT_BLACK);
+      tft.print("Failed to\nConnect");
       Serial.print("Failed to connect to device: ");
       Serial.println(tError);
     }
-    
 
-    // Attempt to connect to the first
-//    BTAdvertisedDevice* dev = pResults->getDevice(0);
-//    SerialBT.connect(*dev->getAddress().getNative());
+    //SerialBT.connect(*dev->getAddress().getNative());
     
     //esp_hidh_dev_open(dev.getAddress().getNative(), pResults->transport, pResults->ble.addr_type);
   }
   else
+  {
+    tft.setTextColor(TFT_RED, TFT_BLACK);
+    tft.print("None Found");
     Serial.println("Error on BT Scan, no result!");
-
+  }
+  //SerialBT.end();
 }
