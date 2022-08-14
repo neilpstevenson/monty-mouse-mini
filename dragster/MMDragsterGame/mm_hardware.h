@@ -1,5 +1,8 @@
 #define MOTORCTRL_DRV8833
 #define STEERINGCTRL_PCB
+#define HAS_ENCODERS
+//#define MOTORCTRL_TB6612
+//#define STEERINGCTRL_PROTO
 
 // the number of the motor pins
 #ifdef MOTORCTRL_TB6612
@@ -16,6 +19,18 @@ const int gpioMotorA2 = 2;
 const int gpioMotorB1 = 13;
 const int gpioMotorB2 = 12;
 #endif //MOTORCTRL_DRV8833
+
+#ifdef HAS_ENCODERS
+// Encoders
+const int gpioMotorEncoderRA = 26;
+const int gpioMotorEncoderRB = 27;
+const int gpioMotorEncoderLA = 38;
+const int gpioMotorEncoderLB = 37;
+
+const int encodeCountsPerRev = 6; // In half-quad mode
+const float wheelDiameter = 37.0;
+const float encoderDistanceCalibration = wheelDiameter * 3.14159 / encodeCountsPerRev; // approx 19.4;
+#endif // HAS_ENCODERS
 
 // setting PWM properties
 #ifdef MOTORCTRL_TB6612

@@ -1,5 +1,6 @@
 #include <PS4Controller.h>
 #include <ESP32Servo.h>
+#include <ESP32Encoder.h>
 #include <TFT_eSPI.h> // TTGO T-Display library
 
 #include "mm_hardware.h"
@@ -21,6 +22,9 @@ unsigned long segmentStartTime;
 unsigned long lastRunTime;
 unsigned long segmentLoopCount;
 Motors motors;
+#ifdef HAS_ENCODERS
+ESP32Encoder positionEncoder;
+#endif //HAS_ENCODERS
 
 Servo steeringServo;
 float pidInput = 0.0;
@@ -356,6 +360,11 @@ void setup()
   steeringServo.setPeriodHertz(steeringServoFreq);
   steeringServo.attach(gpioSteeringServo, 500, 2500);
 
+  // Encoder
+#ifdef HAS_ENCODERS
+  positionEncoder.attachHalfQuad(gpioMotorEncoderRA, gpioMotorEncoderRB);
+#endif //HAS_ENCODERS
+
   // PS4 controller
   //PS4.begin("44:17:93:89:84:6a"); // this esp32
   PS4.begin();  // default MAC
@@ -426,6 +435,9 @@ void initialMenu()
         tft.print("PID\ncalibrate");
         break;
       case 11:
+        tft.print("Distance\ncalibrate");
+        break;
+      case 12:
         tft.print("Pair\nBluetooth");
         break;
       default:
@@ -457,15 +469,16 @@ void initialMenu()
         startProfileDisarmed();
         break;
       case 9:
-        manualAutoSteer = false;
         startSteeringCalibrate();
         break;
       case 10:
         startCalibratePID();
         break;
       case 11:
+        startDistanceCalibrate();
+        break;
+      case 12:
         pairBluetooth();
-        delay(250);
         break;
       }
     }
@@ -589,6 +602,12 @@ void manualControl()
       ++startFinishCount;
       Serial.printf("Start/Finish triggered %d times\n", startFinishCount);
     }
+
+    // Display position
+#ifdef HAS_ENCODERS
+    int64_t positionRaw = positionEncoder.getCount();
+    Serial.printf("Position: %lld (%dmm)\n", positionRaw, (int)(positionRaw*encoderDistanceCalibration));
+#endif //HAS_ENCODERS
   }
 }
 
@@ -693,6 +712,94 @@ void steeringCalibrate()
     
     // Print the sensors
     Serial.printf("%d %d %d %d\n", sensorRadius, sensorLeftLine, sensorRightLine, sensorStartFinish);
+  }
+}
+
+
+void startDistanceCalibrate()
+{
+  waitForPS4Controller();
+  tft.fillScreen(TFT_BLACK);
+  tft.setCursor(0,0);
+  tft.setTextSize(4);
+  tft.print("Position:\n");
+  manualAutoSteer  = false;
+  state = STATE_POSITION_CALIBRATE;
+  digitalWrite(gpioIlluminationLED, HIGH);
+}
+
+void positionCalibrate()
+{
+  if (!PS4.isConnected()) 
+  {
+    motors.stopAll();
+    state = STATE_INITIAL;
+    return;
+  }
+  else if(PS4.Triangle())
+  {
+    // Commit any changes
+    //writeConfig();
+    
+    // Switch to Race mode
+    motors.stopAll();
+    state = STATE_INITIAL;
+    return;
+  }
+  else
+  {
+    
+    int forward = PS4.LStickY();
+    if(forward > 2 || forward < -2)
+    {
+      motors.setSpeed(forward);
+    }
+    else
+    {
+      // Stop
+      motors.breakStop();
+    }
+
+    // Steering
+    if(!manualAutoSteer)
+    {
+      int steer = PS4.RStickX();
+      int steerServoPos =  hwconfig.steer_centre - steer;
+      steeringServo.write(steerServoPos > 500 ? steerServoPos : 500);
+    }
+  
+    // Get the current sensor data
+    int sensorStartFinish = analogRead(gpioSensorStartFinish);
+    int sensorRightLine = analogRead(gpioSensorRightLine);
+    int sensorLeftLine = analogRead(gpioSensorLeftLine);
+    int sensorRadius = analogRead(gpioSensorRadius);
+    
+    if(manualAutoSteer)
+    {
+      // Calculate the steering error
+      int steeringError = sensorLeftLine - sensorRightLine;
+      pidInput = steeringError;
+      float pidOutput = pid.compute();
+      //Serial.printf("PID in = %f, out = %f\n", pidInput, pidOutput);
+      
+      int steer = (int)pidOutput;
+      int steerServoPos = (forward >= -2 ? hwconfig.steer_centre + steer : hwconfig.steer_centre - steer);
+      steeringServo.write(steerServoPos > 500 ? steerServoPos : 500);
+    }
+    
+    // Print the sensors
+   // Serial.printf("%d %d %d %d\n", sensorRadius, sensorLeftLine, sensorRightLine, sensorStartFinish);
+
+    // Show the distance
+#ifdef HAS_ENCODERS
+    int64_t positionRaw = positionEncoder.getCount();
+    int calibratedPosnMm = (int)(positionRaw*encoderDistanceCalibration);
+    Serial.printf("Position: %lld (%dmm)\n", positionRaw, calibratedPosnMm);
+    tft.setCursor(20,64);
+    tft.print(calibratedPosnMm);
+    tft.print("mm     ");
+#endif //HAS_ENCODERS
+
   }
 }
 
@@ -1057,7 +1164,10 @@ void loop()
   case STATE_PID_CALIBRATE:
     calibratePID();
     break;
-
+  case STATE_POSITION_CALIBRATE:
+    positionCalibrate();
+    break;
+    
   default:
     state = STATE_INITIAL;
     break;
