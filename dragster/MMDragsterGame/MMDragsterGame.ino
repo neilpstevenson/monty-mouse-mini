@@ -20,6 +20,9 @@ unsigned long accelTimeout;
 unsigned long startTime;
 unsigned long segmentStartTime;
 unsigned long lastRunTime;
+#ifdef HAS_ENCODERS
+int lastRunDistanceMm;
+#endif //HAS_ENCODERS
 unsigned long segmentLoopCount;
 Motors motors;
 #ifdef HAS_ENCODERS
@@ -335,7 +338,7 @@ void setup()
 
   // Display
   tft.init();
-  tft.setRotation(3);
+  tft.setRotation(1);
   tft.fillScreen(TFT_BLACK);
 
   // Set up analog inputs
@@ -362,7 +365,7 @@ void setup()
 
   // Encoder
 #ifdef HAS_ENCODERS
-  positionEncoder.attachHalfQuad(gpioMotorEncoderRA, gpioMotorEncoderRB);
+  positionEncoder.attachFullQuad(gpioMotorEncoderRA, gpioMotorEncoderRB);
 #endif //HAS_ENCODERS
 
   // PS4 controller
@@ -528,6 +531,7 @@ void startManualControl()
   plotPointers();
 
   state = STATE_MANUAL;
+  digitalWrite(gpioIlluminationLED, HIGH);
 }
 
 void manualControl()
@@ -548,8 +552,6 @@ void manualControl()
   }
   else
   {
-    digitalWrite(gpioIlluminationLED, HIGH);
-    
     int forward = PS4.LStickY();
     if(forward > 2 || forward < -2)
     {
@@ -624,6 +626,7 @@ void startSteeringCalibrate()
   // Wait for menu button to be released
   while(PS4.Right())
     delay(10);
+  digitalWrite(gpioIlluminationLED, HIGH);
 }
 
 void steeringCalibrate()
@@ -670,8 +673,6 @@ void steeringCalibrate()
   }
   else
   {
-    digitalWrite(gpioIlluminationLED, HIGH);
-    
     int forward = PS4.LStickY();
     if(forward > 2 || forward < -2)
     {
@@ -726,6 +727,12 @@ void startDistanceCalibrate()
   manualAutoSteer  = false;
   state = STATE_POSITION_CALIBRATE;
   digitalWrite(gpioIlluminationLED, HIGH);
+
+  // Zero the counter
+#ifdef HAS_ENCODERS
+  positionEncoder.clearCount();
+#endif //HAS_ENCODERS
+
 }
 
 void positionCalibrate()
@@ -763,7 +770,7 @@ void positionCalibrate()
     // Steering
     if(!manualAutoSteer)
     {
-      int steer = PS4.RStickX();
+      int steer = steeringGainManual * PS4.RStickX();
       int steerServoPos =  hwconfig.steer_centre - steer;
       steeringServo.write(steerServoPos > 500 ? steerServoPos : 500);
     }
@@ -812,6 +819,7 @@ void startCalibratePID()
   // Wait for menu button to be released
   while(PS4.Right())
     delay(10);
+  digitalWrite(gpioIlluminationLED, HIGH);
 }
 
 void displayPID()
@@ -871,8 +879,6 @@ void calibratePID()
   }
   else
   {
-    digitalWrite(gpioIlluminationLED, HIGH);
-    
     int forward = PS4.LStickY();
     if(forward > 2 || forward < -2)
     {
@@ -946,6 +952,10 @@ void startProfileRun()
 {
   startTime = millis();
   startFinishCount = 0;
+  // Zero the counter
+#ifdef HAS_ENCODERS
+  positionEncoder.clearCount();
+#endif //HAS_ENCODERS
   state = STATE_PROFILE_RUN;
   startProfileRunSegment();
 }
@@ -1037,6 +1047,8 @@ void profileRun()
       {
         // Taken too long, abort
         motors.breakStop();
+        // Light off
+        digitalWrite(gpioIlluminationLED, LOW);
         // Restart
         state = STATE_INITIAL;
       }
@@ -1091,6 +1103,9 @@ void profileSensorActions()
       }
       tft.fillScreen(TFT_RED);
       lastRunTime = 0;
+#ifdef HAS_ENCODERS
+      lastRunDistanceMm = 0;
+#endif //HAS_ENCODERS
     }
     else
     {
@@ -1105,6 +1120,10 @@ void profileSensorActions()
       if(startFinishCount >= startFinishCountLimit)
       {
         lastRunTime = millis() - startTime;
+#ifdef HAS_ENCODERS
+        int64_t positionRaw = positionEncoder.getCount();
+        lastRunDistanceMm = (int)(positionRaw*encoderDistanceCalibration);
+#endif //HAS_ENCODERS
         
         if(pCurrentRunProfile->pStop)
         {
@@ -1129,12 +1148,19 @@ void displayLastRunTime()
     // Display end result
     tft.fillScreen(TFT_BLUE);
     // Show elapsed time
-    tft.setCursor(0,0);
-    tft.setTextSize(4);
+    tft.setCursor(10,8);
+    tft.setTextSize(6);
     tft.setTextColor(TFT_BLACK, TFT_BLUE);
     tft.print(lastRunTime);
     tft.print("mS");
+    // Show the distance
+#ifdef HAS_ENCODERS
+    tft.setCursor(10,60);
+    tft.print(lastRunDistanceMm);
+    tft.print("mm");
+#endif //HAS_ENCODERS
     tft.setTextColor(TFT_GREEN, TFT_BLACK);
+    
 }
 
 void loop() 

@@ -4,11 +4,11 @@ static const int startFinishCountLimit = 1;
 static const int steeringGainManual = 8;
 
 // Marker thresholds
-const int markerHighThreshold = (int)(0.65 * 4096); //3400;
-const int markerLowThreshold = (int)(0.60 * 4096); //2900;
+const int markerHighThreshold = (int)(0.80 * 4096); //3400;
+const int markerLowThreshold = (int)(0.75 * 4096); //2900;
 
 // Max valid line detectors before we abort the run
-const int maxLineDetectorThreshold = (int)(0.9 * 4096); //4000;
+const int maxLineDetectorThreshold = (int)(0.95 * 4096); //4000;
 
 // Flags
 const uint8_t FLAG_DISPLAY_LAST_RUN = 0x01;

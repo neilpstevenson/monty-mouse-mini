@@ -27,9 +27,9 @@ const int gpioMotorEncoderRB = 27;
 const int gpioMotorEncoderLA = 38;
 const int gpioMotorEncoderLB = 37;
 
-const int encodeCountsPerRev = 6; // In half-quad mode
+const int encodeCountsPerRev = 12; // 12 in full quad, 6 in half-quad mode
 const float wheelDiameter = 37.0;
-const float encoderDistanceCalibration = wheelDiameter * 3.14159 / encodeCountsPerRev; // approx 19.4;
+const float encoderDistanceCalibration = wheelDiameter * 3.14159 / encodeCountsPerRev; // approx 9.7mm/count;
 #endif // HAS_ENCODERS
 
 // setting PWM properties
