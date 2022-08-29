@@ -16,6 +16,10 @@ extern void plotPointers(void);
 extern void plotLinear(const char *label, int x, int y);
 extern void pairBluetooth(void);
 
+int previousPosition; // mm
+unsigned long previousPositionTime; // mS
+int actualSpeed;  // mm/S
+
 unsigned long accelTimeout;
 unsigned long startTime;
 unsigned long segmentStartTime;
@@ -38,267 +42,655 @@ int startFinishCount = 0;
 bool manualAutoSteer = false;
 DRAGSTER_NVRAM_T hwconfig;
 
+/////////////////////////////////////
 // Common profiles
 RunProfile_t allRunProfileStopDone = {
-    FLAG_DISPLAY_LAST_RUN | FLAG_IGNORE_MARKERS,
+    "Done",
+    FLAG_DISPLAY_LAST_RUN | FLAG_IGNORE_MARKERS | FLAG_BREAK_STOP,
     10000,
-    -5,
+    0,
+    0,
+    0,
     0,
     0,
     0
 };
 
+/////////////////////////////////////
 // Crazy Max speed
 RunProfile_t crazyRunProfileStop = {
-    FLAG_IGNORE_MARKERS,
-    800,
-    -80,
-    -30,
+    "Stop",
+    FLAG_IGNORE_MARKERS | FLAG_END_ON_MIN_SPEED,
+    2000,
+    -60,
+    -60,
+    0,
+    0,
     &allRunProfileStopDone,
     0
 };
 RunProfile_t crazyRunProfileCoast = {
+    "Coast S",
+    FLAG_COAST_ON_MAX_SPEED,
+    1000,
+    20,
+    20,
     0,
-    2000,
-    30,
-    30,
+    500,
     0,
     &crazyRunProfileStop
 };
 RunProfile_t crazyRunProfileDecel = {
-    0,
-    400,
-    -50,
-    30,
+    "Decel",
+    FLAG_END_ON_MIN_SPEED,
+    1000,
+    -100,
+    -100,
+    (courseTimedDistance + courseTargetStoppingDistance),
+    1000,
     &crazyRunProfileCoast,
     &crazyRunProfileStop
 };
-RunProfile_t crazyRunProfileSteady = {
+RunProfile_t crazyRunProfileMidCruise = {
+    "Cruise",
     0,
-    950, //650,
+    3000,
     128,
     128,
+    (courseTimedDistance + courseTargetStoppingDistance)*3/5, // Max 3/5ths of track
+    0,  // Unlimited speed
     &crazyRunProfileDecel,
     &crazyRunProfileStop
 };
 RunProfile_t crazyRunProfile = {
+    "Accel",
     FLAG_IGNORE_MARKERS,
     200,
     50,
     128,
-    &crazyRunProfileSteady,
+    (courseTimedDistance + courseTargetStoppingDistance)/3, // Max 1/3rd of track
+    0,  // Unlimited
+    &crazyRunProfileMidCruise,
     &crazyRunProfileStop
 };
-
-// Very fast speed
-RunProfile_t veryFastRunProfileStop = {
-    FLAG_IGNORE_MARKERS,
-    800,
-    -80,
-    -40,
-    &allRunProfileStopDone,
-    0
-};
-RunProfile_t veryFastRunProfileCoast = {
-    0,
-    2000,
-    30,
-    30,
-    0,
-    &veryFastRunProfileStop
-};
-RunProfile_t veryFastRunProfileDecel = {
-    0,
-    500, //350,
-    -50,
-    30,
-    &veryFastRunProfileCoast,
-    &veryFastRunProfileStop
-};
-RunProfile_t veryFastRunProfileSteady = {
-    0,
-    1150, //900,
-    100,
-    100,
-    &veryFastRunProfileDecel,
-    &veryFastRunProfileStop
-};
-RunProfile_t veryFastRunProfile = {
-    FLAG_IGNORE_MARKERS,
-    200,
-    30,
-    100,
-    &veryFastRunProfileSteady,
-    &veryFastRunProfileStop
-};
-
-// Very fast speed - short course
-RunProfile_t veryFastShortRunProfileStop = {
+/*
+RunProfile_t crazyRunProfileStop = {
+    "",
     FLAG_IGNORE_MARKERS,
     800,
     -80,
     -30,
+    0,
+    0,
     &allRunProfileStopDone,
     0
 };
-RunProfile_t veryFastShortRunProfileCoast = {
+RunProfile_t crazyRunProfileCoast = {
+    "",
     0,
     2000,
     30,
     30,
     0,
-    &veryFastShortRunProfileStop
-};
-RunProfile_t veryFastShortRunProfileDecel = {
     0,
-    350,
+    0,
+    &crazyRunProfileStop
+};
+RunProfile_t crazyRunProfileDecel = {
+    "",
+    0,
+    400,
     -50,
     30,
-    &veryFastShortRunProfileCoast,
-    &veryFastShortRunProfileStop
-};
-RunProfile_t veryFastShortRunProfileSteady = {
     0,
-    900,
-    100,
-    100,
-    &veryFastShortRunProfileDecel,
-    &veryFastShortRunProfileStop
+    0,
+    &crazyRunProfileCoast,
+    &crazyRunProfileStop
 };
-RunProfile_t veryFastShortRunProfile = {
+RunProfile_t crazyRunProfileSteady = {
+    "",
+    0,
+    950, //650,
+    128,
+    128,
+    0,
+    0,
+    &crazyRunProfileDecel,
+    &crazyRunProfileStop
+};
+RunProfile_t crazyRunProfile = {
+    "",
+    FLAG_IGNORE_MARKERS,
+    200,
+    50,
+    128,
+    0,
+    0,
+    &crazyRunProfileSteady,
+    &crazyRunProfileStop
+};
+*/
+
+/////////////////////////////////////
+// Very fast speed
+RunProfile_t veryFastRunProfileStop = {
+    "Stop",
+    FLAG_IGNORE_MARKERS | FLAG_END_ON_MIN_SPEED,
+    2000,
+    -70,
+    -70,
+    0,
+    0,
+    &allRunProfileStopDone,
+    0
+};
+RunProfile_t veryFastRunProfileCoast = {
+    "Coast S",
+    FLAG_COAST_ON_MAX_SPEED,
+    1000,
+    20,
+    20,
+    0,
+    500,
+    0,
+    &veryFastRunProfileStop
+};
+RunProfile_t veryFastRunProfileDecel = {
+    "Decel",
+    FLAG_END_ON_MIN_SPEED,
+    1000,
+    -70,
+    -70,
+    (courseTimedDistance + courseTargetStoppingDistance),
+    500,
+    &veryFastRunProfileCoast,
+    &veryFastRunProfileStop
+};
+RunProfile_t veryFastRunProfileMidCruise = {
+    "Cruise",
+    FLAG_COAST_ON_MAX_SPEED,
+    3000,
+    100,
+    100,
+    (courseTimedDistance + courseTargetStoppingDistance)*3/5, // Max 3/5th of track
+    4000,
+    &veryFastRunProfileDecel,
+    &veryFastRunProfileStop
+};
+RunProfile_t veryFastRunProfile = {
+    "Accel",
+    FLAG_IGNORE_MARKERS | FLAG_END_ON_MAX_SPEED,
+    200,
+    40,
+    100,
+    (courseTimedDistance + courseTargetStoppingDistance)/3, // Max 1/3rd of track
+    4000,
+    &veryFastRunProfileMidCruise,
+    &veryFastRunProfileStop
+};
+/*
+RunProfile_t veryFastRunProfileStop = {
+    "",
+    FLAG_IGNORE_MARKERS,
+    800,
+    -80,
+    -40,
+    0,
+    0,
+    &allRunProfileStopDone,
+    0
+};
+RunProfile_t veryFastRunProfileCoast = {
+    "",
+    0,
+    2000,
+    30,
+    30,
+    0,
+    0,
+    0,
+    &veryFastRunProfileStop
+};
+RunProfile_t veryFastRunProfileDecel = {
+    "",
+    0,
+    500, //350,
+    -50,
+    30,
+    0,
+    0,
+    &veryFastRunProfileCoast,
+    &veryFastRunProfileStop
+};
+RunProfile_t veryFastRunProfileSteady = {
+    "",
+    0,
+    1150, //900,
+    100,
+    100,
+    0,
+    0,
+    &veryFastRunProfileDecel,
+    &veryFastRunProfileStop
+};
+RunProfile_t veryFastRunProfile = {
+    "",
     FLAG_IGNORE_MARKERS,
     200,
     30,
     100,
-    &veryFastShortRunProfileSteady,
-    &veryFastShortRunProfileStop
+    0,
+    0,
+    &veryFastRunProfileSteady,
+    &veryFastRunProfileStop
 };
+*/
 
+/////////////////////////////////////
 // Fast speed
 RunProfile_t fastRunProfileStop = {
-    FLAG_IGNORE_MARKERS,
-    800,
-    -40,
+    "Stop",
+    FLAG_IGNORE_MARKERS | FLAG_END_ON_MIN_SPEED,
+    2000,
     -70,
+    -70,
+    0,
+    0,
     &allRunProfileStopDone,
     0
 };
 RunProfile_t fastRunProfileCoast = {
+    "Coast S",
+    FLAG_COAST_ON_MAX_SPEED,
+    1000,
+    20,
+    20,
     0,
-    2000,
-    15,
-    15,
+    500,
     0,
     &fastRunProfileStop
 };
 RunProfile_t fastRunProfileDecel = {
-    0,
-    400,
-    -40,
-    15,
+    "Decel",
+    FLAG_END_ON_MIN_SPEED,
+    1000,
+    -70,
+    -70,
+    (courseTimedDistance + courseTargetStoppingDistance),
+    500,
     &fastRunProfileCoast,
     &fastRunProfileStop
 };
-RunProfile_t fastRunProfileSteady = {
-    0,
-    1500, //1450,
+RunProfile_t fastRunProfileMidCruise = {
+    "Cruise",
+    FLAG_COAST_ON_MAX_SPEED,
+    3000,
     70,
     70,
+    (courseTimedDistance + courseTargetStoppingDistance)*3/4, // Max 3/4 of track
+    3000,
     &fastRunProfileDecel,
     &fastRunProfileStop
 };
 RunProfile_t fastRunProfile = {
+    "Accel",
+    FLAG_IGNORE_MARKERS | FLAG_END_ON_MAX_SPEED,
+    200,
+    40,
+    70,
+    (courseTimedDistance + courseTargetStoppingDistance)/4, // Max 1/4 of track
+    3000,
+    &fastRunProfileMidCruise,
+    &fastRunProfileStop
+};
+/*
+RunProfile_t fastRunProfileStop = {
+    "",
+    FLAG_IGNORE_MARKERS,
+    800,
+    -40,
+    -70,
+    0,
+    0,
+    &allRunProfileStopDone,
+    0
+};
+RunProfile_t fastRunProfileCoast = {
+    "",
+    0,
+    2000,
+    15,
+    15,
+    0,
+    0,
+    0,
+    &fastRunProfileStop
+};
+RunProfile_t fastRunProfileDecel = {
+    "",
+    0,
+    400,
+    -40,
+    15,
+    0,
+    0,
+    &fastRunProfileCoast,
+    &fastRunProfileStop
+};
+RunProfile_t fastRunProfileSteady = {
+    "",
+    0,
+    1500, //1450,
+    70,
+    70,
+    0,
+    0,
+    &fastRunProfileDecel,
+    &fastRunProfileStop
+};
+RunProfile_t fastRunProfile = {
+    "",
     FLAG_IGNORE_MARKERS,
     200,
     30,
     70,
+    0,
+    0,
     &fastRunProfileSteady,
     &fastRunProfileStop
 };
+*/
 
+/////////////////////////////////////
 // Medium speed
 RunProfile_t mediumRunProfileStop = {
-    FLAG_IGNORE_MARKERS,
-    700,
-    -15,
-    -53,
+    "Stop",
+    FLAG_IGNORE_MARKERS | FLAG_END_ON_MIN_SPEED,
+    2000,
+    -50,
+    -50,
+    0,
+    0,
     &allRunProfileStopDone,
     0
 };
 RunProfile_t mediumRunProfileCoast = {
+    "Coast S",
+    FLAG_COAST_ON_MAX_SPEED,
+    1000,
+    20,
+    20,
     0,
-    2000,
-    13,
-    13,
+    500,
     0,
     &mediumRunProfileStop
 };
 RunProfile_t mediumRunProfileDecel = {
-    0,
-    150,
-    -15,
-    13,
+    "Decel",
+    FLAG_END_ON_MIN_SPEED,
+    1000,
+    -50,
+    -50,
+    (courseTimedDistance + courseTargetStoppingDistance),
+    500,
     &mediumRunProfileCoast,
     &mediumRunProfileStop
 };
-RunProfile_t mediumRunProfileSteady = {
-    0,
-    2500, //1600,
+RunProfile_t mediumRunProfileMidCruise = {
+    "Cruise",
+    FLAG_COAST_ON_MAX_SPEED,
+    3000,
     52,
     52,
+    (courseTimedDistance + courseTargetStoppingDistance)*3/4, // Max 3/4 of track
+    3000,
     &mediumRunProfileDecel,
     &mediumRunProfileStop
 };
 RunProfile_t mediumRunProfile = {
+    "Accel",
+    FLAG_IGNORE_MARKERS | FLAG_END_ON_MAX_SPEED,
+    200,
+    40,
+    52,
+    (courseTimedDistance + courseTargetStoppingDistance)/4, // Max 1/4 of track
+    3000,
+    &mediumRunProfileMidCruise,
+    &mediumRunProfileStop
+};
+/*
+RunProfile_t mediumRunProfileStop = {
+    "",
+    FLAG_IGNORE_MARKERS,
+    700,
+    -15,
+    -53,
+    0,
+    0,
+    &allRunProfileStopDone,
+    0
+};
+RunProfile_t mediumRunProfileCoast = {
+    "",
+    0,
+    2000,
+    13,
+    13,
+    0,
+    0,
+    0,
+    &mediumRunProfileStop
+};
+RunProfile_t mediumRunProfileDecel = {
+    "",
+    0,
+    150,
+    -15,
+    13,
+    0,
+    0,
+    &mediumRunProfileCoast,
+    &mediumRunProfileStop
+};
+RunProfile_t mediumRunProfileSteady = {
+    "",
+    0,
+    2500, //1600,
+    52,
+    52,
+    0,
+    0,
+    &mediumRunProfileDecel,
+    &mediumRunProfileStop
+};
+RunProfile_t mediumRunProfile = {
+    "",
     FLAG_IGNORE_MARKERS,
     150,
     13,
     53,
+    0,
+    0,
     &mediumRunProfileSteady,
     &mediumRunProfileStop
 };
+*/
 
+/////////////////////////////////////
 // Slow speed
 RunProfile_t slowRunProfileStop = {
-    FLAG_IGNORE_MARKERS,
+    "Stop",
+    FLAG_IGNORE_MARKERS | FLAG_END_ON_MIN_SPEED,
     1000,
-    -20,
-    -5,
+    -40,
+    -40,
+    0,
+    0,
     &allRunProfileStopDone,
     0
 };
 RunProfile_t slowRunProfileCoast = {
+    "Coast S",
+    FLAG_COAST_ON_MAX_SPEED,
+    2000,
+    20,
+    20,
+    0,
+    500,
+    0,
+    &slowRunProfileStop
+};
+RunProfile_t slowRunProfileDecel = {
+    "Decel",
+    FLAG_END_ON_MIN_SPEED,
+    4000,
+    -30,
+    -30,
+    (courseTimedDistance + courseTargetStoppingDistance),
+    500,
+    &slowRunProfileCoast,
+    &slowRunProfileStop
+};
+RunProfile_t slowRunProfileMidCruise = {
+    "Cruise",
+    FLAG_COAST_ON_MAX_SPEED,
+    4000,
+    40,
+    40,
+    (courseTimedDistance + courseTargetStoppingDistance)*4/5, // Max 4/5th of track
+    2000,
+    &slowRunProfileDecel,
+    &slowRunProfileStop
+};
+RunProfile_t slowRunProfile = {
+    "Accel",
+    FLAG_IGNORE_MARKERS | FLAG_END_ON_MAX_SPEED,
+    1000,
+    40,
+    40,
+    (courseTimedDistance + courseTargetStoppingDistance)/5, // Max 1/5th of track
+    2000,
+    &slowRunProfileMidCruise,
+    &slowRunProfileStop
+};
+
+/*
+RunProfile_t slowRunProfileStop = {
+    "",
+    FLAG_IGNORE_MARKERS,
+    1000,
+    -20,
+    -5,
+    0,
+    0,
+    &allRunProfileStopDone,
+    0
+};
+RunProfile_t slowRunProfileCoast = {
+    "",
     0,
     2000,
     10,
     10,
     0,
+    0,
+    0,
     &slowRunProfileStop
 };
 RunProfile_t slowRunProfileDecel = {
+    "",
     0,
     200,
     -5,
     10,
+    0,
+    0,
     &slowRunProfileCoast,
     &slowRunProfileStop
 };
 RunProfile_t slowRunProfileSteady = {
+    "",
     0,
     1800,
     40,
     40,
+    0,
+    0,
     &slowRunProfileDecel,
     &slowRunProfileStop
 };
 RunProfile_t slowRunProfile = {
+    "",
     FLAG_IGNORE_MARKERS,
     200,
     10,
     40,
+    0,
+    0,
     &slowRunProfileSteady,
     &slowRunProfileStop
 };
+*/
+
+/////////////////////////////////////
+// Test profile
+RunProfile_t testRunProfileStop = {
+    "",
+    FLAG_IGNORE_MARKERS,
+    800,
+    -80,
+    -30,
+    0,
+    0,
+    &allRunProfileStopDone,
+    0
+};
+RunProfile_t testRunProfileCoast = {
+    "",
+    0,
+    2000,
+    0,
+    0,
+    0,
+    0,
+    0,
+    &testRunProfileStop
+};
+RunProfile_t testRunProfileDecel = {
+    "",
+    0,
+    350,
+    -50,
+    10,
+    courseTimedDistance,
+    0,
+    &testRunProfileCoast,
+    &testRunProfileStop
+};
+RunProfile_t testRunProfileSteady = {
+    "",
+    0,
+    2000,
+    100,
+    100,
+    courseTimedDistance/2,
+    0,
+    &testRunProfileDecel,
+    &testRunProfileStop
+};
+RunProfile_t testRunProfile = {
+    "",
+    FLAG_IGNORE_MARKERS,
+    200,
+    30,
+    100,
+    0,
+    0,
+    &testRunProfileSteady,
+    &testRunProfileStop
+};
+
+/////////////////////////////////////
 
 RunProfile_t *pCurrentRunProfile;
 
@@ -428,8 +820,8 @@ void initialMenu()
         pCurrentRunProfile = &crazyRunProfile;
         break;
       case 8:
-        tft.print("Race\nVery Fast\nShort");
-        pCurrentRunProfile = &veryFastShortRunProfile;
+        tft.print("Test Run");
+        pCurrentRunProfile = &testRunProfile;
         break;
       case 9:
         tft.print("Steering\ncalibrate");
@@ -964,9 +1356,18 @@ void startProfileRunSegment()
 {
   segmentStartTime = millis();
   segmentLoopCount = 0;
-  motors.setSpeed(pCurrentRunProfile->startSpeed);
+  motors.setSpeed(pCurrentRunProfile->startPower);
   if(lastRunTime && (pCurrentRunProfile->flags & FLAG_DISPLAY_LAST_RUN))
+  {
     displayLastRunTime();
+  }
+  else
+  {
+    tft.setCursor(0,0);
+    tft.setTextSize(6);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.printf("%-20s", pCurrentRunProfile->name);
+  }
 }
 
 void startProfileStopping()
@@ -1032,10 +1433,38 @@ void profileRun()
     segmentLoopCount++;
     
     // Check if we've gone far enough
-    int32_t elapsed = millis() - segmentStartTime;
-    if(elapsed >= pCurrentRunProfile->runTimeMs)
+    int32_t timeNow = millis();
+    int32_t elapsed = timeNow - segmentStartTime;
+
+#ifdef HAS_ENCODERS
+    int64_t positionRaw = positionEncoder.getCount();
+    int calibratedPosnMm = (int)(positionRaw*encoderDistanceCalibration);
+
+    // Assess speed
+    int32_t elapsedSpeed = timeNow - previousPositionTime;
+    if(elapsedSpeed >= speedAssessmentTime)
+    {
+        actualSpeed = (calibratedPosnMm - previousPosition) * 1000 / elapsedSpeed;
+        
+        previousPositionTime = timeNow;
+        previousPosition = calibratedPosnMm;
+
+        printf("%d %d\n", calibratedPosnMm, actualSpeed);
+    }
+#endif //HAS_ENCODERS
+    
+    if(elapsed >= pCurrentRunProfile->runTimeMs 
+#ifdef HAS_ENCODERS
+      || (pCurrentRunProfile->endDistance && calibratedPosnMm >= pCurrentRunProfile->endDistance)
+      || ((pCurrentRunProfile->flags & FLAG_END_ON_MAX_SPEED) && actualSpeed >= pCurrentRunProfile->targetSpeed)
+      || ((pCurrentRunProfile->flags & FLAG_END_ON_MIN_SPEED) && actualSpeed <= pCurrentRunProfile->targetSpeed)
+#endif //HAS_ENCODERS
+      )
     {
       printf("Loop: %ul in %ulmS => %fmS/loop\n", segmentLoopCount, elapsed, ((float)elapsed)/segmentLoopCount);
+#ifdef HAS_ENCODERS
+      printf("Ended %s at %dmm, speed %dmm/S\n", pCurrentRunProfile->name, calibratedPosnMm, actualSpeed);
+#endif //HAS_ENCODERS
       
       // Next stage
       if(pCurrentRunProfile->pNext)
@@ -1053,10 +1482,22 @@ void profileRun()
         state = STATE_INITIAL;
       }
     }
+#ifdef HAS_ENCODERS
+    else if ((pCurrentRunProfile->flags & FLAG_COAST_ON_MAX_SPEED) && actualSpeed >= pCurrentRunProfile->targetSpeed)
+    {
+      motors.setSpeed(0);
+      profileSensorActions();
+    }
+#endif //HAS_ENCODERS
+    else if (pCurrentRunProfile->flags & FLAG_BREAK_STOP)
+    {
+      motors.breakStop();
+      profileSensorActions();
+    }
     else
     {
       // Accelerate to required new speed
-      int32_t newSpeed = (pCurrentRunProfile->startSpeed + ((int32_t)pCurrentRunProfile->endSpeed - (int32_t)pCurrentRunProfile->startSpeed) * elapsed / pCurrentRunProfile->runTimeMs);
+      int32_t newSpeed = (pCurrentRunProfile->startPower + ((int32_t)pCurrentRunProfile->endPower - (int32_t)pCurrentRunProfile->startPower) * elapsed / pCurrentRunProfile->runTimeMs);
       motors.setSpeed(newSpeed);
       profileSensorActions();
     }

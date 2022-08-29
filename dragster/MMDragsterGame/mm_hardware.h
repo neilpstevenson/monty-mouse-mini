@@ -28,8 +28,8 @@ const int gpioMotorEncoderLA = 38;
 const int gpioMotorEncoderLB = 37;
 
 const int encodeCountsPerRev = 12; // 12 in full quad, 6 in half-quad mode
-const float wheelDiameter = 37.0;
-const float encoderDistanceCalibration = wheelDiameter * 3.14159 / encodeCountsPerRev; // approx 9.7mm/count;
+const float wheelDiameter = -32.0; //37.0;
+const float encoderDistanceCalibration = wheelDiameter * 3.14159 / encodeCountsPerRev; // approx 8.4mm (32mm wheel) or 19.7mm (37mm)/count;
 #endif // HAS_ENCODERS
 
 // setting PWM properties
@@ -44,7 +44,7 @@ const int motorB1PwmChannel = 2;
 const int motorB2PwmChannel = 3;
 #endif //MOTORCTRL_DRV8833
 
-const int pwmFreq = 20000;
+const int pwmFreq = 5000; //20000;
 const int pwmResolution = 8; //bits
 
 // TTGO Display buttons
