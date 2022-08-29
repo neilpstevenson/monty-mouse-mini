@@ -62,8 +62,8 @@ RunProfile_t crazyRunProfileStop = {
     "Stop",
     FLAG_IGNORE_MARKERS | FLAG_END_ON_MIN_SPEED,
     2000,
-    -60,
-    -60,
+    -70,
+    -70,
     0,
     0,
     &allRunProfileStopDone,
@@ -84,8 +84,8 @@ RunProfile_t crazyRunProfileDecel = {
     "Decel",
     FLAG_END_ON_MIN_SPEED,
     1000,
-    -100,
-    -100,
+    -60,
+    -60,
     (courseTimedDistance + courseTargetStoppingDistance),
     1000,
     &crazyRunProfileCoast,
@@ -97,7 +97,7 @@ RunProfile_t crazyRunProfileMidCruise = {
     3000,
     128,
     128,
-    (courseTimedDistance + courseTargetStoppingDistance)*3/5, // Max 3/5ths of track
+    (courseTimedDistance + courseTargetStoppingDistance)*1/2, // Max 1/2 of track
     0,  // Unlimited speed
     &crazyRunProfileDecel,
     &crazyRunProfileStop
