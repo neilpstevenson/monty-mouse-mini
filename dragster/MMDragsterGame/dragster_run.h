@@ -31,7 +31,7 @@ typedef struct RunProfile
   int16_t startPower;
   int16_t endPower;   // So acceleration is (endPower - startPower)/runTimeMs/1000
   int16_t endDistance; // if not zero, end this segment if distance reading gets to this
-  int16_t targetSpeed; // set flags to determine behaviour
+  int16_t targetSpeed; // mm/S
   struct RunProfile *pNext;
   struct RunProfile *pStop;
 } RunProfile_t;
@@ -49,3 +49,33 @@ typedef enum
   STATE_POSITION_CALIBRATE
 } EStates;
 EStates state;
+
+typedef struct RunStats
+{
+  static const int maxStats = 16;
+  int numStats;
+  struct {
+    uint16_t timeMs;
+    int16_t distanceMm;
+    int16_t speedMmS;
+  } stats[maxStats];
+
+  void clear()
+  {
+    numStats = 0;
+  }
+  
+  void log(uint16_t timeMs,
+          int16_t distanceMm,
+          int16_t speedMmS)
+  {
+    if(numStats < maxStats)
+    {
+      stats[numStats].timeMs = timeMs;
+      stats[numStats].distanceMm = distanceMm;
+      stats[numStats].speedMmS = speedMmS;
+      numStats++;
+    }
+  }
+  
+} RunStats_t;

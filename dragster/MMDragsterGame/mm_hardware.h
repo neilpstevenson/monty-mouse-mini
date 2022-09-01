@@ -44,7 +44,7 @@ const int motorB1PwmChannel = 2;
 const int motorB2PwmChannel = 3;
 #endif //MOTORCTRL_DRV8833
 
-const int pwmFreq = 5000; //20000;
+const int pwmFreq = 5000; // 5000; 20000;
 const int pwmResolution = 8; //bits
 
 // TTGO Display buttons
