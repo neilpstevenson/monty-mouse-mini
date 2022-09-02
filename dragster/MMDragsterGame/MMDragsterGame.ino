@@ -16,10 +16,6 @@ extern void plotPointers(void);
 extern void plotLinear(const char *label, int x, int y);
 extern void pairBluetooth(void);
 
-int previousPosition; // mm
-unsigned long previousPositionTime; // mS
-int actualSpeed;  // mm/S
-
 unsigned long accelTimeout;
 unsigned long startTime;
 unsigned long segmentStartTime;
@@ -31,6 +27,7 @@ unsigned long segmentLoopCount;
 Motors motors;
 #ifdef HAS_ENCODERS
 ESP32Encoder positionEncoder;
+Speeds_t speed;
 #endif //HAS_ENCODERS
 RunStats_t stats;
 
@@ -63,8 +60,8 @@ RunProfile_t crazyRunProfileStop = {
     "Stop",
     FLAG_IGNORE_MARKERS | FLAG_END_ON_MIN_SPEED,
     2000,
-    -70,
-    -70,
+    -55,
+    -55,
     0,
     0,
     &allRunProfileStopDone,
@@ -77,18 +74,18 @@ RunProfile_t crazyRunProfileCoast = {
     20,
     20,
     0,
-    2000,
+    2500,
     0,
     &crazyRunProfileStop
 };
 RunProfile_t crazyRunProfileDecel = {
     "Decel",
     FLAG_END_ON_MIN_SPEED,
-    1000,
-    -60,
-    -60,
+    800,
+    -20,
+    -90,
     (courseTimedDistance + courseTargetStoppingDistance),
-    2000,
+    2500,
     &crazyRunProfileCoast,
     &crazyRunProfileStop
 };
@@ -106,7 +103,7 @@ RunProfile_t crazyRunProfileAccel = {
 RunProfile_t crazyRunProfile = {
     "Set Off",
     FLAG_IGNORE_MARKERS,
-    200,
+    600,
     80,
     128,
     0,
@@ -121,8 +118,8 @@ RunProfile_t veryFastRunProfileStop = {
     "Stop",
     FLAG_IGNORE_MARKERS | FLAG_END_ON_MIN_SPEED,
     2000,
-    -75,
-    -75,
+    -55,
+    -55,
     0,
     0,
     &allRunProfileStopDone,
@@ -135,18 +132,18 @@ RunProfile_t veryFastRunProfileCoast = {
     20,
     20,
     0,
-    2000,
+    2500,
     0,
     &veryFastRunProfileStop
 };
 RunProfile_t veryFastRunProfileDecel = {
     "Decel",
     FLAG_END_ON_MIN_SPEED,
-    2000,
-    -60,
-    -60,
+    800,
+    -20,
+    -90,
     (courseTimedDistance + courseTargetStoppingDistance),
-    2000,
+    2500,
     &veryFastRunProfileCoast,
     &veryFastRunProfileStop
 };
@@ -175,7 +172,7 @@ RunProfile_t veryFastRunProfileAccel = {
 RunProfile_t veryFastRunProfile = {
     "Accel",
     FLAG_IGNORE_MARKERS | FLAG_END_ON_MAX_SPEED,
-    200,
+    500,
     40,
     100,
     0,
@@ -190,8 +187,8 @@ RunProfile_t fastRunProfileStop = {
     "Stop",
     FLAG_IGNORE_MARKERS | FLAG_END_ON_MIN_SPEED,
     2000,
-    -70,
-    -70,
+    -55,
+    -55,
     0,
     0,
     &allRunProfileStopDone,
@@ -212,8 +209,8 @@ RunProfile_t fastRunProfileDecel = {
     "Decel",
     FLAG_END_ON_MIN_SPEED,
     1000,
-    -70,
-    -70,
+    -55,
+    -55,
     (courseTimedDistance + courseTargetStoppingDistance),
     500,
     &fastRunProfileCoast,
@@ -505,17 +502,18 @@ void initialMenu()
   tft.print("Mode?");
 
   static int menuSelected = 0;
+  bool forceDisplay = false;
 
   // Ensure repeat last menu
   if(menuSelected)
-    menuSelected--;
+  {
+    forceDisplay = true;
+  }
   
   Debounce selectSwitch(LOW, HIGH, false);
   Debounce enterSwitch(LOW, HIGH, false);
   while(!state)
   {
-    bool forceDisplay = false;
-    
     // Allow quick peak at stats
     if(PS4.Triangle())
     {
@@ -523,19 +521,20 @@ void initialMenu()
       while(PS4.Triangle())
         delay(50);
       // Ensure repeat last menu
-      if(menuSelected)
-        menuSelected--;
       forceDisplay = true;
     }
     
     if(selectSwitch.isTriggered(digitalRead(gpioSelectButton) && !PS4.Down()) || forceDisplay)
     {
-      forceDisplay = false;
+      if(!forceDisplay)
+        ++menuSelected;
+      else
+        forceDisplay = false;
       tft.fillScreen(TFT_BLACK);
       tft.setCursor(0,0);
       tft.setTextSize(4);
       tft.setTextColor(TFT_WHITE, TFT_BLACK);
-      switch(++menuSelected)
+      switch(menuSelected)
       {
       case 1:
         tft.print("Manual\nControl");
@@ -581,8 +580,6 @@ void initialMenu()
         break;
       case 13:
         tft.print("Show\nStats");
-        // Ensure repeat last menu
-        forceDisplay = true;
         break;
       default:
         menuSelected = 0;
@@ -626,6 +623,8 @@ void initialMenu()
         break;
       case 13:
         displayStats();
+        // Ensure repeat last menu
+        forceDisplay = true;
         break;
       }
     }
@@ -669,7 +668,15 @@ void displayStats()
     while(!PS4.Triangle())
       delay(50);
 }
- 
+
+#ifdef HAS_ENCODERS
+int getCalibratedPosnMm()
+{
+    int64_t positionRaw = positionEncoder.getCount();
+    return (int)(positionRaw*encoderDistanceCalibration);
+}
+#endif
+
 void startManualControl()
 {
   waitForPS4Controller();
@@ -881,7 +888,9 @@ void startDistanceCalibrate()
   tft.fillScreen(TFT_BLACK);
   tft.setCursor(0,0);
   tft.setTextSize(4);
-  tft.print("Position:\n");
+  tft.print("Position:");
+  tft.setCursor(0,64);
+  tft.print("Speed:");
   manualAutoSteer  = false;
   state = STATE_POSITION_CALIBRATE;
   digitalWrite(gpioIlluminationLED, HIGH);
@@ -957,12 +966,17 @@ void positionCalibrate()
 
     // Show the distance
 #ifdef HAS_ENCODERS
-    int64_t positionRaw = positionEncoder.getCount();
-    int calibratedPosnMm = (int)(positionRaw*encoderDistanceCalibration);
-    Serial.printf("Position: %lld (%dmm)\n", positionRaw, calibratedPosnMm);
-    tft.setCursor(20,64);
-    tft.print(calibratedPosnMm);
-    tft.print("mm     ");
+    // Assess speed and position
+    int calibratedPosnMm = getCalibratedPosnMm();
+    speed.logDistance(calibratedPosnMm);
+    int16_t actualSpeed = speed.getSpeed();
+    
+    //Serial.printf("Position: %lld (%dmm), Speed=%dmm/S\n", positionRaw, calibratedPosnMm, actualSpeed);
+    Serial.printf("%d %d\n", calibratedPosnMm, actualSpeed);
+    tft.setCursor(10,32);
+    tft.printf("%6dmm", calibratedPosnMm);
+    tft.setCursor(10,96);
+    tft.printf("%5dmm/S", actualSpeed);
 #endif //HAS_ENCODERS
 
   }
@@ -1132,6 +1146,7 @@ void startProfileRunSegment()
   }
   else
   {
+#ifdef DEBUG_ON_DISPLAY    
     tft.setCursor(0,0);
     tft.setTextSize(6);
     // Cycle colours
@@ -1140,6 +1155,7 @@ void startProfileRunSegment()
     else
       tft.setTextColor(TFT_WHITE, TFT_BLUE);
     tft.printf("%-12s", pCurrentRunProfile->name);
+#endif //DEBUG_ON_DISPLAY    
   }
 }
 
@@ -1210,20 +1226,12 @@ void profileRun()
     int32_t elapsed = timeNow - segmentStartTime;
 
 #ifdef HAS_ENCODERS
-    int64_t positionRaw = positionEncoder.getCount();
-    int calibratedPosnMm = (int)(positionRaw*encoderDistanceCalibration);
-
-    // Assess speed
-    int32_t elapsedSpeed = timeNow - previousPositionTime;
-    if(elapsedSpeed >= speedAssessmentTime)
-    {
-        actualSpeed = (calibratedPosnMm - previousPosition) * 1000 / elapsedSpeed;
-        
-        previousPositionTime = timeNow;
-        previousPosition = calibratedPosnMm;
-
-        printf("%d %d\n", calibratedPosnMm, actualSpeed);
-    }
+    // Assess speed and position
+    int calibratedPosnMm = getCalibratedPosnMm();
+    speed.logDistance(calibratedPosnMm);
+    int16_t actualSpeed = speed.getSpeed();
+    
+    //printf("%d %d\n", calibratedPosnMm, actualSpeed);
 #endif //HAS_ENCODERS
     
     if(elapsed >= pCurrentRunProfile->runTimeMs 
@@ -1235,9 +1243,11 @@ void profileRun()
       )
     {
 
-      printf("Loop: %ul in %ulmS => %fmS/loop\n", segmentLoopCount, elapsed, ((float)elapsed)/segmentLoopCount);
 #ifdef HAS_ENCODERS
+#ifdef DEBUG_LOOP_SERIAL_INFO    
+      printf("Loop: %ul in %ulmS => %fmS/loop\n", segmentLoopCount, elapsed, ((float)elapsed)/segmentLoopCount);
       printf("Ended %s at %dmm, speed %dmm/S\n", pCurrentRunProfile->name, calibratedPosnMm, actualSpeed);
+#endif //DEBUG_LOOP_SERIAL_INFO    
       
       // Log the latest stats
       stats.log(timeNow - startTime, calibratedPosnMm, actualSpeed);
@@ -1308,9 +1318,8 @@ void profileSensorActions()
       // Log the latest stats
 #ifdef HAS_ENCODERS
       lastRunTime = millis() - startTime;
-      int64_t positionRaw = positionEncoder.getCount();
-      lastRunDistanceMm = (int)(positionRaw*encoderDistanceCalibration);
-      stats.log(lastRunTime, lastRunDistanceMm, actualSpeed);
+      lastRunDistanceMm = getCalibratedPosnMm();
+      stats.log(lastRunTime, lastRunDistanceMm, speed.getSpeed());
 #endif //HAS_ENCODERS
       
       // We've lost all contact wtih the line, just abort stop
@@ -1348,11 +1357,9 @@ void profileSensorActions()
       {
         lastRunTime = millis() - startTime;
 #ifdef HAS_ENCODERS
-        int64_t positionRaw = positionEncoder.getCount();
-        lastRunDistanceMm = (int)(positionRaw*encoderDistanceCalibration);
-        
+        lastRunDistanceMm = getCalibratedPosnMm();
         // Log the latest stats
-        stats.log(lastRunTime, lastRunDistanceMm, actualSpeed);
+        stats.log(lastRunTime, lastRunDistanceMm, speed.getSpeed());
 #endif //HAS_ENCODERS
         
         if(pCurrentRunProfile->pStop)

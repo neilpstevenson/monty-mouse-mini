@@ -28,7 +28,7 @@ const int gpioMotorEncoderLA = 38;
 const int gpioMotorEncoderLB = 37;
 
 const int encodeCountsPerRev = 12; // 12 in full quad, 6 in half-quad mode
-const float wheelDiameter = -32.0; //37.0;
+const float wheelDiameter = -32.09; //37.0;
 const float encoderDistanceCalibration = wheelDiameter * 3.14159 / encodeCountsPerRev; // approx 8.4mm (32mm wheel) or 19.7mm (37mm)/count;
 #endif // HAS_ENCODERS
 

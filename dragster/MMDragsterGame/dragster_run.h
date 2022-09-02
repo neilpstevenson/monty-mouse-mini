@@ -6,8 +6,6 @@ static const int steeringGainManual = 8;
 static const int courseTimedDistance = 3780;          // 5625;
 static const int courseTargetStoppingDistance = 400;  // 600;
 
-static const int speedAssessmentTime = 50; // Interval overwhich speed is assessed, in mS
-
 // Marker thresholds
 const int markerHighThreshold = (int)(0.92 * 4096); //3400;
 const int markerLowThreshold = (int)(0.88 * 4096); //2900;
@@ -49,6 +47,35 @@ typedef enum
   STATE_POSITION_CALIBRATE
 } EStates;
 EStates state;
+
+
+typedef struct Speeds
+{ 
+  static const int maxReadings = 24;
+  struct {
+    uint16_t timeMs;
+    int16_t distanceMm;
+  } readings[maxReadings];    // Index 0 is the oldest entry
+
+  void logDistance(int16_t distanceMm)
+  {
+    // Copy all readings down one
+    memcpy(readings, readings+1, sizeof(*readings) * (maxReadings-1));
+    // Log new reading
+    readings[maxReadings-1].timeMs = millis();
+    readings[maxReadings-1].distanceMm = distanceMm;
+ 
+  }
+  
+  int16_t getSpeed()
+  {
+    // Use first and last readings as speed assessment
+    if(readings[0].timeMs)
+      return (readings[maxReadings-1].distanceMm - readings[0].distanceMm) * 1000 / (readings[maxReadings-1].timeMs - readings[0].timeMs);
+    else
+      return 0;
+  }
+} Speeds_t;
 
 typedef struct RunStats
 {
