@@ -1,8 +1,8 @@
-#define MOTORCTRL_DRV8833
-#define STEERINGCTRL_PCB
-#define HAS_ENCODERS
-//#define MOTORCTRL_TB6612
-//#define STEERINGCTRL_PROTO
+//#define MOTORCTRL_DRV8833
+//#define STEERINGCTRL_PCB
+//#define HAS_ENCODERS
+#define MOTORCTRL_TB6612
+#define STEERINGCTRL_PROTO
 
 // the number of the motor pins
 #ifdef MOTORCTRL_TB6612
