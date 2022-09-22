@@ -3,12 +3,12 @@
 static const int startFinishCountLimit = 1;
 static const int steeringGainManual = 8;
 
-static const int courseTimedDistance = 3780;          // 5625;
+static const int courseTimedDistance = 5625; //3780;          // 5625;
 static const int courseTargetStoppingDistance = 400;  // 600;
 
 // Marker thresholds
-const int markerHighThreshold = (int)(0.92 * 4096); //3400;
-const int markerLowThreshold = (int)(0.88 * 4096); //2900;
+const int markerHighThreshold = (int)(0.6 * 4096); //0.92;
+const int markerLowThreshold = (int)(0.5 * 4096); //0.88;
 
 // Max valid line detectors before we abort the run
 const int maxLineDetectorThreshold = (int)(0.99 * 4096); //4000;
