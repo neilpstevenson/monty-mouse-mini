@@ -1,3 +1,5 @@
+#pragma once
+
 typedef struct Speeds
 { 
   static const int maxReadings = 24;

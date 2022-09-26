@@ -1,3 +1,5 @@
+#pragma once
+
 typedef struct RunStats
 {
   static const int maxStats = 16;

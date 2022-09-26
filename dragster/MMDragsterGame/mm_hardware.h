@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 #define MOTORCTRL_DRV8833
 #define STEERINGCTRL_PCB
 #define HAS_ENCODERS
