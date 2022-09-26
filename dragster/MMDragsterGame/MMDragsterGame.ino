@@ -35,7 +35,12 @@ Servo steeringServo;
 float pidInput = 0.0;
 float pidSetpoint = 0.0;
 PID pid(PID_Kp, PID_Ki, PID_Kd, &pidInput, &pidSetpoint);
+
 Debounce startFinish(markerLowThreshold, markerHighThreshold, false);
+Debounce radiusMarker(markerLowThreshold, markerHighThreshold, false);
+Debounce selectSwitch(LOW, HIGH, false);
+Debounce enterSwitch(LOW, HIGH, false);
+
 int startFinishCount = 0;
 bool manualAutoSteer = false;
 DRAGSTER_NVRAM_T hwconfig;
@@ -579,8 +584,6 @@ void initialMenu()
     forceDisplay = true;
   }
   
-  Debounce selectSwitch(LOW, HIGH, false);
-  Debounce enterSwitch(LOW, HIGH, false);
   while(!state)
   {
     // Allow quick peak at stats
@@ -709,6 +712,7 @@ void initialMenu()
 
 void waitForPS4Controller()
 {
+#ifdef NO_PS4_REQUIRED  
     if(!PS4.isConnected()) 
     {
       tft.fillScreen(TFT_BLACK);
@@ -727,6 +731,7 @@ void waitForPS4Controller()
       //tft.fillScreen(TFT_BLACK);
     }
     Serial.println("PS4 controller connected.");
+#endif //NO_PS4_REQUIRED  
 }
 
 void displayStats()
@@ -1178,6 +1183,12 @@ void startProfileDisarmed()
   tft.setTextSize(4);
   tft.print("Press []\nto arm");
 
+  if(!PS4.isConnected())
+  {
+      // Light on - we're using this to trigger the start
+      digitalWrite(gpioIlluminationLED, HIGH);
+  }
+
   state = STATE_PROFILE_DISARMED;
 }
 
@@ -1241,8 +1252,12 @@ void startProfileStopping()
 
 void waitForProfileArmed()
 {
-    // Wait for Square button
-    if(PS4.Square())
+    // Wait for Square button 
+    // or button with radius sensor over white
+    int sensorRadius = analogRead(gpioSensorRadius);
+    //Serial.println(sensorRadius);
+    if(PS4.Square() || 
+       (selectSwitch.isTriggered(digitalRead(gpioSelectButton)) && sensorRadius < markerLowThreshold))
     {
       // Light on
       digitalWrite(gpioIlluminationLED, HIGH);
@@ -1260,7 +1275,10 @@ void waitForProfileGo()
     startFinishCount = 0;
     
     // Wait for Circle button
-    if(PS4.Circle())
+    // or manual trigger if no PS4 controller
+    int sensorRadius = analogRead(gpioSensorRadius);
+    if(PS4.Circle() ||
+       (!PS4.isConnected() && sensorRadius > markerHighThreshold))
     {
       startProfileRun();
       //tft.fillScreen(TFT_GREEN);
