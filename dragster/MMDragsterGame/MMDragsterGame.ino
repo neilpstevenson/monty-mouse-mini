@@ -1,20 +1,17 @@
 #include <PS4Controller.h>
 #include <ESP32Servo.h>
 #include <ESP32Encoder.h>
-#include <TFT_eSPI.h> // TTGO T-Display library
 
+#include "display.h"
 #include "mm_hardware.h"
 #include "pid.h"
 #include "debounce.h"
 #include "dragster_run.h"
 #include "nvram.h"
 #include "motors.h"
-
-extern TFT_eSPI tft;
-extern int value[6];
-extern void plotPointers(void);
-extern void plotLinear(const char *label, int x, int y);
-extern void pairBluetooth(void);
+#include "speeds.h"
+#include "run_stats.h"
+#include "bluetooth_mgmt.h"
 
 unsigned long accelTimeout;
 unsigned long startTime;
