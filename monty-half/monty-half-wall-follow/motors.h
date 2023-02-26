@@ -12,8 +12,13 @@ class Motor
     {
       pinMode(pinA, OUTPUT);
       pinMode(pinB, OUTPUT);
+      // Set initial state
+      analogWrite(pinA, 0);  // 255 = coast mode, 0 = break-mode
+      analogWrite(pinB, 0);
     }
 
+#define MOTORS_USE_COAST_MODE
+#ifdef MOTORS_USE_COAST_MODE
     // Set power, -255 to +255
     void setPower(int power)
     {
@@ -33,6 +38,27 @@ class Motor
         analogWrite(pinB, 255);
       }
     } 
+#else //MOTORS_USE_COAST_MODE
+    // Set power, -255 to +255
+    void setPower(int power)
+    {
+      // Break mode
+      if(power >= 0)
+      {
+        if(power > 255)
+          power = 255;
+        analogWrite(pinA, power);  // 255 = coast mode, 0 = break-mode
+        analogWrite(pinB, 0);
+      }
+      else
+      {
+        if(power < -255)
+          power = -255;
+        analogWrite(pinA, 0);
+        analogWrite(pinB, -power);
+      }
+    } 
+#endif //MOTORS_USE_COAST_MODE
 
     void stop(bool breakMode = false)
     {
