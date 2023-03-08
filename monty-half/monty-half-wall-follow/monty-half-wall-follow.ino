@@ -1,7 +1,7 @@
 //#include "mbed.h"
 //using namespace mbed;
 //using namespace rtos;
-
+#include <Adafruit_NeoPixel.h>
 #include "sensors.h"
 #include "motors.h"
 #include "quadrature.h"
@@ -12,6 +12,8 @@ Motors motors;
 
 Quadrature_encoder<8, 9> encoder_l;
 Quadrature_encoder<2, 3> encoder_r;
+
+Adafruit_NeoPixel pixels(1, neoPixel, NEO_GRB + NEO_KHZ800);
 
 /*
 DigitalOut frontleds(p14);
@@ -74,7 +76,7 @@ void forward(int distance, int speed)
   float start_pos_r = encoder_r.count() * encode_calibrate_r;
   motors.forwardPower(speed);
   while(encoder_r.count() * encode_calibrate_r - start_pos_r < distance &&
-        sensors.frontLeft().getCalibrated() < 90)
+        sensors.frontLeft().getCalibrated() < wall_follow_forward_min_distance)
   {
     delay(10);
     //Serial.print("FORWARD ");
@@ -124,8 +126,25 @@ void turn_right_90(int speed)
     //Serial.println();
     logSensors("RIGHT90");
   }
-  
 }
+
+void turn_right_180(int speed)
+{
+  // Rotate 90 degrees
+  float start_pos_l = encoder_l.count() * encode_calibrate_l;
+  float start_pos_r = encoder_r.count() * encode_calibrate_r;
+  motors.turn(0, -speed);
+
+  int required_dist_r = (int)(3.14159 * turning_diameter_mm);
+  
+  while(encoder_l.count() * encode_calibrate_l - start_pos_l <
+        (encoder_r.count() * encode_calibrate_r - start_pos_r + required_dist_r))
+  {
+    delay(10);
+    logSensors("RIGHT180");
+  }
+}
+
 
 void logSensors(const char *mode)
 {
@@ -149,14 +168,57 @@ void setup()
     Serial.begin(115200);
     //Scheduler.startLoop(readAdcLoop);
     //poller.start(readAdcLoop);
-    sensors.startSensors();
+
+    pixels.clear(); // Set all neopixels to 'off'
+
+    pinMode(buttonA, INPUT_PULLUP);
+    pinMode(buttonB, INPUT_PULLUP);
 }
 
 void loop() 
 {
     encoder_r.begin(pull_direction::up, resolution::full);
     encoder_l.begin(pull_direction::up, resolution::full);
-  
+
+    // Display starting flashes
+    bool triggered = false;
+    Serial.println("waiting");
+    for(int count = 0; !triggered; count++)
+    {
+      if(count % 30 == 0)
+      {
+        // On
+        pixels.setPixelColor(0, pixels.Color(8, 0, 0));
+        pixels.show();
+      }
+      else if(count % 30 == 15)
+      {
+        // Off
+        pixels.setPixelColor(0, pixels.Color(0, 0, 0));
+        pixels.show();
+      }
+
+      if(digitalRead(buttonB) == 0)
+      {
+        triggered = true;
+        Serial.println("triggered");
+      }
+      
+      delay(20);
+    }
+    Serial.println("running");
+
+    // Show starting
+    pixels.setPixelColor(0, pixels.Color(0, 16, 0));
+    pixels.show();
+    
+    sensors.startSensors();
+
+    delay(2000);
+
+    // Go
+    // Wait for 1 second
+    
     while(true) {
         //delay(20);
         //adcReadyEvent.wait_any(1);
@@ -278,59 +340,78 @@ void loop()
         // Line follower
         static float lastDist = 0.0;
         static const float interval = 1000.0 / WallSensors::adcPollIntervalMs;
-        static const float targetDist = 80.0;
+        //static const float targetDist = 80.0;
 
         float newDist = sensors.left().getCalibrated();
-        float error = (newDist - targetDist) * kp + (newDist - lastDist) * kd * interval;
+        float error = (newDist - wall_follow_left_distance) * kp + (newDist - lastDist) * kd * interval;
         lastDist = newDist;
         
         //Serial.println(error);
 
         // Gap on left?
-        if(newDist < 50)
+        if(newDist < wall_follow_left_gap_threshold)
         {
-          //Serial.println(" GAP LEFT");
           logSensors("GAP LEFT");
           digitalWrite(ledGreen, 1);
-          forward(60, turn_leadin_speed);
-          turn_left_90(turn_speed);
-          forward(10, turn_leadout_speed);
-/*
-            // proceed a bit then left turn
-            motors.forwardPower(128);
-            delay(300);
-            motors.turn(128, 128);
-            delay(200);
-            motors.forwardPower(128);
-            delay(200);
-*/            
-            // Reset PID
-            lastDist = sensors.left().getCalibrated();
+
+          // Move past the gap, so can turn
+          forward(40, turn_leadin_speed);
+          
+          // Loop to cope with 180 degree turns
+          for(int i = 0; sensors.left().getCalibrated() < wall_follow_left_gap_threshold && i < 2; i++)
+          {
+            //Serial.println(" GAP LEFT");
+            digitalWrite(ledGreen, 1);
+            forward(20, turn_leadin_speed);
+            turn_left_90(turn_speed);
             digitalWrite(ledGreen, 0);
+            forward(10, turn_leadout_speed);
+  /*
+              // proceed a bit then left turn
+              motors.forwardPower(128);
+              delay(300);
+              motors.turn(128, 128);
+              delay(200);
+              motors.forwardPower(128);
+              delay(200);
+  */            
+          }
+          
+          // Reset PID
+          lastDist = sensors.left().getCalibrated();
+          digitalWrite(ledGreen, 0);
         }
         else 
         // Blocked ahead
-        if(sensors.frontLeft().getCalibrated() > 80)
+        if(sensors.frontLeft().getCalibrated() > wall_follow_ahead_blocked_threshold)
         {
           //Serial.println(" BLOCKED AHEAD");
-          logSensors("BLOCKED");
           digitalWrite(ledRed, 1);
-          forward(20, turn_leadin_speed);
-          turn_right_90(turn_speed);
-          forward(20, turn_leadout_speed);
-          /*
-            // proceed a bit then right turn
-            motors.forwardPower(128);
-            delay(200);
-            motors.turn(128, -128);
-            delay(200);
-            */
-//            motors.forwardPower(128);
-//            delay(200);
 
-            // Reset PID
-            lastDist = sensors.left().getCalibrated();
+          // Do we need to do 90 degree or 180 degree?
+          if(sensors.right().getCalibrated() < wall_follow_right_gap_threshold)
+          {
+            // Ok to do 90 degree
+            logSensors("BLOCKED");
+            forward(30, turn_leadin_speed);
+            turn_right_90(turn_speed);
             digitalWrite(ledRed, 0);
+            
+            forward(10, turn_leadout_speed);
+          }
+          else
+          {
+            // Need to do 180 degree
+            logSensors("CUL-DE-SAC");
+            turn_right_180(turn_180_speed);
+            digitalWrite(ledRed, 0);
+            
+            forward(10, turn_leadout_speed);
+          }
+          
+          // Reset PID
+          lastDist = sensors.left().getCalibrated();
+          digitalWrite(ledRed, 0);
         }
         else
         

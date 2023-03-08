@@ -1,4 +1,5 @@
 #include <mbed.h>
+#include "config.h"
 //#include <pico/multicore.h>
 
 //using namespace mbed;
@@ -82,11 +83,11 @@ class WallSensors
   public:
     WallSensors()
     : frontLeds(p14), // TODO - Use hardware constants
-      sensorFL(p27),
-      sensorFR(p28),
+      sensorFL(p28, sensor_frontleft_min_raw, sensor_frontleft_max_raw),
+      sensorFR(p27, sensor_frontright_min_raw, sensor_frontright_max_raw),
       sideLeds(p15),
-      sensorL(p26),
-      sensorR(p29),
+      sensorL(p26, sensor_left_min_raw, sensor_left_max_raw),
+      sensorR(p29, sensor_right_min_raw, sensor_right_max_raw),
       sensorThread(osPriorityRealtime)
     {
       // Ensure LEDs off
