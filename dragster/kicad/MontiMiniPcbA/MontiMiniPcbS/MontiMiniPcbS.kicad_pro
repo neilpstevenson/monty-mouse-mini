@@ -33,9 +33,9 @@
         "other_text_thickness": 0.15,
         "other_text_upright": false,
         "pads": {
-          "drill": 0.762,
-          "height": 1.524,
-          "width": 1.524
+          "drill": 2.2,
+          "height": 2.2,
+          "width": 2.2
         },
         "silk_line_width": 0.15,
         "silk_text_italic": false,
@@ -55,7 +55,9 @@
           "width": 0.0
         }
       ],
-      "drc_exclusions": [],
+      "drc_exclusions": [
+        "courtyards_overlap|141548848|85742680|6b45d24f-dc3b-4e4a-aa75-668025f5989d|75017097-ad81-460e-8e63-829f55bbcd5b"
+      ],
       "meta": {
         "version": 2
       },
@@ -350,7 +352,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "MontiMiniPcbS.kicad_pro",
+    "filename": "MontiMiniPcbs.kicad_pro",
     "version": 1
   },
   "net_settings": {
