@@ -15,6 +15,76 @@ RunProfile_t allRunProfileStopDone = {
 };
 
 /////////////////////////////////////
+// Configured VV fast speed
+RunProfile_t vConfigFastRunProfileStop = {
+    "Stop",
+    FLAG_IGNORE_MARKERS | FLAG_END_ON_MIN_SPEED,
+    2000,
+    -55,
+    -55,
+    0,
+    0,
+    &allRunProfileStopDone,
+    0
+};
+RunProfile_t vConfigFastRunProfileCoast = {
+    "Coast S",
+    FLAG_COAST_ON_MAX_SPEED,
+    1000,
+    20,
+    20,
+    0,
+    2500,
+    0,
+    &vConfigFastRunProfileStop
+};
+RunProfile_t vConfigFastRunProfileDecel = {
+    "Decel",
+    FLAG_END_ON_MIN_SPEED,
+    700,
+    -20,
+    -90,
+    (courseTimedDistance + courseTargetStoppingDistance),
+    3000,
+    &vConfigFastRunProfileCoast,
+    &vConfigFastRunProfileStop
+};
+RunProfile_t vConfigFastRunProfileMidCruise = {
+    "Cruise",
+    FLAG_COAST_ON_MAX_SPEED,
+    2000,
+    105,
+    105,
+    int((courseTimedDistance + courseTargetStoppingDistance)*0.7), // Max 70% of track
+    4300,
+    &vConfigFastRunProfileDecel,
+    &vConfigFastRunProfileStop
+};
+RunProfile_t vConfigFastRunProfileAccel = {
+    "Accel",
+    FLAG_END_ON_MAX_SPEED,
+    2000,
+    105,
+    105,
+    int((courseTimedDistance + courseTargetStoppingDistance)*0.7), // Max 70% of track
+    4300,
+    &vConfigFastRunProfileMidCruise,
+    &vConfigFastRunProfileStop
+};
+RunProfile_t DragsterControl::vConfigFastRunProfile = {
+    "Start",
+    FLAG_IGNORE_MARKERS | FLAG_END_ON_MAX_SPEED,
+    500,
+    40,
+    105,
+    0,
+    4300,
+    &vConfigFastRunProfileAccel,
+    &vConfigFastRunProfileStop
+};
+
+
+/////////////////////////////////////
 // Crazy Max speed
 RunProfile_t crazyRunProfileStop = {
     "Stop",

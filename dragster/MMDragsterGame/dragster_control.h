@@ -49,6 +49,7 @@ class DragsterControl
 
     RunProfile_t *pCurrentRunProfile;
 
+    static RunProfile_t vConfigFastRunProfile;
     static RunProfile_t slowRunProfile;
     static RunProfile_t mediumRunProfile;
     static RunProfile_t fastRunProfile;
@@ -83,9 +84,12 @@ class DragsterControl
     
     void readConfig();
     void writeConfig();
+    void readRunParameters(DRAGSTER_NVRAM_RACE_CONFIG_T &runParams);
+    void writeRunParameters(DRAGSTER_NVRAM_RACE_CONFIG_T &runParams);
     void setup();
     void initialMenu();
     void waitForPS4Controller();
+    void editRunConfigParams();
     void displayStats();
     int getCalibratedPosnMm();
     void startManualControl();

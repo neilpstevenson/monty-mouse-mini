@@ -2,12 +2,13 @@
 
 void DragsterControl::readConfig()
 {
-  EEPROM.get(0, hwconfig);
+  EEPROM.get(NVRAM_DRAGSTER_NVRAM, hwconfig);
   if(hwconfig.magic != DRAGSTER_NVRAM_T::nvramMagic)
   {
     // Initialise the data
-    hwconfig.steer_centre = default_steeringServoCentre;
     hwconfig.magic = DRAGSTER_NVRAM_T::nvramMagic;
+    
+    hwconfig.steer_centre = default_steeringServoCentre;
     hwconfig.Kp = PID_Kp;
     hwconfig.Ki = PID_Ki;
     hwconfig.Kd = PID_Kd;
@@ -26,7 +27,49 @@ void DragsterControl::readConfig()
 void DragsterControl::writeConfig()
 {
   // Update config in NVRAM
-  EEPROM.put(0, hwconfig);
+  EEPROM.put(NVRAM_DRAGSTER_NVRAM, hwconfig);
+  EEPROM.commit();
+}
+
+void DragsterControl::readRunParameters(DRAGSTER_NVRAM_RACE_CONFIG_T &runParams)
+{
+  EEPROM.get(NVRAM_DRAGSTER_NVRAM_RACE_CONFIG, runParams);
+  if(runParams.magic != DRAGSTER_NVRAM_RACE_CONFIG_T::nvramMagic)
+  {
+    // Initialise the data
+    runParams.magic = DRAGSTER_NVRAM_RACE_CONFIG_T::nvramMagic;
+
+    // Course dimensions
+    runParams.timed_distance = courseTimedDistance;
+    runParams.target_stopping_distance = courseTargetStoppingDistance;
+
+    // Initial acceleration phase
+    runParams.initial_power = 40;
+    runParams.acceleration_distance = 500;
+    runParams.max_power = 105;
+    // Cruise
+    runParams.target_top_speed = 4300;
+    // Slowdown
+    runParams.slowdown_distance_from_end = 1400;
+    runParams.initial_deceleration_power = -20;
+    runParams.max_deceleration_power = -90;
+    runParams.target_end_speed = 3000;
+    // Stop
+    runParams.break_deceleration_power = -55;
+    
+    writeRunParameters(runParams);
+    Serial.println("Initialised NVRAM Run Params");
+  }
+  else
+  {
+    Serial.println("Reading Run Params from NVRAM");
+  }
+}
+
+void DragsterControl::writeRunParameters(DRAGSTER_NVRAM_RACE_CONFIG_T &runParams)
+{
+  // Update config in NVRAM
+  EEPROM.put(NVRAM_DRAGSTER_NVRAM_RACE_CONFIG, runParams);
   EEPROM.commit();
 }
 
@@ -64,7 +107,7 @@ void DragsterControl::setup()
   PS4.begin();  // default MAC
 
   // Get the peristent config data
-  EEPROM.begin(sizeof(hwconfig));
+  EEPROM.begin(NVRAM_MAX_SIZE);
   readConfig();
 }
 
@@ -116,46 +159,86 @@ void DragsterControl::initialMenu()
         tft.print("Manual\nAuto steer");
         break;
       case 3:
+        tft.print("Race\nUse Config");
+        pCurrentRunProfile = &vConfigFastRunProfile;
+        // Load up config params
+        {
+          DRAGSTER_NVRAM_RACE_CONFIG_T runParams;
+          readRunParameters(runParams);
+
+          // Configure the run
+          // Start
+          vConfigFastRunProfile.startPower = runParams.initial_power;
+          vConfigFastRunProfile.endPower = runParams.max_power;
+          vConfigFastRunProfile.endDistance = runParams.acceleration_distance;
+          vConfigFastRunProfile.targetSpeed = runParams.target_top_speed;
+          // Accel
+          vConfigFastRunProfile.pNext->startPower = runParams.max_power;
+          vConfigFastRunProfile.pNext->endPower = runParams.max_power;
+          vConfigFastRunProfile.pNext->endDistance = (runParams.timed_distance - runParams.slowdown_distance_from_end);
+          vConfigFastRunProfile.pNext->targetSpeed = runParams.target_top_speed;
+          // Mid Cruise
+          vConfigFastRunProfile.pNext->pNext->startPower = runParams.max_power / 2;
+          vConfigFastRunProfile.pNext->pNext->endPower = runParams.max_power / 2;
+          vConfigFastRunProfile.pNext->pNext->endDistance = (runParams.timed_distance - runParams.slowdown_distance_from_end);
+          vConfigFastRunProfile.pNext->pNext->targetSpeed = runParams.target_top_speed;
+          // Decel
+          vConfigFastRunProfile.pNext->pNext->pNext->startPower = runParams.initial_deceleration_power;
+          vConfigFastRunProfile.pNext->pNext->pNext->endPower = runParams.max_deceleration_power;
+          vConfigFastRunProfile.pNext->pNext->pNext->endDistance = (runParams.timed_distance + runParams.target_stopping_distance);
+          vConfigFastRunProfile.pNext->pNext->pNext->targetSpeed = runParams.target_end_speed;
+          // Coast to line
+          vConfigFastRunProfile.pNext->pNext->pNext->pNext->endDistance = (runParams.timed_distance + runParams.target_stopping_distance);
+          vConfigFastRunProfile.pNext->pNext->pNext->pNext->targetSpeed = runParams.target_end_speed;
+          // Stop
+          vConfigFastRunProfile.pStop->startPower = runParams.break_deceleration_power;
+          vConfigFastRunProfile.pStop->endPower = runParams.break_deceleration_power;
+        }
+        break;
+      case 4:
         tft.print("Race\nSlow");
         pCurrentRunProfile = &slowRunProfile;
         break;
-      case 4:
+      case 5:
         tft.print("Race\nMedium");
         pCurrentRunProfile = &mediumRunProfile;
         break;
-      case 5:
+      case 6:
         tft.print("Race\nFast");
         pCurrentRunProfile = &fastRunProfile;
         break;
-      case 6:
+      case 7:
         tft.print("Race\nVery Fast");
         pCurrentRunProfile = &veryFastRunProfile;
         break;
-      case 7:
+      case 8:
         tft.print("Race\nVV Fast");
         pCurrentRunProfile = &vVFastRunProfile;
         break;
-      case 8:
+      case 9:
         tft.print("Race\nCrazy Fast");
         pCurrentRunProfile = &crazyRunProfile;
         break;
-      case 9:
+      case 10:
         tft.print("Test Run");
         pCurrentRunProfile = &testRunProfile;
         break;
-      case 10:
+      case 11:
         tft.print("Steering\ncalibrate");
         break;
-      case 11:
+      case 12:
         tft.print("PID\ncalibrate");
         break;
-      case 12:
+      case 13:
         tft.print("Distance\ncalibrate");
         break;
-      case 13:
+      case 14:
         tft.print("Pair\nBluetooth");
         break;
-      case 14:
+      case 15:
+        tft.print("Edit\nRun params");
+        break;
+      case 16:
         tft.print("Show\nStats");
         break;
       default:
@@ -185,21 +268,27 @@ void DragsterControl::initialMenu()
       case 7:
       case 8:
       case 9:
+      case 10:
         startProfileDisarmed();
         break;
-      case 10:
+      case 11:
         startSteeringCalibrate();
         break;
-      case 11:
+      case 12:
         startCalibratePID();
         break;
-      case 12:
+      case 13:
         startDistanceCalibrate();
         break;
-      case 13:
+      case 14:
         pairBluetooth();
         break;
-      case 14:
+      case 15:
+        editRunConfigParams();
+        // Ensure repeat last menu
+        forceDisplay = true;
+        break;
+      case 16:
         displayStats();
         // Ensure repeat last menu
         forceDisplay = true;
@@ -233,6 +322,145 @@ void DragsterControl::waitForPS4Controller()
     }
     Serial.println("PS4 controller connected.");
 #endif //NO_PS4_REQUIRED  
+}
+
+void DragsterControl::editRunConfigParams()
+{
+    int param = 0;
+    bool changed = true;
+    int16_t *pParam;
+    int16_t increment = 0;
+    const char *name = 0;
+    const char *unit = 0;
+
+    // Wait for key releases before we start
+    while(PS4.Up() || PS4.Down() || PS4.Left() || PS4.Right()) 
+    {
+      delay(10);
+    }
+
+    DRAGSTER_NVRAM_RACE_CONFIG_T runParams;
+    readRunParameters(runParams);
+    
+    while(!PS4.Triangle())
+    {
+      switch(param)
+      {
+        case 0: pParam = &runParams.timed_distance;
+                name = "Timed\nDistance";
+                unit = "mm";
+                increment = 10;
+                break;
+        case 1: pParam = &runParams.target_stopping_distance;
+                name = "Stopping\nDistance";
+                unit = "mm";
+                increment = 10;
+                break;
+        case 2: pParam = &runParams.initial_power;
+                name = "Initial\nPower";
+                unit = "";
+                increment = 1;
+                break;
+        case 3: pParam = &runParams.acceleration_distance;
+                name = "Acceleration\nDistance";
+                unit = "mm";
+                increment = 10;
+                break;
+        case 4: pParam = &runParams.max_power;
+                name = "Max\nPower";
+                unit = "";
+                increment = 1;
+                break;
+        case 5: pParam = &runParams.target_top_speed;
+                name = "Top\nSpeed";
+                unit = "mm/s";
+                increment = 10;
+                break;
+        case 6: pParam = &runParams.slowdown_distance_from_end;
+                name = "Slowdown\nDistance";
+                unit = "mm";
+                increment = 10;
+                break;
+        case 7: pParam = &runParams.initial_deceleration_power;
+                name = "Initial\nDecel Power";
+                unit = "";
+                increment = 1;
+                break;
+        case 8: pParam = &runParams.max_deceleration_power;
+                name = "Max\nDecel Power";
+                unit = "";
+                increment = 1;
+                break;
+        case 9: pParam = &runParams.target_end_speed;
+                name = "Target\nEnd Speed";
+                unit = "mm/s";
+                increment = 10;
+                break;
+        case 10: pParam = &runParams.break_deceleration_power;
+                name = "Break\nDecel Power";
+                unit = "";
+                increment = 1;
+                break;
+        case -1:
+                param = 10;
+                continue;
+        default:
+                param = 0;
+                continue;
+      }
+
+      if(changed)
+      {
+        tft.fillScreen(TFT_BLACK);
+        tft.setCursor(0,0);
+        tft.setTextSize(3);
+        tft.printf("%s\n\n", name);
+        tft.setTextSize(4);
+        tft.printf("  %d%s\n", *pParam, unit);
+        changed = false;
+      }
+
+      if(PS4.Right())
+      {
+        *pParam += increment;
+        delay(100);
+        changed = true;
+      }
+      else if(PS4.Left())
+      {
+        *pParam -= increment;
+        delay(100);
+        changed = true;
+      }
+      else if(PS4.Down())
+      {
+        param++;
+        changed = true;
+        // Wait for button release
+        while(PS4.Down())
+        {
+          delay(10);
+        }
+      }
+      else if(PS4.Up())
+      {
+        param--;
+        changed = true;
+        // Wait for button release
+        while(PS4.Up())
+        {
+          delay(10);
+        }
+
+      }
+      else
+      {
+        delay(10);
+      }
+    }
+
+    // Save the results
+    writeRunParameters(runParams);
 }
 
 void DragsterControl::displayStats()
