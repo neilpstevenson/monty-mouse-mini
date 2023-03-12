@@ -217,7 +217,7 @@ void loop()
     delay(2000);
 
     // Go
-    // Wait for 1 second
+    bool justTurned = false;
     
     while(true) {
         //delay(20);
@@ -355,31 +355,28 @@ void loop()
           digitalWrite(ledGreen, 1);
 
           // Move past the gap, so can turn
-          forward(40, turn_leadin_speed);
-          
-          // Loop to cope with 180 degree turns
-          for(int i = 0; sensors.left().getCalibrated() < wall_follow_left_gap_threshold && i < 2; i++)
+          if(!justTurned)
           {
-            //Serial.println(" GAP LEFT");
-            digitalWrite(ledGreen, 1);
-            forward(20, turn_leadin_speed);
-            turn_left_90(turn_speed);
-            digitalWrite(ledGreen, 0);
-            forward(10, turn_leadout_speed);
-  /*
-              // proceed a bit then left turn
-              motors.forwardPower(128);
-              delay(300);
-              motors.turn(128, 128);
-              delay(200);
-              motors.forwardPower(128);
-              delay(200);
-  */            
+            // Need to move wheels into the gap
+            forward(60, turn_leadin_speed);
           }
+          else
+          {
+            // Wheels already in gap, just need a bit of clearance
+            forward(20, turn_leadin_speed);
+          }          
+
+          // Turn
+          turn_left_90(turn_speed);
+
+          digitalWrite(ledGreen, 0);
+
+          // Straighten up
+          forward(10, turn_leadout_speed);
           
           // Reset PID
           lastDist = sensors.left().getCalibrated();
-          digitalWrite(ledGreen, 0);
+          justTurned = true;
         }
         else 
         // Blocked ahead
@@ -395,6 +392,7 @@ void loop()
             logSensors("BLOCKED");
             forward(30, turn_leadin_speed);
             turn_right_90(turn_speed);
+            
             digitalWrite(ledRed, 0);
             
             forward(10, turn_leadout_speed);
@@ -404,14 +402,15 @@ void loop()
             // Need to do 180 degree
             logSensors("CUL-DE-SAC");
             turn_right_180(turn_180_speed);
+
             digitalWrite(ledRed, 0);
             
             forward(10, turn_leadout_speed);
           }
-          
+
           // Reset PID
           lastDist = sensors.left().getCalibrated();
-          digitalWrite(ledRed, 0);
+          justTurned = true;
         }
         else
         
@@ -419,6 +418,7 @@ void loop()
           // Continue ahead
           logSensors("AHEAD");
           motors.turn(forward_speed, -error);
+          justTurned = false;
         }
       
         // Wall follower approach

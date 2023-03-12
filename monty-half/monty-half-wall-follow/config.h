@@ -6,7 +6,7 @@ static const float kd = 0.01;
 static const float encode_calibrate_l = 0.132;
 static const float encode_calibrate_r = 0.132;
 
-static const float turning_diameter_mm = 39.0;  // Bigger means turns more
+static const float turning_diameter_mm = 40.0;  // Bigger means turns more
 
 static const int forward_speed = 128;
 static const int turn_leadin_speed = 64;
