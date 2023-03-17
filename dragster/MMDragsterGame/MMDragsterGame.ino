@@ -111,7 +111,7 @@ RunProfile_t veryFastRunProfileCoast = {
 };
 RunProfile_t veryFastRunProfileDecel = {
     0,
-    500, //350,
+    600, //500, //350,
     -50,
     30,
     &veryFastRunProfileCoast,
@@ -119,7 +119,7 @@ RunProfile_t veryFastRunProfileDecel = {
 };
 RunProfile_t veryFastRunProfileSteady = {
     0,
-    1150, //900,
+    1050, //1150, //900,
     100,
     100,
     &veryFastRunProfileDecel,
@@ -153,7 +153,7 @@ RunProfile_t veryFastShortRunProfileCoast = {
 };
 RunProfile_t veryFastShortRunProfileDecel = {
     0,
-    350,
+    450, //350,
     -50,
     30,
     &veryFastShortRunProfileCoast,
@@ -161,7 +161,7 @@ RunProfile_t veryFastShortRunProfileDecel = {
 };
 RunProfile_t veryFastShortRunProfileSteady = {
     0,
-    900,
+    800, //900,
     100,
     100,
     &veryFastShortRunProfileDecel,
