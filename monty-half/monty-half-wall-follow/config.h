@@ -15,8 +15,8 @@ static const int turn_leadout_speed = 64;
 static const int turn_180_speed = 64;
 
 // Distance parameters during wall follower
-static const int wall_follow_left_distance = 90;
-static const int wall_follow_forward_min_distance = 95;
+static const int wall_follow_left_distance = 85; //90;
+static const int wall_follow_forward_min_distance = 90; //95;
 static const int wall_follow_left_gap_threshold = 40;
 static const int wall_follow_right_gap_threshold = 40;
 static const int wall_follow_ahead_blocked_threshold = 75;
