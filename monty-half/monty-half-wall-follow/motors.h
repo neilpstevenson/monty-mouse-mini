@@ -1,4 +1,7 @@
 #include "hardware.h"
+#include "config.h"
+
+#define MOTORS_USE_BREAK_MODE
 
 class Motor
 {
@@ -13,12 +16,11 @@ class Motor
       pinMode(pinA, OUTPUT);
       pinMode(pinB, OUTPUT);
       // Set initial state
-      analogWrite(pinA, 0);  // 255 = coast mode, 0 = break-mode
+      analogWrite(pinA, 0);  // 0 = coast mode, 255 = break-mode
       analogWrite(pinB, 0);
     }
 
-#define MOTORS_USE_COAST_MODE
-#ifdef MOTORS_USE_COAST_MODE
+#ifdef MOTORS_USE_BREAK_MODE
     // Set power, -255 to +255
     void setPower(int power)
     {
@@ -27,7 +29,7 @@ class Motor
       {
         if(power > 255)
           power = 255;
-        analogWrite(pinA, 255);  // 255 = coast mode, 0 = break-mode
+        analogWrite(pinA, 255);  // 0 = coast mode, 255 = break-mode
         analogWrite(pinB, 255-power);
       }
       else
@@ -38,7 +40,7 @@ class Motor
         analogWrite(pinB, 255);
       }
     } 
-#else //MOTORS_USE_COAST_MODE
+#else //MOTORS_USE_BREAK_MODE
     // Set power, -255 to +255
     void setPower(int power)
     {
@@ -47,7 +49,7 @@ class Motor
       {
         if(power > 255)
           power = 255;
-        analogWrite(pinA, power);  // 255 = coast mode, 0 = break-mode
+        analogWrite(pinA, power);  // 0 = coast mode, 255 = break-mode
         analogWrite(pinB, 0);
       }
       else
@@ -58,19 +60,19 @@ class Motor
         analogWrite(pinB, -power);
       }
     } 
-#endif //MOTORS_USE_COAST_MODE
+#endif //MOTORS_USE_BREAK_MODE
 
     void stop(bool breakMode = false)
     {
       if(breakMode)
       {
-        analogWrite(pinA, 0);  // 255 = coast mode, 0 = break-mode
-        analogWrite(pinB, 0);
+        analogWrite(pinA, 255);  // 0 = coast mode, 255 = break-mode
+        analogWrite(pinB, 255);
       }
       else
       {
-        analogWrite(pinA, 255);
-        analogWrite(pinB, 255);
+        analogWrite(pinA, 0);
+        analogWrite(pinB, 0);
       }
     }      
 };
@@ -90,8 +92,16 @@ class Motors
     // Move forward/reverse -255 to 255
     void forwardPower(int power)
     {
-      left.setPower(power);
-      right.setPower(power);
+      if(power >= 0)
+      {
+        left.setPower((int)(power * motor_compensation_left));
+        right.setPower(power);
+      }
+      else
+      {
+        left.setPower(power);
+        right.setPower((int)(power * motor_compensation_right));
+      }
     }
 
     // Move forward/reverse -255 to 255

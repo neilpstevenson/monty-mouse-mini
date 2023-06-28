@@ -6,28 +6,31 @@
 //
 
 // Indicators
-const int ledGreen = 10;
-const int ledRed = 11;
-const int neoPixel = 16;
+static const int ledGreen = 10;
+static const int ledRed = 11;
+static const int neoPixel = 16;
 
 // Buttons
-const int buttonA = 12;
-const int buttonB = 13;
+static const int buttonA = 12;
+static const int buttonB = 13;
 
 // Motors
-const int motorA1 = 4;
-const int motorA2 = 5;
+static const int motorA1 = 5;
+static const int motorA2 = 4;
 
-const int motorB1 = 6;
-const int motorB2 = 7;
+static const int motorB1 = 7;
+static const int motorB2 = 6;
 
 // Sensors
-const int illuminationForward = 14;
-const int illuminationSides = 15;
-const int leftSensor = A0;
-const int rightSensor = A3;
-const int forwardLSensor = A2;
-const int forwardRSensor = A1;
+static const int illuminationForward = 14;
+static const int illuminationSides = 15;
+static const int leftSensor = A0;
+static const int rightSensor = A3;
+static const int forwardLSensor = A2;
+static const int forwardRSensor = A1;
 
 // Position encoders
-// todo 
+static const int leftEncoderA = 8;
+static const int leftEncoderB = 9;
+static const int rightEncoderA = 3;
+static const int rightEncoderB = 2;

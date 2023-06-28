@@ -56,6 +56,11 @@ class WallSensor
         return (unsigned int)((raw - litMinimum) * 100L / (litMaximum - litMinimum));
     }
 
+    void setCalibration(unsigned int litMinimum, unsigned int litMaximum)
+    {
+      this->litMinimum = litMinimum;
+      this->litMaximum = litMaximum;
+    }
 };
 
 
@@ -122,6 +127,18 @@ class WallSensors
     WallSensor &right()
     {
       return sensorR;
+    }
+
+    // Calibrate the left and right sensor, assuing we're midway between two walls
+    void calibrateLRSensors()
+    {
+      unsigned int whiteRawL = sensorL.getRaw();
+      unsigned int whiteRawR = sensorR.getRaw();
+      // Convert this to 85% by assuming black is 50% of the current reading
+      unsigned int blackRawL = whiteRawL / 2;
+      sensorL.setCalibration(blackRawL, (whiteRawL - blackRawL) * 20 / 17 + blackRawL);
+      unsigned int blackRawR = whiteRawR / 2;
+      sensorR.setCalibration(blackRawR, (whiteRawR - blackRawR) * 20 / 17 + blackRawR);
     }
     
   private:

@@ -10,8 +10,8 @@
 WallSensors sensors;
 Motors motors;
 
-Quadrature_encoder<8, 9> encoder_l;
-Quadrature_encoder<2, 3> encoder_r;
+Quadrature_encoder<leftEncoderA, leftEncoderB> encoder_l;
+Quadrature_encoder<rightEncoderA, rightEncoderB> encoder_r;
 
 Adafruit_NeoPixel pixels(1, neoPixel, NEO_GRB + NEO_KHZ800);
 
@@ -74,28 +74,46 @@ void forward(int distance, int speed)
 {
   // Move forward until distance reached or too near the forward wall
   float start_pos_r = encoder_r.count() * encode_calibrate_r;
-  motors.forwardPower(speed);
-  while(encoder_r.count() * encode_calibrate_r - start_pos_r < distance &&
-        sensors.frontLeft().getCalibrated() < wall_follow_forward_min_distance)
+  if(distance > 0)
   {
-    delay(10);
-    //Serial.print("FORWARD ");
-    //Serial.print(encoder_r.count() * encode_calibrate_l);  Serial.print("mm ");
-    //Serial.println();
-    logSensors("FORWARD");
+    motors.forwardPower(speed);
+    while(encoder_r.count() * encode_calibrate_r - start_pos_r < distance &&
+          sensors.frontLeft().getCalibrated() < wall_follow_forward_min_distance)
+    {
+      delay(10);
+      //Serial.print("FORWARD ");
+      //Serial.print(encoder_r.count() * encode_calibrate_l);  Serial.print("mm ");
+      //Serial.println();
+      logSensors("FORWARD");
+    }
+  }
+  else
+  {
+    motors.forwardPower(-speed);
+    while(encoder_r.count() * encode_calibrate_r - start_pos_r > distance)
+    {
+      delay(10);
+      //Serial.print("FORWARD ");
+      //Serial.print(encoder_r.count() * encode_calibrate_l);  Serial.print("mm ");
+      //Serial.println();
+      logSensors("REVERSE");
+    }
   }
 }
 
 void turn_left_90(int speed)
 {
+//  motors.stop();
+//  delay(500);
+ 
   // Rotate 90 degrees
   float start_pos_l = encoder_l.count() * encode_calibrate_l;
   float start_pos_r = encoder_r.count() * encode_calibrate_r;
   motors.turn(speed, speed);
 
-  int required_dist_r = (int)(3.14159/2.0 * turning_diameter_mm);
+  int required_dist_r = (int)(3.14159/2.0 * turning_diameter_mm) - turn_angle_inertia_compensation;
   
-  while(encoder_r.count() * encode_calibrate_r - start_pos_r <
+  while(encoder_r.count() * encode_calibrate_r - start_pos_r < 
         (encoder_l.count() * encode_calibrate_l - start_pos_l + required_dist_r))
   {
     delay(10);
@@ -105,19 +123,23 @@ void turn_left_90(int speed)
     //Serial.println();
     logSensors("LEFT90");
   }
+//  motors.stop();
+//  delay(500);
 }
 
 void turn_right_90(int speed)
 {
+//  motors.stop();
+//  delay(500);
   // Rotate 90 degrees
   float start_pos_l = encoder_l.count() * encode_calibrate_l;
   float start_pos_r = encoder_r.count() * encode_calibrate_r;
   motors.turn(speed, -speed);
 
-  int required_dist_r = (int)(3.14159/2.0 * turning_diameter_mm);
+  int required_dist_l = (int)(3.14159/2.0 * turning_diameter_mm) - turn_angle_inertia_compensation;
   
-  while(encoder_l.count() * encode_calibrate_l - start_pos_l <
-        (encoder_r.count() * encode_calibrate_r - start_pos_r + required_dist_r))
+  while(encoder_l.count() * encode_calibrate_l - start_pos_l < 
+        (encoder_r.count() * encode_calibrate_r - start_pos_r + required_dist_l))
   {
     delay(10);
     //Serial.print("RIGHT ");
@@ -126,23 +148,29 @@ void turn_right_90(int speed)
     //Serial.println();
     logSensors("RIGHT90");
   }
+//  motors.stop();
+//  delay(500);
 }
 
 void turn_right_180(int speed)
 {
+//  motors.stop();
+//  delay(500);
   // Rotate 90 degrees
   float start_pos_l = encoder_l.count() * encode_calibrate_l;
   float start_pos_r = encoder_r.count() * encode_calibrate_r;
   motors.turn(0, -speed);
 
-  int required_dist_r = (int)(3.14159 * turning_diameter_mm);
+  int required_dist_l = (int)(3.14159 * turning_diameter_mm) - turn_angle_inertia_compensation;
   
   while(encoder_l.count() * encode_calibrate_l - start_pos_l <
-        (encoder_r.count() * encode_calibrate_r - start_pos_r + required_dist_r))
+        (encoder_r.count() * encode_calibrate_r - start_pos_r + required_dist_l))
   {
     delay(10);
     logSensors("RIGHT180");
   }
+//  motors.stop();
+//  delay(500);
 }
 
 
@@ -157,8 +185,20 @@ void logSensors(const char *mode)
   Serial.print(sensors.right().getCalibrated());      Serial.print(" ");
   
   // Encoders
-  Serial.print(encoder_r.count() * encode_calibrate_r);Serial.print("mm ");
   Serial.print(encoder_l.count() * encode_calibrate_l);Serial.print("mm ");
+  Serial.print(encoder_r.count() * encode_calibrate_r);Serial.print("mm ");
+
+#define LOG_RAW_SENSORS
+#ifdef LOG_RAW_SENSORS  
+  Serial.print(sensors.left().getRaw());       Serial.print(" ");
+  Serial.print(sensors.frontLeft().getRaw());  Serial.print(" ");
+  Serial.print(sensors.frontRight().getRaw()); Serial.print(" ");
+  Serial.print(sensors.right().getRaw());      Serial.print(" ");
+  
+  // Encoders
+  Serial.print(encoder_l.count());             Serial.print(" ");
+  Serial.print(encoder_r.count());
+#endif
 
   Serial.println();
 }
@@ -174,6 +214,31 @@ void setup()
     pinMode(buttonA, INPUT_PULLUP);
     pinMode(buttonB, INPUT_PULLUP);
 }
+
+void print_sensors()
+{
+  Serial.print(sensors.left().getRaw());              Serial.print(" ");
+  Serial.print(sensors.left().getCalibrated());       Serial.print(" ");
+  Serial.print(sensors.frontLeft().getRaw());         Serial.print(" ");
+  Serial.print(sensors.frontLeft().getCalibrated());  Serial.print(" ");
+  Serial.print(sensors.frontRight().getRaw());        Serial.print(" ");
+  Serial.print(sensors.frontRight().getCalibrated()); Serial.print(" ");
+  Serial.print(sensors.right().getRaw());             Serial.print(" ");
+  Serial.print(sensors.right().getCalibrated());      Serial.print(" ");
+
+  // Encoders
+  Serial.print(encoder_r.count());                     Serial.print(" ");
+  Serial.print(encoder_r.count() * encode_calibrate_r);Serial.print("mm ");
+  Serial.print(encoder_r.interval());                  Serial.print(" ");
+  Serial.print(encoder_r.speed());                     Serial.print(" ");
+  Serial.print(encoder_l.count());                     Serial.print(" ");
+  Serial.print(encoder_l.count() * encode_calibrate_l);Serial.print("mm ");
+  Serial.print(encoder_l.interval());                  Serial.print(" ");
+  Serial.print(encoder_l.speed());  //                   Serial.print(" ");
+
+  Serial.println();
+}
+
 
 void loop() 
 {
@@ -214,37 +279,49 @@ void loop()
     
     sensors.startSensors();
 
-    delay(2000);
+    delay(1500);
+
+    // Take a sample and use the left/right readings as midpoint between the two initial walls
+    // We will use this as a centre line when following subsequent walls
+    sensors.waitForSample();
+    sensors.calibrateLRSensors();
+
+    // Confirm the calibrated readings
+    Serial.print("Calibrated(Raw) L, LR, FR, R:");               Serial.println();
+    Serial.print(sensors.left().getCalibrated());   Serial.print("(");
+    Serial.print(sensors.left().getRaw());          Serial.print(") ");
+    Serial.print(sensors.frontLeft().getCalibrated());  Serial.print("(");
+    Serial.print(sensors.frontLeft().getRaw());         Serial.print(") ");
+    Serial.print(sensors.frontRight().getCalibrated());   Serial.print("(");
+    Serial.print(sensors.frontRight().getRaw());          Serial.print(") ");
+    Serial.print(sensors.right().getCalibrated());  Serial.print("(");
+    Serial.print(sensors.right().getRaw());         Serial.println(")");
+
+    delay(500);
 
     // Go
     bool justTurned = false;
-    
+    float wall_sensor_filtered = sensors.left().getCalibrated();
+
+/*
+    while(true) {
+        sensors.waitForSample();
+        forward(70, turn_leadin_speed);
+        motors.stop(true);
+        delay(500);
+        forward(-70, turn_leadin_speed);
+        motors.stop(true);
+        delay(500);
+    }
+*/
+
     while(true) {
         //delay(20);
         //adcReadyEvent.wait_any(1);
         sensors.waitForSample();
         
-        /*
-        Serial.print(sensors.left().getRaw());              Serial.print(" ");
-        Serial.print(sensors.left().getCalibrated());       Serial.print(" ");
-        Serial.print(sensors.frontLeft().getRaw());         Serial.print(" ");
-        Serial.print(sensors.frontLeft().getCalibrated());  Serial.print(" ");
-        Serial.print(sensors.frontRight().getRaw());        Serial.print(" ");
-        Serial.print(sensors.frontRight().getCalibrated()); Serial.print(" ");
-        Serial.print(sensors.right().getRaw());             Serial.print(" ");
-        Serial.print(sensors.right().getCalibrated());      Serial.print(" ");
+        //print_sensors();
 
-        // Encoders
-        Serial.print(encoder_r.count());                     Serial.print(" ");
-        Serial.print(encoder_r.count() * encode_calibrate_r);Serial.print("mm ");
-        Serial.print(encoder_r.interval());                  Serial.print(" ");
-        Serial.print(encoder_r.speed());                     Serial.print(" ");
-        Serial.print(encoder_l.count());                     Serial.print(" ");
-        Serial.print(encoder_l.count() * encode_calibrate_l);Serial.print("mm ");
-        Serial.print(encoder_l.interval());                  Serial.print(" ");
-        Serial.print(encoder_l.speed());                     Serial.print(" ");
-        */
-        
         /*
         Serial.print(darkAdcL);        Serial.print(" ");
         Serial.print(lightAdcL);        Serial.print(" ");
@@ -343,69 +420,81 @@ void loop()
         //static const float targetDist = 80.0;
 
         float newDist = sensors.left().getCalibrated();
-        float error = (newDist - wall_follow_left_distance) * kp + (newDist - lastDist) * kd * interval;
-        lastDist = newDist;
+        wall_sensor_filtered = wall_sensor_filtered * (1.0-wall_sensor_filter_ratio) + newDist * wall_sensor_filter_ratio;
+        float error = (wall_sensor_filtered - wall_follow_left_distance) * kp + (wall_sensor_filtered - lastDist) * kd * interval;
+        lastDist = wall_sensor_filtered;
         
         //Serial.println(error);
 
         // Gap on left?
-        if(newDist < wall_follow_left_gap_threshold)
+        if(wall_sensor_filtered < wall_follow_left_gap_threshold)
         {
           logSensors("GAP LEFT");
           digitalWrite(ledGreen, 1);
+  //motors.stop();
+  //delay(500);
 
           // Move past the gap, so can turn
           if(!justTurned)
           {
             // Need to move wheels into the gap
-            forward(60, turn_leadin_speed);
+            forward(80, turn_leadin_speed);
           }
           else
           {
             // Wheels already in gap, just need a bit of clearance
-            forward(20, turn_leadin_speed);
+            forward(30, turn_leadin_speed);
           }          
 
           // Turn
           turn_left_90(turn_speed);
 
-          digitalWrite(ledGreen, 0);
-
           // Straighten up
           forward(10, turn_leadout_speed);
           
+          digitalWrite(ledGreen, 0);
+
           // Reset PID
           lastDist = sensors.left().getCalibrated();
           justTurned = true;
         }
         else 
-        // Blocked ahead
+        // Blocked ahead?
         if(sensors.frontLeft().getCalibrated() > wall_follow_ahead_blocked_threshold)
         {
           //Serial.println(" BLOCKED AHEAD");
-          digitalWrite(ledRed, 1);
-
           // Do we need to do 90 degree or 180 degree?
           if(sensors.right().getCalibrated() < wall_follow_right_gap_threshold)
           {
             // Ok to do 90 degree
+            digitalWrite(ledRed, 1);
+
+  //motors.stop();
+  //delay(500);
             logSensors("BLOCKED");
-            forward(30, turn_leadin_speed);
+            forward(70, turn_leadin_speed); // Will stop if gets too close
             turn_right_90(turn_speed);
             
+            forward(5, turn_leadout_speed);
+
             digitalWrite(ledRed, 0);
-            
-            forward(10, turn_leadout_speed);
           }
           else
           {
             // Need to do 180 degree
+            digitalWrite(ledRed, 1);
+            digitalWrite(ledGreen, 1);
+
+  //motors.stop();
+  //delay(500);
             logSensors("CUL-DE-SAC");
+            forward(20, turn_180_speed);
             turn_right_180(turn_180_speed);
 
+            forward(5, turn_leadout_speed);
+
+            digitalWrite(ledGreen, 0);
             digitalWrite(ledRed, 0);
-            
-            forward(10, turn_leadout_speed);
           }
 
           // Reset PID
@@ -413,7 +502,6 @@ void loop()
           justTurned = true;
         }
         else
-        
         {
           // Continue ahead
           logSensors("AHEAD");
