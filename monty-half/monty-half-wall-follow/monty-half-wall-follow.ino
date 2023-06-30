@@ -15,6 +15,86 @@ Quadrature_encoder<rightEncoderA, rightEncoderB> encoder_r;
 
 Adafruit_NeoPixel pixels(1, neoPixel, NEO_GRB + NEO_KHZ800);
 
+typedef struct  
+{
+  unsigned int ahead_max_speed;
+  unsigned int left_leadin_distance;
+  unsigned int left_leadin_distance_short;
+  unsigned int left_leadin_speed;
+  unsigned int left_turn_speed;
+  unsigned int left_leadout_distance;
+  unsigned int left_leadout_speed;
+  unsigned int right_leadin_distance;
+  unsigned int right_leadin_speed;
+  unsigned int right_turn_speed;
+  unsigned int right_leadout_distance;
+  unsigned int right_leadout_speed;
+  unsigned int about_leadin_distance;
+  unsigned int about_leadin_speed;
+  unsigned int about_turn_speed;
+  unsigned int about_leadout_distance;
+  unsigned int about_leadout_speed;
+} MODE_PROFILE_TABLE;
+
+static MODE_PROFILE_TABLE mode_profiles[] =
+{
+  // Half-size maze
+  {
+    // Ahead 
+    forward_speed,
+    // Left
+    80, 30, turn_leadin_speed,
+    turn_speed,
+    10, turn_leadout_speed,
+    // Right
+    70, turn_leadin_speed,
+    turn_speed,
+    5, turn_leadout_speed,
+    // About turn
+    100, turn_leadin_speed,
+    turn_180_speed,
+    5, turn_leadout_speed
+  },
+  // Classic maze
+  {
+    // Ahead 
+    forward_speed,
+    // Left
+    160, 50, turn_leadin_speed,
+    turn_speed,
+    30, turn_leadout_speed,
+    // Right
+    30, turn_leadin_speed,
+    turn_speed,
+    90, turn_leadout_speed,
+    // About turn
+    40, turn_leadin_speed,
+    turn_180_speed,
+    5, turn_leadout_speed
+  },
+  // Classic maze faster
+  {
+    // Ahead 
+    forward_speed,
+    // Left
+    160, 50, turn_leadin_speed * 3 / 2,
+    turn_speed * 3 / 2,
+    30, turn_leadout_speed * 3 / 2,
+    // Right
+    30, turn_leadin_speed * 3 / 2,
+    turn_speed * 3 / 2,
+    90, turn_leadout_speed * 3 / 2,
+    // About turn
+    40, turn_leadin_speed * 3 / 2,
+    turn_180_speed * 3 / 2,
+    5, turn_leadout_speed * 3 / 2
+  }
+};
+
+float wall_follow_error_filtered = 0.0;
+float lastDistL = 0.0;
+float lastDistR = 0.0;
+
 /*
 DigitalOut frontleds(p14);
 DigitalOut sideleds(p15);
@@ -98,6 +178,51 @@ void forward(int distance, int speed)
       //Serial.println();
       logSensors("REVERSE");
     }
+  }
+}
+
+float get_wall_follow_error()
+{
+  static const float interval = 1000.0 / WallSensors::adcPollIntervalMs;
+
+  // Simple P(I)D controller using the nearest wall
+  float newDistL = sensors.left().getCalibrated();
+  float newDistR = sensors.right().getCalibrated();
+  float error;
+  if(newDistL > newDistR)
+    error = (newDistL - wall_follow_left_distance) * kp + (newDistL - lastDistL) * kd * interval;
+  else if(newDistR > wall_follow_left_distance_min)
+    error = -((newDistR - wall_follow_left_distance) * kp + (newDistR - lastDistR) * kd * interval);
+  else
+    // Clamp error if reached a potential gap
+    error = 0.0;
+
+  // Simple filter
+  wall_follow_error_filtered = wall_follow_error_filtered * (1.0-wall_sensor_filter_ratio) + error * wall_sensor_filter_ratio;
+
+  lastDistL = newDistL;
+  lastDistR = newDistR;
+
+  return wall_follow_error_filtered;
+}
+
+void reset_PID()
+{
+  lastDistL = sensors.left().getCalibrated();
+  lastDistR = sensors.right().getCalibrated();
+  wall_follow_error_filtered = 0.0;
+}
+
+void forward_with_wall_follow(int distance, int speed)
+{
+  // Move forward until distance reached or too near the forward wall
+  float start_pos_r = encoder_r.count() * encode_calibrate_r;
+  while(encoder_r.count() * encode_calibrate_r - start_pos_r < distance &&
+        sensors.frontLeft().getCalibrated() < wall_follow_forward_min_distance)
+  {
+      logSensors("FORWARD-FOLLOW");
+      motors.turn(speed, -get_wall_follow_error());
+      sensors.waitForSample();
   }
 }
 
@@ -247,13 +372,15 @@ void loop()
 
     // Display starting flashes
     bool triggered = false;
-    Serial.println("waiting");
+    int mode = 0;
+    Serial.println("ready for start");
+
     for(int count = 0; !triggered; count++)
     {
       if(count % 30 == 0)
       {
         // On
-        pixels.setPixelColor(0, pixels.Color(8, 0, 0));
+        pixels.setPixelColor(0, pixels.Color(mode == 0 ? 8 : 0, mode == 1 ? 8 : 0, mode == 2 ? 8 : 0));
         pixels.show();
       }
       else if(count % 30 == 15)
@@ -261,6 +388,16 @@ void loop()
         // Off
         pixels.setPixelColor(0, pixels.Color(0, 0, 0));
         pixels.show();
+      }
+
+      if(digitalRead(buttonA) == 0)
+      {
+        Serial.println("mode change");
+        if(++mode > 3)
+          mode = 0;
+        delay(100);
+        while(digitalRead(buttonA) == 0)
+          delay(100);
       }
 
       if(digitalRead(buttonB) == 0)
@@ -301,10 +438,13 @@ void loop()
 
     // Go
     bool justTurned = false;
-    float wall_sensor_filtered = sensors.left().getCalibrated();
 
-/*
-    while(true) {
+    // Reset PID
+    reset_PID();
+
+    // Test mode
+    while(mode == 3) 
+    {
         sensors.waitForSample();
         forward(70, turn_leadin_speed);
         motors.stop(true);
@@ -313,7 +453,6 @@ void loop()
         motors.stop(true);
         delay(500);
     }
-*/
 
     while(true) {
         //delay(20);
@@ -413,21 +552,8 @@ void loop()
         }
         */
 
-        // Very simple PI-controller
-        // Line follower
-        static float lastDist = 0.0;
-        static const float interval = 1000.0 / WallSensors::adcPollIntervalMs;
-        //static const float targetDist = 80.0;
-
-        float newDist = sensors.left().getCalibrated();
-        wall_sensor_filtered = wall_sensor_filtered * (1.0-wall_sensor_filter_ratio) + newDist * wall_sensor_filter_ratio;
-        float error = (wall_sensor_filtered - wall_follow_left_distance) * kp + (wall_sensor_filtered - lastDist) * kd * interval;
-        lastDist = wall_sensor_filtered;
-        
-        //Serial.println(error);
-
         // Gap on left?
-        if(wall_sensor_filtered < wall_follow_left_gap_threshold)
+        if(sensors.left().getCalibrated() < wall_follow_left_gap_threshold)
         {
           logSensors("GAP LEFT");
           digitalWrite(ledGreen, 1);
@@ -438,30 +564,29 @@ void loop()
           if(!justTurned)
           {
             // Need to move wheels into the gap
-            forward(80, turn_leadin_speed);
+            forward_with_wall_follow(mode_profiles[mode].left_leadin_distance, mode_profiles[mode].left_leadin_speed);
           }
           else
           {
             // Wheels already in gap, just need a bit of clearance
-            forward(30, turn_leadin_speed);
+            forward_with_wall_follow(mode_profiles[mode].left_leadin_distance_short, mode_profiles[mode].left_leadin_speed);
           }          
 
           // Turn
-          turn_left_90(turn_speed);
+          turn_left_90(mode_profiles[mode].left_leadin_speed);
 
           // Straighten up
-          forward(10, turn_leadout_speed);
+          reset_PID();
+          forward_with_wall_follow(mode_profiles[mode].left_leadout_distance, mode_profiles[mode].left_leadout_speed);
           
           digitalWrite(ledGreen, 0);
 
           // Reset PID
-          lastDist = sensors.left().getCalibrated();
+//          reset_PID();
           justTurned = true;
-          // Reset filter
-          wall_sensor_filtered = lastDist;
         }
         else 
-        // Blocked ahead?
+        // Blocked ahead - need to turn right or u-turn?
         if(sensors.frontLeft().getCalibrated() > wall_follow_ahead_blocked_threshold)
         {
           //Serial.println(" BLOCKED AHEAD");
@@ -469,47 +594,49 @@ void loop()
           if(sensors.right().getCalibrated() < wall_follow_right_gap_threshold)
           {
             // Ok to do 90 degree
+            logSensors("GAP RIGHT");
             digitalWrite(ledRed, 1);
 
   //motors.stop();
   //delay(500);
-            logSensors("BLOCKED");
-            forward(70, turn_leadin_speed); // Will stop if gets too close
-            turn_right_90(turn_speed);
-            
-            forward(5, turn_leadout_speed);
+            forward_with_wall_follow(mode_profiles[mode].right_leadin_distance, mode_profiles[mode].right_leadin_speed); // Will stop if gets too close
+            turn_right_90(mode_profiles[mode].right_turn_speed);
+            reset_PID();
+            forward_with_wall_follow(mode_profiles[mode].right_leadout_distance, mode_profiles[mode].right_leadout_speed);
 
             digitalWrite(ledRed, 0);
           }
           else
           {
             // Need to do 180 degree
+            logSensors("CUL-DE-SAC");
             digitalWrite(ledRed, 1);
             digitalWrite(ledGreen, 1);
 
   //motors.stop();
   //delay(500);
-            logSensors("CUL-DE-SAC");
-            forward(100, turn_180_speed); // Will stop if gets too close
-            turn_right_180(turn_180_speed);
 
-            forward(5, turn_leadout_speed);
+            forward_with_wall_follow(mode_profiles[mode].about_leadin_distance, mode_profiles[mode].about_leadin_speed); // Will stop if gets too close
+            turn_right_180(mode_profiles[mode].about_turn_speed);
+
+            // Reset PID
+            reset_PID();
+            forward_with_wall_follow(mode_profiles[mode].about_leadout_distance, mode_profiles[mode].about_leadout_speed);
 
             digitalWrite(ledGreen, 0);
             digitalWrite(ledRed, 0);
           }
 
           // Reset PID
-          lastDist = sensors.left().getCalibrated();
+//          reset_PID();
           justTurned = true;
-          // Reset filter
-          wall_sensor_filtered = lastDist;
-         }
+        }
         else
         {
           // Continue ahead
           logSensors("AHEAD");
-          motors.turn(forward_speed, -error);
+          forward_with_wall_follow(5, mode_profiles[mode].ahead_max_speed);
+          //motors.turn(mode_profiles[mode].ahead_max_speed, -get_wall_follow_error());
           justTurned = false;
         }
       
@@ -523,3 +650,4 @@ void loop()
         //yield();
     }
 }
+

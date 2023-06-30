@@ -9,7 +9,7 @@ static const float encode_calibrate_r = 0.123;// 0.132;
 static const float motor_compensation_left = 0.79;  // When motor goes in one direction, it tends to go faster than the other
 static const float motor_compensation_right = 1.12;
 
-static const int turn_angle_inertia_compensation = 5; // End the turns this much short, to allow for inertia taking it the rest of the way
+static const int turn_angle_inertia_compensation = 8; // End the turns this much short, to allow for inertia taking it the rest of the way
 
 static const float turning_diameter_mm = 39.0;  // Bigger means turns more
 
@@ -23,6 +23,7 @@ static const int turn_180_speed = 64;
 
 // Distance parameters during wall follower
 static const int wall_follow_left_distance = 85; //90;
+static const int wall_follow_left_distance_min = 50;
 static const int wall_follow_forward_min_distance = 95; //90; //95;
 static const int wall_follow_left_gap_threshold = 40;
 static const int wall_follow_right_gap_threshold = 40;
