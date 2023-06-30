@@ -457,6 +457,8 @@ void loop()
           // Reset PID
           lastDist = sensors.left().getCalibrated();
           justTurned = true;
+          // Reset filter
+          wall_sensor_filtered = lastDist;
         }
         else 
         // Blocked ahead?
@@ -488,7 +490,7 @@ void loop()
   //motors.stop();
   //delay(500);
             logSensors("CUL-DE-SAC");
-            forward(20, turn_180_speed);
+            forward(100, turn_180_speed); // Will stop if gets too close
             turn_right_180(turn_180_speed);
 
             forward(5, turn_leadout_speed);
@@ -500,7 +502,9 @@ void loop()
           // Reset PID
           lastDist = sensors.left().getCalibrated();
           justTurned = true;
-        }
+          // Reset filter
+          wall_sensor_filtered = lastDist;
+         }
         else
         {
           // Continue ahead

@@ -3,8 +3,8 @@
 static const float kp = 1.0;
 static const float kd = 0.01;
 
-static const float encode_calibrate_l = 0.128;// 0.132; // smaller = bigger turns
-static const float encode_calibrate_r = 0.128;// 0.132;
+static const float encode_calibrate_l = 0.123;// 0.132; // smaller = bigger turns
+static const float encode_calibrate_r = 0.123;// 0.132;
 
 static const float motor_compensation_left = 0.79;  // When motor goes in one direction, it tends to go faster than the other
 static const float motor_compensation_right = 1.12;
@@ -13,7 +13,7 @@ static const int turn_angle_inertia_compensation = 5; // End the turns this much
 
 static const float turning_diameter_mm = 39.0;  // Bigger means turns more
 
-static const float wall_sensor_filter_ratio = 0.2;  // average = old * (1.0-ratio) + new * ratio
+static const float wall_sensor_filter_ratio = 0.1;  // average = old * (1.0-ratio) + new * ratio
 
 static const int forward_speed = 128;
 static const int turn_leadin_speed = 64;
@@ -34,9 +34,9 @@ static const int wall_follow_move_left_initial_forward = 85;
 // Sensor sensitivities
 static const int sensor_left_min_raw = 7000;
 static const int sensor_left_max_raw = 12000;
-static const int sensor_frontleft_min_raw = 10000;
-static const int sensor_frontleft_max_raw = 50000;
+static const int sensor_frontleft_min_raw = 8000;
+static const int sensor_frontleft_max_raw = 55000;
 static const int sensor_frontright_min_raw = 8000;
-static const int sensor_frontright_max_raw = 53000;
+static const int sensor_frontright_max_raw = 55000;
 static const int sensor_right_min_raw = 7000;
 static const int sensor_right_max_raw = 12000;
