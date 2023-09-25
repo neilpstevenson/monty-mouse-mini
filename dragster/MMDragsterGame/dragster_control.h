@@ -42,6 +42,12 @@ class DragsterControl
     Debounce radiusMarker;
     Debounce selectSwitch;
     Debounce enterSwitch;
+
+    // Last sensor readings
+    int sensorStartFinish;
+    int sensorRightLine;
+    int sensorLeftLine;
+    int sensorRadius;
     
     int startFinishCount = 0;
     bool manualAutoSteer = false;
@@ -112,4 +118,7 @@ class DragsterControl
     void profileSensorActions();
     void displayLastRunTime();
     void stateMachineRun();
+    void getSensorReadings();
+    void showSensorMeters();
+    void plotSensorReadings();
 };

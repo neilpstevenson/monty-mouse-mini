@@ -8,11 +8,11 @@ static const int courseTimedDistance = 5625; //3780;          // 5625;
 static const int courseTargetStoppingDistance = 400;  // 600;
 
 // Marker thresholds
-const int markerHighThreshold = (int)(0.85 * 4096); //0.92;
-const int markerLowThreshold = (int)(0.80 * 4096); //0.88;
+const int markerHighThreshold = (int)(0.15 * 4096); //0.92;
+const int markerLowThreshold = (int)(0.10 * 4096); //0.88;
 
 // Max valid line detectors before we abort the run
-const int maxLineDetectorThreshold = (int)(0.99 * 4096); //4000;
+const int maxLineDetectorThreshold = (int)(0.40 * 4096); //4000;
 
 // Flags
 const uint8_t FLAG_DISPLAY_LAST_RUN = 0x01;

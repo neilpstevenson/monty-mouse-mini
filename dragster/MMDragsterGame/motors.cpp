@@ -29,6 +29,7 @@ void Motors::initHardware()
   ledcAttachPin(gpioMotorB1, motorB1PwmChannel);
   ledcSetup(motorB2PwmChannel, pwmFreq, pwmResolution);
   ledcAttachPin(gpioMotorB2, motorB2PwmChannel);
+  
 #endif //MOTORCTRL_DRV8833
 }
 

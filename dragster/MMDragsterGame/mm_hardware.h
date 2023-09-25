@@ -3,6 +3,7 @@
 #define MOTORCTRL_DRV8833
 #define STEERINGCTRL_PCB
 #define HAS_ENCODERS
+#define INVERTED_SENSORS
 //#define MOTORCTRL_TB6612
 //#define STEERINGCTRL_PROTO
 
@@ -16,18 +17,18 @@ const int gpioMotorB2 = 13;
 const int gpioMotorBPwm = 27;
 #endif //MOTORCTRL_TB6612
 #ifdef MOTORCTRL_DRV8833
-const int gpioMotorA1 = 17;
-const int gpioMotorA2 = 2;
-const int gpioMotorB1 = 13;
+const int gpioMotorA1 = 2;   // Left connector = Right Motor
+const int gpioMotorA2 = 17;
+const int gpioMotorB1 = 13;   // Right connector = Left Motor
 const int gpioMotorB2 = 12;
 #endif //MOTORCTRL_DRV8833
 
 #ifdef HAS_ENCODERS
 // Encoders
-const int gpioMotorEncoderRA = 26;
-const int gpioMotorEncoderRB = 27;
-const int gpioMotorEncoderLA = 38;
-const int gpioMotorEncoderLB = 37;
+const int gpioMotorEncoderRA = 38;
+const int gpioMotorEncoderRB = 37;
+//const int gpioMotorEncoderLA = 38;
+//const int gpioMotorEncoderLB = 37;
 
 const int encodeCountsPerRev = 12; // 12 in full quad, 6 in half-quad mode
 const float wheelDiameter = -32.09; //37.0;
@@ -65,13 +66,15 @@ const int default_steeringServoCentre = 1500; // Nominally 1500 = mid range of m
 const int steeringServoFreq = 333;  // Servo refresh rate (50Hz to about 300Hz for most digial servos)
 
 // Sensors
-const int gpioSensorStartFinish = A5; // Rightmost sensor
-const int gpioSensorRightLine = A4;
-const int gpioSensorLeftLine = A3;
-const int gpioSensorRadius = A0;  // Leftmost sensor
+const int gpioSensorStartFinish = 27; // Rightmost sensor
+const int gpioSensorRightLine = 25;
+const int gpioSensorLeftLine = 33;
+const int gpioSensorRadius = 39;  // Leftmost sensor
+
+const int phototransistorsResponseTimeMicroS = 250;
 
 // LEDs
-const int gpioIlluminationLED = 25;
+const int gpioIlluminationLED = 32;
 
 // PID values
 const float LOOP_INTERVAL = 0.003;  // 1mS

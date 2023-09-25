@@ -489,22 +489,10 @@ void DragsterControl::startManualControl()
 {
   waitForPS4Controller();
  
-  // Draw 4 linear meters
-  tft.fillScreen(TFT_BLACK);
-  byte d = 60;
-  plotLinear("Rad", 0, 0);
-  plotLinear(" L", 1 * d, 0);
-  plotLinear(" R", 2 * d, 0);
-  plotLinear("StFi", 3 * d, 0);
-  // Ensure we reset pointer positions shown
-  value[0] = 0;
-  value[1] = 0;
-  value[2] = 0;
-  value[3] = 0;
-  plotPointers();
-
+  showSensorMeters();
+  
   state = STATE_MANUAL;
-  digitalWrite(gpioIlluminationLED, HIGH);
+//  digitalWrite(gpioIlluminationLED, HIGH);
 }
 
 void DragsterControl::manualControl()
@@ -514,11 +502,22 @@ void DragsterControl::manualControl()
      // Stop motors
     motors.stopAll();
     Serial.println("Waiting for PS4 controller...");
-    delay(500);
+
+    // Display the sensors
+    getSensorReadings();
+    plotSensorReadings();
+
+    if(selectSwitch.isTriggered(digitalRead(gpioSelectButton)))
+    {
+      // Switch to menu mode
+        state = STATE_INITIAL;
+        return;
+    }
+    delay(20);
   }
   else if(PS4.Cross())
   {
-    // Switch to Race mode
+    // Switch to menu mode
     motors.stopAll();
     state = STATE_INITIAL;
     return;
@@ -546,10 +545,7 @@ void DragsterControl::manualControl()
     }
   
     // Get the current sensor data
-    int sensorStartFinish = analogRead(gpioSensorStartFinish);
-    int sensorRightLine = analogRead(gpioSensorRightLine);
-    int sensorLeftLine = analogRead(gpioSensorLeftLine);
-    int sensorRadius = analogRead(gpioSensorRadius);
+    getSensorReadings();
     
     if(manualAutoSteer)
     {
@@ -565,12 +561,8 @@ void DragsterControl::manualControl()
     }
     
     // Display the sensors
-    value[0] = map(sensorRadius, 0, 4095, 0, 100);
-    value[1] = map(sensorLeftLine, 0, 4095, 0, 100);
-    value[2] = map(sensorRightLine, 0, 4095, 0, 100);
-    value[3] = map(sensorStartFinish, 0, 4095, 0, 100);
-    plotPointers();
-    
+    plotSensorReadings();
+
     // Check start/finish sensor
     if(startFinish.isTriggered(sensorStartFinish))
     {
@@ -599,7 +591,7 @@ void DragsterControl::startSteeringCalibrate()
   // Wait for menu button to be released
   while(PS4.Right())
     delay(10);
-  digitalWrite(gpioIlluminationLED, HIGH);
+//  digitalWrite(gpioIlluminationLED, HIGH);
 }
 
 void DragsterControl::steeringCalibrate()
@@ -666,10 +658,7 @@ void DragsterControl::steeringCalibrate()
     }
   
     // Get the current sensor data
-    int sensorStartFinish = analogRead(gpioSensorStartFinish);
-    int sensorRightLine = analogRead(gpioSensorRightLine);
-    int sensorLeftLine = analogRead(gpioSensorLeftLine);
-    int sensorRadius = analogRead(gpioSensorRadius);
+    getSensorReadings();
     
     if(manualAutoSteer)
     {
@@ -701,7 +690,7 @@ void DragsterControl::startDistanceCalibrate()
   tft.print("Speed:");
   manualAutoSteer  = false;
   state = STATE_POSITION_CALIBRATE;
-  digitalWrite(gpioIlluminationLED, HIGH);
+//  digitalWrite(gpioIlluminationLED, HIGH);
 
   // Zero the counter
 #ifdef HAS_ENCODERS
@@ -751,10 +740,7 @@ void DragsterControl::positionCalibrate()
     }
   
     // Get the current sensor data
-    int sensorStartFinish = analogRead(gpioSensorStartFinish);
-    int sensorRightLine = analogRead(gpioSensorRightLine);
-    int sensorLeftLine = analogRead(gpioSensorLeftLine);
-    int sensorRadius = analogRead(gpioSensorRadius);
+    getSensorReadings();
     
     if(manualAutoSteer)
     {
@@ -799,7 +785,7 @@ void DragsterControl::startCalibratePID()
   // Wait for menu button to be released
   while(PS4.Right())
     delay(10);
-  digitalWrite(gpioIlluminationLED, HIGH);
+//  digitalWrite(gpioIlluminationLED, HIGH);
 }
 
 void DragsterControl::displayPID()
@@ -879,10 +865,7 @@ void DragsterControl::calibratePID()
     }
   
     // Get the current sensor data
-    int sensorStartFinish = analogRead(gpioSensorStartFinish);
-    int sensorRightLine = analogRead(gpioSensorRightLine);
-    int sensorLeftLine = analogRead(gpioSensorLeftLine);
-    int sensorRadius = analogRead(gpioSensorRadius);
+    getSensorReadings();
     
     if(manualAutoSteer)
     {
@@ -915,7 +898,7 @@ void DragsterControl::startProfileDisarmed()
   if(!PS4.isConnected())
   {
       // Light on - we're using this to trigger the start
-      digitalWrite(gpioIlluminationLED, HIGH);
+//      digitalWrite(gpioIlluminationLED, HIGH);
   }
 
   state = STATE_PROFILE_DISARMED;
@@ -983,13 +966,14 @@ void DragsterControl::waitForProfileArmed()
 {
     // Wait for Square button 
     // or button with radius sensor over white
-    int sensorRadius = analogRead(gpioSensorRadius);
-    //Serial.println(sensorRadius);
+    getSensorReadings();
+    Serial.print("waitForProfileArmed triggered: ");
+    Serial.println(sensorRadius);
     if(PS4.Square() || 
-       (selectSwitch.isTriggered(digitalRead(gpioSelectButton)) && sensorRadius < markerLowThreshold))
+       (selectSwitch.isTriggered(digitalRead(gpioSelectButton)) && sensorRadius > markerHighThreshold))
     {
       // Light on
-      digitalWrite(gpioIlluminationLED, HIGH);
+//      digitalWrite(gpioIlluminationLED, HIGH);
       startProfileArmed();
     }
     else if(PS4.Triangle())
@@ -1005,9 +989,18 @@ void DragsterControl::waitForProfileGo()
     
     // Wait for Circle button
     // or manual trigger if no PS4 controller
-    int sensorRadius = analogRead(gpioSensorRadius);
+    getSensorReadings();
+    Serial.print("waitForProfileGo: ");
+    Serial.println(sensorRadius);
+    if(selectSwitch.isTriggered(digitalRead(gpioSelectButton)))
+    {
+        // Switch back to menu mode
+        state = STATE_INITIAL;
+        return;
+    }
+
     if(PS4.Circle() ||
-       (!PS4.isConnected() && sensorRadius > markerHighThreshold))
+       (!PS4.isConnected() && sensorRadius < markerLowThreshold))
     {
       startProfileRun();
       //tft.fillScreen(TFT_GREEN);
@@ -1113,11 +1106,8 @@ void DragsterControl::profileRun()
 
 void DragsterControl::profileSensorActions()
 {
-   // Get the current sensor data
-  int sensorStartFinish = analogRead(gpioSensorStartFinish);
-  int sensorRightLine = analogRead(gpioSensorRightLine);
-  int sensorLeftLine = analogRead(gpioSensorLeftLine);
-  int sensorRadius = analogRead(gpioSensorRadius);
+  // Get the current sensor data
+  getSensorReadings();
 
   // Calculate the steering error
   int steeringError = sensorLeftLine - sensorRightLine;
@@ -1258,4 +1248,64 @@ void DragsterControl::stateMachineRun()
   }
   
   delay(3);
+}
+
+void  DragsterControl::getSensorReadings()
+{
+  // Read the ambient level first
+  int sensorStartFinishAbient = analogRead(gpioSensorStartFinish);
+  int sensorRadiusAbient = analogRead(gpioSensorRadius);
+  int sensorRightLineAbient = analogRead(gpioSensorRightLine);
+  int sensorLeftLineAbient = analogRead(gpioSensorLeftLine);
+
+  // Illuminate
+  digitalWrite(gpioIlluminationLED, HIGH);
+  delayMicroseconds(phototransistorsResponseTimeMicroS);  // Allow phototransitors time to react
+
+  // Read illuminated values
+  int sensorStartFinishLit = analogRead(gpioSensorStartFinish);
+  int sensorRadiusLit = analogRead(gpioSensorRadius);
+  int sensorRightLineLit = analogRead(gpioSensorRightLine);
+  int sensorLeftLineLit = analogRead(gpioSensorLeftLine);
+  // Switch illumination off
+  digitalWrite(gpioIlluminationLED, LOW);
+
+  // Store the difference
+  #ifdef INVERTED_SENSORS
+  sensorStartFinish = -(sensorStartFinishLit < sensorStartFinishAbient ? sensorStartFinishLit - sensorStartFinishAbient : 0);
+  sensorRightLine = -(sensorRightLineLit < sensorRightLineAbient ? sensorRightLineLit - sensorRightLineAbient : 0);
+  sensorLeftLine = -(sensorLeftLineLit < sensorLeftLineAbient ? sensorLeftLineLit - sensorLeftLineAbient : 0);
+  sensorRadius = -(sensorRadiusLit < sensorRadiusAbient ? sensorRadiusLit - sensorRadiusAbient : 0);
+  #else
+  sensorStartFinish = sensorStartFinishLit > sensorStartFinishAbient ? sensorStartFinishLit - sensorStartFinishAbient : 0;
+  sensorRightLine = sensorRightLineLit > sensorRightLineAbient ? sensorRightLineLit - sensorRightLineAbient : 0;
+  sensorLeftLine = sensorLeftLineLit > sensorLeftLineAbient ? sensorLeftLineLit - sensorLeftLineAbient : 0;
+  sensorRadius = sensorRadiusLit > sensorRadiusAbient ? sensorRadiusLit - sensorRadiusAbient : 0;
+  #endif
+}
+
+void  DragsterControl::showSensorMeters()
+{
+  // Draw 4 linear meters
+  tft.fillScreen(TFT_BLACK);
+  byte d = 60;
+  plotLinear("Rad", 0, 0);
+  plotLinear(" L", 1 * d, 0);
+  plotLinear(" R", 2 * d, 0);
+  plotLinear("StFi", 3 * d, 0);
+  // Ensure we reset pointer positions shown
+  value[0] = 0;
+  value[1] = 0;
+  value[2] = 0;
+  value[3] = 0;
+  plotPointers();
+}
+
+void  DragsterControl::plotSensorReadings()
+{
+    value[0] = map(sensorRadius, 0, 4095, 0, 100);
+    value[1] = map(sensorLeftLine, 0, 4095, 0, 100);
+    value[2] = map(sensorRightLine, 0, 4095, 0, 100);
+    value[3] = map(sensorStartFinish, 0, 4095, 0, 100);
+    plotPointers();
 }
