@@ -82,7 +82,7 @@ const int gpioI2cSda = 21;
 const int gpioI2cScl = 22;
 
 // PID values
-const float LOOP_INTERVAL = 0.003;  // 1mS
+const float LOOP_INTERVAL = 0.005;  // Secs
 const float LOOP_FREQUENCY = 1/LOOP_INTERVAL;  // Hz
 const float MAX_MOTOR_VOLTS = 300.0;
 // Defaults (actual from NVRam

@@ -1163,7 +1163,7 @@ void DragsterControl::profileSensorActions()
   if( !(pCurrentRunProfile->flags & FLAG_IGNORE_MARKERS) && state != STATE_PROFILE_ARMED)
   {
     // Check to abort run if off line
-    if( sensorRightLine >= maxLineDetectorThreshold && sensorLeftLine >= maxLineDetectorThreshold)
+    if( sensorRightLine < minLineDetectorThreshold && sensorLeftLine < minLineDetectorThreshold)
     {
       // Log the latest stats
 #ifdef HAS_ENCODERS
