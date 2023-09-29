@@ -31,7 +31,7 @@ const int gpioMotorEncoderRB = 37;
 //const int gpioMotorEncoderLB = 37;
 
 const int encodeCountsPerRev = 12; // 12 in full quad, 6 in half-quad mode
-const float wheelDiameter = -32.09; //37.0;
+const float wheelDiameter = 26.5; //-32.09; //37.0;
 const float encoderDistanceCalibration = wheelDiameter * 3.14159 / encodeCountsPerRev; // approx 8.4mm (32mm wheel) or 19.7mm (37mm)/count;
 #endif // HAS_ENCODERS
 
@@ -71,10 +71,15 @@ const int gpioSensorRightLine = 25;
 const int gpioSensorLeftLine = 33;
 const int gpioSensorRadius = 39;  // Leftmost sensor
 
-const int phototransistorsResponseTimeMicroS = 250;
+const int phototransistorsResponseTimeMicroS = 1000;
+const int adcConversionTimesTotalMicroS = 80 * 8;   // Total for 8 samples (4 ambient, 4 lit)
 
 // LEDs
 const int gpioIlluminationLED = 32;
+
+// Aux I2C port
+const int gpioI2cSda = 21;
+const int gpioI2cScl = 22;
 
 // PID values
 const float LOOP_INTERVAL = 0.003;  // 1mS

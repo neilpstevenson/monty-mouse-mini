@@ -102,9 +102,17 @@ void DragsterControl::setup()
   positionEncoder.attachFullQuad(gpioMotorEncoderRA, gpioMotorEncoderRB);
 #endif //HAS_ENCODERS
 
+  // I2C
+  pinMode(gpioI2cSda, OUTPUT);
+  pinMode(gpioI2cScl, OUTPUT);
+
   // PS4 controller
   //PS4.begin("44:17:93:89:84:6a"); // this esp32
   PS4.begin();  // default MAC
+
+  // Set the ESP32 ADC sampling parameters 
+  //analogSetClockDiv(1);     // Number samples averaged on return (default=16/12 approx 80uS per sample)
+  //analogReadResolution(12); // Bits
 
   // Get the peristent config data
   EEPROM.begin(NVRAM_MAX_SIZE);
@@ -116,7 +124,7 @@ void DragsterControl::initialMenu()
   tft.fillScreen(TFT_BLACK);
   tft.setCursor(0,0);
   tft.setTextSize(4);
-  tft.setTextColor(TFT_WHITE, TFT_BLACK);
+  tft.setTextColor(TFT_GREEN, TFT_BLACK);
   tft.print("Mode?");
 
   static int menuSelected = 0;
@@ -140,16 +148,25 @@ void DragsterControl::initialMenu()
       forceDisplay = true;
     }
     
-    if(selectSwitch.isTriggered(digitalRead(gpioSelectButton) && !PS4.Down()) || forceDisplay)
+    static bool menuDown = true;
+    if(PS4.Down())
+      menuDown = true;
+    else if(PS4.Up())
+      menuDown = false;
+
+    if(selectSwitch.isTriggered(digitalRead(gpioSelectButton) && !PS4.Down() && !PS4.Up()) || forceDisplay)
     {
       if(!forceDisplay)
-        ++menuSelected;
+        if(menuDown)
+          ++menuSelected;
+        else
+          --menuSelected;
       else
         forceDisplay = false;
       tft.fillScreen(TFT_BLACK);
       tft.setCursor(0,0);
       tft.setTextSize(4);
-      tft.setTextColor(TFT_WHITE, TFT_BLACK);
+      tft.setTextColor(TFT_CYAN, TFT_BLACK);
       switch(menuSelected)
       {
       case 1:
@@ -196,53 +213,54 @@ void DragsterControl::initialMenu()
         }
         break;
       case 4:
+        tft.print("Edit\nRun params");
+        break;
+      case 5:
         tft.print("Race\nSlow");
         pCurrentRunProfile = &slowRunProfile;
         break;
-      case 5:
+      case 6:
         tft.print("Race\nMedium");
         pCurrentRunProfile = &mediumRunProfile;
         break;
-      case 6:
+      case 7:
         tft.print("Race\nFast");
         pCurrentRunProfile = &fastRunProfile;
         break;
-      case 7:
+      case 8:
         tft.print("Race\nVery Fast");
         pCurrentRunProfile = &veryFastRunProfile;
         break;
-      case 8:
+      case 9:
         tft.print("Race\nVV Fast");
         pCurrentRunProfile = &vVFastRunProfile;
         break;
-      case 9:
+      case 10:
         tft.print("Race\nCrazy Fast");
         pCurrentRunProfile = &crazyRunProfile;
         break;
-      case 10:
+      case 11:
         tft.print("Test Run");
         pCurrentRunProfile = &testRunProfile;
         break;
-      case 11:
+      case 12:
         tft.print("Steering\ncalibrate");
         break;
-      case 12:
+      case 13:
         tft.print("PID\ncalibrate");
         break;
-      case 13:
+      case 14:
         tft.print("Distance\ncalibrate");
         break;
-      case 14:
-        tft.print("Pair\nBluetooth");
-        break;
       case 15:
-        tft.print("Edit\nRun params");
+        tft.print("Pair\nBluetooth");
         break;
       case 16:
         tft.print("Show\nStats");
         break;
       default:
         menuSelected = 0;
+        tft.setTextColor(TFT_GREEN, TFT_BLACK);
         tft.print("Mode?");
         break;
       }
@@ -262,31 +280,33 @@ void DragsterControl::initialMenu()
         startManualControl();
         break;
       case 3:
+        startProfileDisarmed();
+        break;
       case 4:
+        editRunConfigParams();
+        // Ensure repeat last menu
+        forceDisplay = true;
+        break;
       case 5:
       case 6:
       case 7:
       case 8:
       case 9:
       case 10:
+      case 11:
         startProfileDisarmed();
         break;
-      case 11:
+      case 12:
         startSteeringCalibrate();
         break;
-      case 12:
+      case 13:
         startCalibratePID();
         break;
-      case 13:
+      case 14:
         startDistanceCalibrate();
         break;
-      case 14:
-        pairBluetooth();
-        break;
       case 15:
-        editRunConfigParams();
-        // Ensure repeat last menu
-        forceDisplay = true;
+        pairBluetooth();
         break;
       case 16:
         displayStats();
@@ -541,7 +561,7 @@ void DragsterControl::manualControl()
       int steer = steeringGainManual * PS4.RStickX();
       int steerServoPos =  hwconfig.steer_centre - steer;
       steeringServo.write(steerServoPos > 500 ? steerServoPos : 500);
-      Serial.printf("Steer: %d\n", steerServoPos);
+      //Serial.printf("Steer: %d\n", steerServoPos);
     }
   
     // Get the current sensor data
@@ -550,7 +570,7 @@ void DragsterControl::manualControl()
     if(manualAutoSteer)
     {
       // Calculate the steering error
-      int steeringError = sensorLeftLine - sensorRightLine;
+      int steeringError = sensorRightLine - sensorLeftLine;
       pidInput = steeringError;
       float pidOutput = pid.compute();
       //Serial.printf("PID in = %f, out = %f\n", pidInput, pidOutput);
@@ -572,8 +592,8 @@ void DragsterControl::manualControl()
 
     // Display position
 #ifdef HAS_ENCODERS
-    int64_t positionRaw = positionEncoder.getCount();
-    Serial.printf("Position: %lld (%dmm)\n", positionRaw, (int)(positionRaw*encoderDistanceCalibration));
+//    int64_t positionRaw = positionEncoder.getCount();
+//    Serial.printf("Position: %lld (%dmm)\n", positionRaw, (int)(positionRaw*encoderDistanceCalibration));
 #endif //HAS_ENCODERS
   }
 }
@@ -663,7 +683,7 @@ void DragsterControl::steeringCalibrate()
     if(manualAutoSteer)
     {
       // Calculate the steering error
-      int steeringError = sensorLeftLine - sensorRightLine;
+      int steeringError = sensorRightLine - sensorLeftLine;
       pidInput = steeringError;
       float pidOutput = pid.compute();
       //Serial.printf("PID in = %f, out = %f\n", pidInput, pidOutput);
@@ -704,8 +724,27 @@ void DragsterControl::positionCalibrate()
   if (!PS4.isConnected()) 
   {
     motors.stopAll();
-    state = STATE_INITIAL;
-    return;
+    if(selectSwitch.isTriggered(digitalRead(gpioSelectButton)))
+    {
+      // Switch to menu mode
+      state = STATE_INITIAL;
+      return;
+    }
+
+    // Show the distance
+#ifdef HAS_ENCODERS
+    // Assess speed and position
+    int calibratedPosnMm = getCalibratedPosnMm();
+    speed.logDistance(calibratedPosnMm);
+    int16_t actualSpeed = speed.getSpeed();
+    
+    //Serial.printf("Position: %lld (%dmm), Speed=%dmm/S\n", positionRaw, calibratedPosnMm, actualSpeed);
+    Serial.printf("%d %d\n", calibratedPosnMm, actualSpeed);
+    tft.setCursor(10,32);
+    tft.printf("%6dmm", calibratedPosnMm);
+    tft.setCursor(10,96);
+    tft.printf("%5dmm/S", actualSpeed);
+#endif //HAS_ENCODERS
   }
   else if(PS4.Triangle())
   {
@@ -745,7 +784,7 @@ void DragsterControl::positionCalibrate()
     if(manualAutoSteer)
     {
       // Calculate the steering error
-      int steeringError = sensorLeftLine - sensorRightLine;
+      int steeringError = sensorRightLine - sensorLeftLine;
       pidInput = steeringError;
       float pidOutput = pid.compute();
       //Serial.printf("PID in = %f, out = %f\n", pidInput, pidOutput);
@@ -870,7 +909,7 @@ void DragsterControl::calibratePID()
     if(manualAutoSteer)
     {
       // Calculate the steering error
-      int steeringError = sensorLeftLine - sensorRightLine;
+      int steeringError = sensorRightLine - sensorLeftLine;
       pidInput = steeringError;
       float pidOutput = pid.compute();
       //Serial.printf("PID in = %f, out = %f\n", pidInput, pidOutput);
@@ -967,8 +1006,8 @@ void DragsterControl::waitForProfileArmed()
     // Wait for Square button 
     // or button with radius sensor over white
     getSensorReadings();
-    Serial.print("waitForProfileArmed triggered: ");
-    Serial.println(sensorRadius);
+    //Serial.print("waitForProfileArmed triggered: ");
+    //Serial.println(sensorRadius);
     if(PS4.Square() || 
        (selectSwitch.isTriggered(digitalRead(gpioSelectButton)) && sensorRadius > markerHighThreshold))
     {
@@ -989,10 +1028,9 @@ void DragsterControl::waitForProfileGo()
     
     // Wait for Circle button
     // or manual trigger if no PS4 controller
-    getSensorReadings();
-    Serial.print("waitForProfileGo: ");
-    Serial.println(sensorRadius);
-    if(selectSwitch.isTriggered(digitalRead(gpioSelectButton)))
+    //Serial.print("waitForProfileGo: ");
+    //Serial.println(sensorRadius);
+    if(PS4.Triangle() || selectSwitch.isTriggered(digitalRead(gpioSelectButton)))
     {
         // Switch back to menu mode
         state = STATE_INITIAL;
@@ -1017,7 +1055,7 @@ void DragsterControl::waitForProfileGo()
         float pidOutput = pid.output();
         tft.setCursor(0,80);
         tft.setTextSize(4);
-        if(pidOutput < 10.0 && pidOutput > -10.0)
+        if(pidOutput >= 0.0)
           tft.setTextColor(TFT_GREEN, TFT_ORANGE);
         else
           tft.setTextColor(TFT_RED, TFT_ORANGE);
@@ -1025,6 +1063,7 @@ void DragsterControl::waitForProfileGo()
         tft.setTextColor(TFT_GREEN, TFT_BLACK);
 
         // Recompute PID to avoid display code disrupting the I & D parts on next cycle
+        getSensorReadings();
         pid.compute();
       }
     }
@@ -1110,7 +1149,7 @@ void DragsterControl::profileSensorActions()
   getSensorReadings();
 
   // Calculate the steering error
-  int steeringError = sensorLeftLine - sensorRightLine;
+  int steeringError = sensorRightLine - sensorLeftLine;
   pidInput = steeringError;
   float pidOutput = pid.compute();
   //Serial.printf("PID in = %f (%d-%d), out = %f\n", pidInput, sensorLeftLine, sensorRightLine, pidOutput);
@@ -1247,26 +1286,64 @@ void DragsterControl::stateMachineRun()
     break;
   }
   
-  delay(3);
+  delayMicroseconds(int(LOOP_INTERVAL * 1E6) - phototransistorsResponseTimeMicroS - adcConversionTimesTotalMicroS);
 }
 
 void  DragsterControl::getSensorReadings()
 {
+#define DEBUG_TIMINGS
+#ifdef DEBUG_TIMINGS
+  digitalWrite(gpioI2cSda, HIGH);
+#endif // DEBUG_TIMINGS
   // Read the ambient level first
   int sensorStartFinishAbient = analogRead(gpioSensorStartFinish);
+#ifdef DEBUG_TIMINGS
+  digitalWrite(gpioI2cSda, LOW);
+  digitalWrite(gpioI2cSda, HIGH);
+#endif // DEBUG_TIMINGS
   int sensorRadiusAbient = analogRead(gpioSensorRadius);
+#ifdef DEBUG_TIMINGS
+  digitalWrite(gpioI2cSda, LOW);
+  digitalWrite(gpioI2cSda, HIGH);
+#endif // DEBUG_TIMINGS
   int sensorRightLineAbient = analogRead(gpioSensorRightLine);
+#ifdef DEBUG_TIMINGS
+  digitalWrite(gpioI2cSda, LOW);
+  digitalWrite(gpioI2cSda, HIGH);
+#endif // DEBUG_TIMINGS
   int sensorLeftLineAbient = analogRead(gpioSensorLeftLine);
+#ifdef DEBUG_TIMINGS
+  digitalWrite(gpioI2cSda, LOW);
+#endif // DEBUG_TIMINGS
 
   // Illuminate
   digitalWrite(gpioIlluminationLED, HIGH);
   delayMicroseconds(phototransistorsResponseTimeMicroS);  // Allow phototransitors time to react
 
   // Read illuminated values
+#ifdef DEBUG_TIMINGS
+  digitalWrite(gpioI2cSda, HIGH);
+#endif // DEBUG_TIMINGS
   int sensorStartFinishLit = analogRead(gpioSensorStartFinish);
+#ifdef DEBUG_TIMINGS
+  digitalWrite(gpioI2cSda, LOW);
+  digitalWrite(gpioI2cSda, HIGH);
+#endif // DEBUG_TIMINGS
   int sensorRadiusLit = analogRead(gpioSensorRadius);
+#ifdef DEBUG_TIMINGS
+  digitalWrite(gpioI2cSda, LOW);
+  digitalWrite(gpioI2cSda, HIGH);
+#endif // DEBUG_TIMINGS
   int sensorRightLineLit = analogRead(gpioSensorRightLine);
+#ifdef DEBUG_TIMINGS
+  digitalWrite(gpioI2cSda, LOW);
+  digitalWrite(gpioI2cSda, HIGH);
+#endif // DEBUG_TIMINGS
   int sensorLeftLineLit = analogRead(gpioSensorLeftLine);
+#ifdef DEBUG_TIMINGS
+  digitalWrite(gpioI2cSda, LOW);
+#endif // DEBUG_TIMINGS
+
   // Switch illumination off
   digitalWrite(gpioIlluminationLED, LOW);
 
