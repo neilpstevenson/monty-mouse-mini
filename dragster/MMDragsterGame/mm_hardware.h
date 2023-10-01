@@ -72,7 +72,7 @@ const int gpioSensorLeftLine = 33;
 const int gpioSensorRadius = 39;  // Leftmost sensor
 
 const int phototransistorsResponseTimeMicroS = 1000;
-const int adcConversionTimesTotalMicroS = 80 * 8;   // Total for 8 samples (4 ambient, 4 lit)
+const int adcConversionTimeMicroS = 87;   // Typical ADC conversion time
 
 // LEDs
 const int gpioIlluminationLED = 32;
@@ -81,11 +81,3 @@ const int gpioIlluminationLED = 32;
 const int gpioI2cSda = 21;
 const int gpioI2cScl = 22;
 
-// PID values
-const float LOOP_INTERVAL = 0.005;  // Secs
-const float LOOP_FREQUENCY = 1/LOOP_INTERVAL;  // Hz
-const float MAX_MOTOR_VOLTS = 300.0;
-// Defaults (actual from NVRam
-const float PID_Kp = 0.03; //0.005; //0.01;// 0.007;
-const float PID_Ki = 0.0;
-const float PID_Kd = 0.005; //0.002;

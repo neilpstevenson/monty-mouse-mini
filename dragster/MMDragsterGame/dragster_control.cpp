@@ -111,7 +111,7 @@ void DragsterControl::setup()
   PS4.begin();  // default MAC
 
   // Set the ESP32 ADC sampling parameters 
-  //analogSetClockDiv(1);     // Number samples averaged on return (default=16/12 approx 80uS per sample)
+  //analogSetClockDiv(1);     // Number samples averaged on return
   //analogReadResolution(12); // Bits
 
   // Get the peristent config data
@@ -1286,79 +1286,147 @@ void DragsterControl::stateMachineRun()
     break;
   }
   
-  delayMicroseconds(int(LOOP_INTERVAL * 1E6) - phototransistorsResponseTimeMicroS - adcConversionTimesTotalMicroS);
+  delayMicroseconds(int(LOOP_INTERVAL * 1E6) - phototransistorsResponseTimeMicroS - adcConversionTimeMicroS * 8 * sampleAveraging);
 }
 
 void  DragsterControl::getSensorReadings()
 {
+  int sensorRadiusAbient = 0;
+  for(int i = 0; i < sampleAveraging; i++)
+  {
+#ifdef DEBUG_TIMINGS
+    digitalWrite(gpioI2cSda, HIGH);
+#endif // DEBUG_TIMINGS
+    sensorRadiusAbient += analogRead(gpioSensorRadius);
+#ifdef DEBUG_TIMINGS
+    digitalWrite(gpioI2cSda, LOW);
+#endif // DEBUG_TIMINGS
+  }
+  sensorRadiusAbient /= sampleAveraging;
+
 #define DEBUG_TIMINGS
+  int sensorStartFinishAbient = 0;
+  for(int i = 0; i < sampleAveraging; i++)
+  {
 #ifdef DEBUG_TIMINGS
-  digitalWrite(gpioI2cSda, HIGH);
+    digitalWrite(gpioI2cSda, HIGH);
 #endif // DEBUG_TIMINGS
-  // Read the ambient level first
-  int sensorStartFinishAbient = analogRead(gpioSensorStartFinish);
+    // Read the ambient level first
+    sensorStartFinishAbient += analogRead(gpioSensorStartFinish);
 #ifdef DEBUG_TIMINGS
-  digitalWrite(gpioI2cSda, LOW);
-  digitalWrite(gpioI2cSda, HIGH);
+    digitalWrite(gpioI2cSda, LOW);
 #endif // DEBUG_TIMINGS
-  int sensorRadiusAbient = analogRead(gpioSensorRadius);
+  }
+  sensorStartFinishAbient /= sampleAveraging;
+
+  int sensorRightLineAbient = 0;
+  for(int i = 0; i < sampleAveraging; i++)
+  {
 #ifdef DEBUG_TIMINGS
-  digitalWrite(gpioI2cSda, LOW);
-  digitalWrite(gpioI2cSda, HIGH);
+    digitalWrite(gpioI2cSda, HIGH);
 #endif // DEBUG_TIMINGS
-  int sensorRightLineAbient = analogRead(gpioSensorRightLine);
+    sensorRightLineAbient += analogRead(gpioSensorRightLine);
 #ifdef DEBUG_TIMINGS
-  digitalWrite(gpioI2cSda, LOW);
-  digitalWrite(gpioI2cSda, HIGH);
+    digitalWrite(gpioI2cSda, LOW);
 #endif // DEBUG_TIMINGS
-  int sensorLeftLineAbient = analogRead(gpioSensorLeftLine);
+  }
+  sensorRightLineAbient /= sampleAveraging;
+
+  int sensorLeftLineAbient = 0;
+  for(int i = 0; i < sampleAveraging; i++)
+  {
 #ifdef DEBUG_TIMINGS
-  digitalWrite(gpioI2cSda, LOW);
+    digitalWrite(gpioI2cSda, HIGH);
 #endif // DEBUG_TIMINGS
+    sensorLeftLineAbient += analogRead(gpioSensorLeftLine);
+#ifdef DEBUG_TIMINGS
+    digitalWrite(gpioI2cSda, LOW);
+#endif // DEBUG_TIMINGS
+  }
+  sensorLeftLineAbient /= sampleAveraging;
 
   // Illuminate
   digitalWrite(gpioIlluminationLED, HIGH);
   delayMicroseconds(phototransistorsResponseTimeMicroS);  // Allow phototransitors time to react
 
   // Read illuminated values
+  int sensorRadiusLit = 0;
+  for(int i = 0; i < sampleAveraging; i++)
+  {
 #ifdef DEBUG_TIMINGS
-  digitalWrite(gpioI2cSda, HIGH);
+    digitalWrite(gpioI2cSda, HIGH);
 #endif // DEBUG_TIMINGS
-  int sensorStartFinishLit = analogRead(gpioSensorStartFinish);
+    sensorRadiusLit += analogRead(gpioSensorRadius);
 #ifdef DEBUG_TIMINGS
-  digitalWrite(gpioI2cSda, LOW);
-  digitalWrite(gpioI2cSda, HIGH);
+    digitalWrite(gpioI2cSda, LOW);
 #endif // DEBUG_TIMINGS
-  int sensorRadiusLit = analogRead(gpioSensorRadius);
+  }
+  sensorRadiusLit /= sampleAveraging;
+
+  int sensorStartFinishLit = 0;
+  for(int i = 0; i < sampleAveraging; i++)
+  {
 #ifdef DEBUG_TIMINGS
-  digitalWrite(gpioI2cSda, LOW);
-  digitalWrite(gpioI2cSda, HIGH);
+    digitalWrite(gpioI2cSda, HIGH);
 #endif // DEBUG_TIMINGS
-  int sensorRightLineLit = analogRead(gpioSensorRightLine);
+    sensorStartFinishLit += analogRead(gpioSensorStartFinish);
 #ifdef DEBUG_TIMINGS
-  digitalWrite(gpioI2cSda, LOW);
-  digitalWrite(gpioI2cSda, HIGH);
+    digitalWrite(gpioI2cSda, LOW);
 #endif // DEBUG_TIMINGS
-  int sensorLeftLineLit = analogRead(gpioSensorLeftLine);
+  }
+  sensorStartFinishLit /= sampleAveraging;
+
+  int sensorRightLineLit = 0;
+  for(int i = 0; i < sampleAveraging; i++)
+  {
 #ifdef DEBUG_TIMINGS
-  digitalWrite(gpioI2cSda, LOW);
+    digitalWrite(gpioI2cSda, HIGH);
 #endif // DEBUG_TIMINGS
+    sensorRightLineLit += analogRead(gpioSensorRightLine);
+#ifdef DEBUG_TIMINGS
+    digitalWrite(gpioI2cSda, LOW);
+#endif // DEBUG_TIMINGS
+  }
+  sensorRightLineLit /= sampleAveraging;
+
+  int sensorLeftLineLit = 0;
+  for(int i = 0; i < sampleAveraging; i++)
+  {
+#ifdef DEBUG_TIMINGS
+    digitalWrite(gpioI2cSda, HIGH);
+#endif // DEBUG_TIMINGS
+    sensorLeftLineLit += analogRead(gpioSensorLeftLine);
+#ifdef DEBUG_TIMINGS
+    digitalWrite(gpioI2cSda, LOW);
+#endif // DEBUG_TIMINGS
+  }
+  sensorLeftLineLit /= sampleAveraging;
 
   // Switch illumination off
   digitalWrite(gpioIlluminationLED, LOW);
 
-  // Store the difference
+  // Calculate the difference as the retruned readings
   #ifdef INVERTED_SENSORS
-  sensorStartFinish = -(sensorStartFinishLit < sensorStartFinishAbient ? sensorStartFinishLit - sensorStartFinishAbient : 0);
-  sensorRightLine = -(sensorRightLineLit < sensorRightLineAbient ? sensorRightLineLit - sensorRightLineAbient : 0);
-  sensorLeftLine = -(sensorLeftLineLit < sensorLeftLineAbient ? sensorLeftLineLit - sensorLeftLineAbient : 0);
-  sensorRadius = -(sensorRadiusLit < sensorRadiusAbient ? sensorRadiusLit - sensorRadiusAbient : 0);
+  int sensorStartFinishNew = -(sensorStartFinishLit < sensorStartFinishAbient ? sensorStartFinishLit - sensorStartFinishAbient : 0);
+  int sensorRightLineNew = -(sensorRightLineLit < sensorRightLineAbient ? sensorRightLineLit - sensorRightLineAbient : 0);
+  int sensorLeftLineNew = -(sensorLeftLineLit < sensorLeftLineAbient ? sensorLeftLineLit - sensorLeftLineAbient : 0);
+  int sensorRadiusNew = -(sensorRadiusLit < sensorRadiusAbient ? sensorRadiusLit - sensorRadiusAbient : 0);
   #else
-  sensorStartFinish = sensorStartFinishLit > sensorStartFinishAbient ? sensorStartFinishLit - sensorStartFinishAbient : 0;
-  sensorRightLine = sensorRightLineLit > sensorRightLineAbient ? sensorRightLineLit - sensorRightLineAbient : 0;
-  sensorLeftLine = sensorLeftLineLit > sensorLeftLineAbient ? sensorLeftLineLit - sensorLeftLineAbient : 0;
-  sensorRadius = sensorRadiusLit > sensorRadiusAbient ? sensorRadiusLit - sensorRadiusAbient : 0;
+  int sensorStartFinishNew = sensorStartFinishLit > sensorStartFinishAbient ? sensorStartFinishLit - sensorStartFinishAbient : 0;
+  int sensorRightLineNew = sensorRightLineLit > sensorRightLineAbient ? sensorRightLineLit - sensorRightLineAbient : 0;
+  int sensorLeftLineNew = sensorLeftLineLit > sensorLeftLineAbient ? sensorLeftLineLit - sensorLeftLineAbient : 0;
+  int sensorRadiusNew = sensorRadiusLit > sensorRadiusAbient ? sensorRadiusLit - sensorRadiusAbient : 0;
   #endif
+
+  // Store the results, applying a simple filter
+  sensorStartFinish = (sensorStartFinish * sampleFilteringFactor + sensorStartFinishNew)/(sampleFilteringFactor+1);
+  sensorRightLine = (sensorRightLine * sampleFilteringFactor + sensorRightLineNew)/(sampleFilteringFactor+1);
+  sensorLeftLine = (sensorLeftLine * sampleFilteringFactor + sensorLeftLineNew)/(sampleFilteringFactor+1);
+  sensorRadius = (sensorRadius * sampleFilteringFactor + sensorRadiusNew)/(sampleFilteringFactor+1);
+
+  // Print the sensors
+  //Serial.printf("RAW,%d,%d,%d,%d,%d,%d,%d,%d\n", sensorRadiusLit, sensorRadiusAbient, sensorLeftLineLit, sensorLeftLineAbient, sensorRightLineLit, sensorRightLineAbient, sensorStartFinishLit, sensorStartFinishAbient);
+  //Serial.printf("FILT,%d,%d,%d,%d\n", sensorRadius, sensorLeftLine, sensorRightLine, sensorStartFinish);
 }
 
 void  DragsterControl::showSensorMeters()

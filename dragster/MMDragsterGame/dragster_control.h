@@ -5,9 +5,9 @@
 #include <ESP32Encoder.h>
 #include "display.h"
 #include "mm_hardware.h"
+#include "dragster_run.h"
 #include "pid.h"
 #include "debounce.h"
-#include "dragster_run.h"
 #include "nvram.h"
 #include "motors.h"
 #include "speeds.h"
