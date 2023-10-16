@@ -38,16 +38,16 @@ typedef struct
 
 static MODE_PROFILE_TABLE mode_profiles[] =
 {
-  // Half-size maze
+  // Half-size maze - Red
   {
     // Ahead 
     forward_speed,
     // Left
-    80, 30, turn_leadin_speed,
+    80, 40, turn_leadin_speed,
     turn_speed,
     10, turn_leadout_speed,
     // Right
-    70, turn_leadin_speed,
+    80, turn_leadin_speed,
     turn_speed,
     5, turn_leadout_speed,
     // About turn
@@ -55,24 +55,24 @@ static MODE_PROFILE_TABLE mode_profiles[] =
     turn_180_speed,
     5, turn_leadout_speed
   },
-  // Classic maze
+  // Classic maze - Green
   {
     // Ahead 
     forward_speed,
     // Left
     160, 50, turn_leadin_speed,
     turn_speed,
-    30, turn_leadout_speed,
+    100, turn_leadout_speed,
     // Right
-    30, turn_leadin_speed,
+    160, turn_leadin_speed,
     turn_speed,
-    90, turn_leadout_speed,
+    100, turn_leadout_speed,
     // About turn
     40, turn_leadin_speed,
     turn_180_speed,
-    5, turn_leadout_speed
+    20, turn_leadout_speed
   },
-  // Classic maze faster
+  // Classic maze faster - Blue
   {
     // Ahead 
     forward_speed,
@@ -301,36 +301,52 @@ void turn_right_180(int speed)
 
 void logSensors(const char *mode)
 {
-  Serial.print(mode); Serial.print(" ");
+  static bool firstLog = true;
+  if(firstLog)
+  {
+    firstLog = false;
+    // Print header
+    DebugPort.print("Mode,LeftCal,FrontLCal,FrontRCal,RightCal,EncLCal,EncRCal");
+#ifdef LOG_RAW_SENSORS  
+    DebugPort.println(",LeftRaw,FrontLRaw,FrontRRaw,RightRaw,EncLRaw,EncRRaw");
+#else
+    DebugPort.println();
+#endif
+  }
+
+  DebugPort.print(mode);        DebugPort.print(",");
   
   // Sensors
-  Serial.print(sensors.left().getCalibrated());       Serial.print(" ");
-  Serial.print(sensors.frontLeft().getCalibrated());  Serial.print(" ");
-  Serial.print(sensors.frontRight().getCalibrated()); Serial.print(" ");
-  Serial.print(sensors.right().getCalibrated());      Serial.print(" ");
+  DebugPort.print(sensors.left().getCalibrated());       DebugPort.print(",");
+  DebugPort.print(sensors.frontLeft().getCalibrated());  DebugPort.print(",");
+  DebugPort.print(sensors.frontRight().getCalibrated()); DebugPort.print(",");
+  DebugPort.print(sensors.right().getCalibrated());      DebugPort.print(",");
   
   // Encoders
-  Serial.print(encoder_l.count() * encode_calibrate_l);Serial.print("mm ");
-  Serial.print(encoder_r.count() * encode_calibrate_r);Serial.print("mm ");
+  DebugPort.print(encoder_l.count() * encode_calibrate_l);  DebugPort.print("mm,");
+  DebugPort.print(encoder_r.count() * encode_calibrate_r);  DebugPort.print("mm,");
 
-#define LOG_RAW_SENSORS
 #ifdef LOG_RAW_SENSORS  
-  Serial.print(sensors.left().getRaw());       Serial.print(" ");
-  Serial.print(sensors.frontLeft().getRaw());  Serial.print(" ");
-  Serial.print(sensors.frontRight().getRaw()); Serial.print(" ");
-  Serial.print(sensors.right().getRaw());      Serial.print(" ");
+  DebugPort.print(sensors.left().getRaw());       DebugPort.print(",");
+  DebugPort.print(sensors.frontLeft().getRaw());  DebugPort.print(",");
+  DebugPort.print(sensors.frontRight().getRaw()); DebugPort.print(",");
+  DebugPort.print(sensors.right().getRaw());      DebugPort.print(",");
   
   // Encoders
-  Serial.print(encoder_l.count());             Serial.print(" ");
-  Serial.print(encoder_r.count());
+  DebugPort.print(encoder_l.count());             DebugPort.print(",");
+  DebugPort.print(encoder_r.count());
 #endif
 
-  Serial.println();
+  DebugPort.println();
 }
 
 void setup() 
 {
     Serial.begin(115200);
+#ifdef SERIAL_DEBUG_PORT 
+    DebugPort.begin(115200);
+#endif
+
     //Scheduler.startLoop(readAdcLoop);
     //poller.start(readAdcLoop);
 
@@ -373,17 +389,17 @@ void loop()
     // Display starting flashes
     bool triggered = false;
     int mode = 0;
-    Serial.println("ready for start");
+    DebugPort.println("ready for start");
 
     for(int count = 0; !triggered; count++)
     {
       if(count % 30 == 0)
       {
-        // On
-        pixels.setPixelColor(0, pixels.Color(mode == 0 ? 8 : 0, mode == 1 ? 8 : 0, mode == 2 ? 8 : 0));
+        // On - Red=0 (1/2 size), Green=1 (full), Blue=2 (Full faster), 3 = cyan (Test) 
+        pixels.setPixelColor(0, pixels.Color(mode == 0 ? 8 : 0, mode == 1 || mode == 3 ? 8 : 0, mode == 2 || mode == 3 ? 8 : 0));
         pixels.show();
       }
-      else if(count % 30 == 15)
+      else if(count % 30 == 20)
       {
         // Off
         pixels.setPixelColor(0, pixels.Color(0, 0, 0));
@@ -392,9 +408,16 @@ void loop()
 
       if(digitalRead(buttonA) == 0)
       {
-        Serial.println("mode change");
         if(++mode > 3)
           mode = 0;
+          
+        DebugPort.print("mode ");
+        DebugPort.println(mode);
+        
+        // On - Red=0 (1/2 size), Green=1 (full), Blue=2 (Full faster), 3 = cyan (Test) 
+        pixels.setPixelColor(0, pixels.Color(mode == 0 ? 8 : 0, mode == 1 || mode == 3 ? 8 : 0, mode == 2 || mode == 3 ? 8 : 0));
+        pixels.show();
+
         delay(100);
         while(digitalRead(buttonA) == 0)
           delay(100);
@@ -403,36 +426,43 @@ void loop()
       if(digitalRead(buttonB) == 0)
       {
         triggered = true;
-        Serial.println("triggered");
+        DebugPort.println("go");
+
+        // Show starting - Solid white
+        pixels.setPixelColor(0, pixels.Color(8, 8, 8));
+        pixels.show();
+      
+        delay(100);
+        while(digitalRead(buttonB) == 0)
+          delay(100);
       }
       
       delay(20);
     }
-    Serial.println("running");
 
-    // Show starting
-    pixels.setPixelColor(0, pixels.Color(0, 16, 0));
-    pixels.show();
-    
+    DebugPort.print("running mode: ");
+    DebugPort.println(mode);
+
     sensors.startSensors();
 
     delay(1500);
 
     // Take a sample and use the left/right readings as midpoint between the two initial walls
     // We will use this as a centre line when following subsequent walls
-    sensors.waitForSample();
     sensors.calibrateLRSensors();
 
     // Confirm the calibrated readings
-    Serial.print("Calibrated(Raw) L, LR, FR, R:");               Serial.println();
-    Serial.print(sensors.left().getCalibrated());   Serial.print("(");
-    Serial.print(sensors.left().getRaw());          Serial.print(") ");
-    Serial.print(sensors.frontLeft().getCalibrated());  Serial.print("(");
-    Serial.print(sensors.frontLeft().getRaw());         Serial.print(") ");
-    Serial.print(sensors.frontRight().getCalibrated());   Serial.print("(");
-    Serial.print(sensors.frontRight().getRaw());          Serial.print(") ");
-    Serial.print(sensors.right().getCalibrated());  Serial.print("(");
-    Serial.print(sensors.right().getRaw());         Serial.println(")");
+    DebugPort.println("Calibration:");
+    DebugPort.println("LeftCal,LeftRaw, FrontLCal,FrontLRaw, FrontRCal,FrontRRaw, RightCal,RightRaw");
+    DebugPort.print(sensors.left().getCalibrated());      DebugPort.print(",");
+    DebugPort.print(sensors.left().getRaw());             DebugPort.print(", ");
+    DebugPort.print(sensors.frontLeft().getCalibrated()); DebugPort.print(",");
+    DebugPort.print(sensors.frontLeft().getRaw());        DebugPort.print(", ");
+    DebugPort.print(sensors.frontRight().getCalibrated());DebugPort.print(",");
+    DebugPort.print(sensors.frontRight().getRaw());       DebugPort.print(", ");
+    DebugPort.print(sensors.right().getCalibrated());     DebugPort.print(",");
+    DebugPort.print(sensors.right().getRaw());
+    DebugPort.println();
 
     delay(500);
 
@@ -454,122 +484,26 @@ void loop()
         delay(500);
     }
 
-    while(true) {
-        //delay(20);
-        //adcReadyEvent.wait_any(1);
+    while(true) 
+    {
         sensors.waitForSample();
         
-        //print_sensors();
-
-        /*
-        Serial.print(darkAdcL);        Serial.print(" ");
-        Serial.print(lightAdcL);        Serial.print(" ");
-        Serial.print(sensorFL.getRaw());        Serial.print(" ");
-        Serial.print(sensorFL.getCalibrated());        Serial.print(" ");
-        Serial.print(darkAdcFR);        Serial.print(" ");
-        Serial.print(lightAdcFR);        Serial.print(" ");
-        Serial.print(darkAdcR);        Serial.print(" ");
-        Serial.print(lightAdcR);
-        */
-        //Serial.println();
-
-        /*
-         * Simple move to a set distance
-        if(sensors.frontLeft().getCalibrated() < 30)
-        {
-          motors.forwardPower(128);
-          Serial.println(" FORWARD");
-        }
-        else if(sensors.frontLeft().getCalibrated() > 60)
-        {
-          motors.forwardPower(-128);
-          Serial.println(" BACKUP");
-        }
-        else
-        {
-          motors.stop();
-          Serial.println(" STOP");
-        }
-        */
-/*
-        motors.stop();
-
-        // Foward 100mm
-        float start_pos_r = encoder_r.count() * encode_calibrate_r;
-//        while(1)
-//        {
-        motors.forwardPower(127);
-//        delay(2000);
-//        motors.forwardPower(-127);
-//        delay(2000);
-//        }
-        while(encoder_r.count() * encode_calibrate_r - start_pos_r < 100)
-        {
-          delay(10);
-          Serial.print(encoder_r.count() * encode_calibrate_r);Serial.print("mm ");
-          Serial.print(encoder_l.count() * encode_calibrate_l);Serial.print("mm ");
-          Serial.println();
-        }
-       
-        // Stop
-        motors.stop();
-
-        // Allow to stop
-        delay(1000);
-        Serial.print(encoder_r.count() * encode_calibrate_r);Serial.print("mm ");
-        Serial.print(encoder_l.count() * encode_calibrate_l);Serial.print("mm ");
-        Serial.println();
-        
-        // Wait 10s to retry
-        delay(10000);
-*/
-
-        // Test encoder-based moves
-        /*
-        forward(100);
-        motors.stop();
-        delay(2000);
-        forward(100);
-        motors.stop();
-        delay(2000);
-        turn_left_90();
-        motors.stop();
-        delay(2000);
-        */
-
-        // Test simple moves
-        /*
-        while(1)
-        {
-          motors.forwardPower(128);
-          delay(1000);
-          motors.stop();
-          delay(1000);
-          motors.forwardPower(-128);
-          delay(1000);
-          motors.stop();
-          delay(1000);
-        }
-        */
-
         // Gap on left?
         if(sensors.left().getCalibrated() < wall_follow_left_gap_threshold)
         {
           logSensors("GAP LEFT");
           digitalWrite(ledGreen, 1);
-  //motors.stop();
-  //delay(500);
-
+  
           // Move past the gap, so can turn
           if(!justTurned)
           {
             // Need to move wheels into the gap
-            forward_with_wall_follow(mode_profiles[mode].left_leadin_distance, mode_profiles[mode].left_leadin_speed);
+            forward(mode_profiles[mode].left_leadin_distance, mode_profiles[mode].left_leadin_speed);
           }
           else
           {
             // Wheels already in gap, just need a bit of clearance
-            forward_with_wall_follow(mode_profiles[mode].left_leadin_distance_short, mode_profiles[mode].left_leadin_speed);
+            forward(mode_profiles[mode].left_leadin_distance_short, mode_profiles[mode].left_leadin_speed);
           }          
 
           // Turn
@@ -577,7 +511,7 @@ void loop()
 
           // Straighten up
           reset_PID();
-          forward_with_wall_follow(mode_profiles[mode].left_leadout_distance, mode_profiles[mode].left_leadout_speed);
+          forward(mode_profiles[mode].left_leadout_distance, mode_profiles[mode].left_leadout_speed);
           
           digitalWrite(ledGreen, 0);
 
@@ -599,8 +533,10 @@ void loop()
 
   //motors.stop();
   //delay(500);
-            forward_with_wall_follow(mode_profiles[mode].right_leadin_distance, mode_profiles[mode].right_leadin_speed); // Will stop if gets too close
+            forward(mode_profiles[mode].right_leadin_distance, mode_profiles[mode].right_leadin_speed); // Will stop if gets too close
             turn_right_90(mode_profiles[mode].right_turn_speed);
+
+            // We will have a left wall, follow it
             reset_PID();
             forward_with_wall_follow(mode_profiles[mode].right_leadout_distance, mode_profiles[mode].right_leadout_speed);
 
@@ -616,10 +552,10 @@ void loop()
   //motors.stop();
   //delay(500);
 
-            forward_with_wall_follow(mode_profiles[mode].about_leadin_distance, mode_profiles[mode].about_leadin_speed); // Will stop if gets too close
+            forward(mode_profiles[mode].about_leadin_distance, mode_profiles[mode].about_leadin_speed); // Will stop if gets too close
             turn_right_180(mode_profiles[mode].about_turn_speed);
 
-            // Reset PID
+            // We will have a left wall, follow it
             reset_PID();
             forward_with_wall_follow(mode_profiles[mode].about_leadout_distance, mode_profiles[mode].about_leadout_speed);
 
@@ -650,4 +586,3 @@ void loop()
         //yield();
     }
 }
-

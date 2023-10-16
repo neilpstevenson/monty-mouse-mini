@@ -1,5 +1,8 @@
 #pragma once
 
+#define SERIAL_DEBUG_PORT 
+#define LOG_RAW_SENSORS
+
 static const float kp = 1.0;
 static const float kd = 0.01;
 
@@ -24,7 +27,7 @@ static const int turn_180_speed = 64;
 // Distance parameters during wall follower
 static const int wall_follow_left_distance = 85; //90;
 static const int wall_follow_left_distance_min = 50;
-static const int wall_follow_forward_min_distance = 95; //90; //95;
+static const int wall_follow_forward_min_distance = 98; //90; //95;
 static const int wall_follow_left_gap_threshold = 40;
 static const int wall_follow_right_gap_threshold = 40;
 static const int wall_follow_ahead_blocked_threshold = 40;
@@ -41,3 +44,10 @@ static const int sensor_frontright_min_raw = 8000;
 static const int sensor_frontright_max_raw = 55000;
 static const int sensor_right_min_raw = 7000;
 static const int sensor_right_max_raw = 12000;
+
+#ifdef SERIAL_DEBUG_PORT
+static UART &DebugPort = Serial1; // i.e. UART0 (pins 0&1)
+#else
+static UART &DebugPort = Serial;  // i.e. USB serial
+#endif
+

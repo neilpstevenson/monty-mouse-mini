@@ -11,8 +11,8 @@ static const int ledRed = 11;
 static const int neoPixel = 16;
 
 // Buttons
-static const int buttonA = 12;
-static const int buttonB = 13;
+static const int buttonA = 12;  // Select
+static const int buttonB = 13;  // Go
 
 // Motors
 static const int motorA1 = 5;
@@ -34,3 +34,7 @@ static const int leftEncoderA = 8;
 static const int leftEncoderB = 9;
 static const int rightEncoderA = 3;
 static const int rightEncoderB = 2;
+
+// Debug port
+static const int debugPortTx = 0;
+static const int debugPortRx = 1;

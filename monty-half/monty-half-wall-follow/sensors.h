@@ -132,6 +132,8 @@ class WallSensors
     // Calibrate the left and right sensor, assuing we're midway between two walls
     void calibrateLRSensors()
     {
+      waitForSample();
+      
       unsigned int whiteRawL = sensorL.getRaw();
       unsigned int whiteRawR = sensorR.getRaw();
       // Convert this to 85% by assuming black is 50% of the current reading
