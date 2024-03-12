@@ -189,7 +189,9 @@ float get_wall_follow_error()
   float newDistL = sensors.left().getCalibrated();
   float newDistR = sensors.right().getCalibrated();
   float error;
-  if(newDistL > newDistR)
+
+  // Prefer left wall, if we have one, or the right if this is seeable
+  if(newDistL > wall_follow_left_distance_min)
     error = (newDistL - wall_follow_left_distance) * kp + (newDistL - lastDistL) * kd * interval;
   else if(newDistR > wall_follow_left_distance_min)
     error = -((newDistR - wall_follow_left_distance) * kp + (newDistR - lastDistR) * kd * interval);
@@ -380,109 +382,27 @@ void print_sensors()
   Serial.println();
 }
 
-
-void loop() 
+void testMode()
 {
-    encoder_r.begin(pull_direction::up, resolution::full);
-    encoder_l.begin(pull_direction::up, resolution::full);
-
-    // Display starting flashes
-    bool triggered = false;
-    int mode = 0;
-    DebugPort.println("ready for start");
-
-    for(int count = 0; !triggered; count++)
+    while(1)
     {
-      if(count % 30 == 0)
-      {
-        // On - Red=0 (1/2 size), Green=1 (full), Blue=2 (Full faster), 3 = cyan (Test) 
-        pixels.setPixelColor(0, pixels.Color(mode == 0 ? 8 : 0, mode == 1 || mode == 3 ? 8 : 0, mode == 2 || mode == 3 ? 8 : 0));
-        pixels.show();
-      }
-      else if(count % 30 == 20)
-      {
-        // Off
-        pixels.setPixelColor(0, pixels.Color(0, 0, 0));
-        pixels.show();
-      }
-
-      if(digitalRead(buttonA) == 0)
-      {
-        if(++mode > 3)
-          mode = 0;
-          
-        DebugPort.print("mode ");
-        DebugPort.println(mode);
-        
-        // On - Red=0 (1/2 size), Green=1 (full), Blue=2 (Full faster), 3 = cyan (Test) 
-        pixels.setPixelColor(0, pixels.Color(mode == 0 ? 8 : 0, mode == 1 || mode == 3 ? 8 : 0, mode == 2 || mode == 3 ? 8 : 0));
-        pixels.show();
-
-        delay(100);
-        while(digitalRead(buttonA) == 0)
-          delay(100);
-      }
-
-      if(digitalRead(buttonB) == 0)
-      {
-        triggered = true;
-        DebugPort.println("go");
-
-        // Show starting - Solid white
-        pixels.setPixelColor(0, pixels.Color(8, 8, 8));
-        pixels.show();
-      
-        delay(100);
-        while(digitalRead(buttonB) == 0)
-          delay(100);
-      }
-      
-      delay(20);
+      sensors.waitForSample();
+      forward(70, turn_leadin_speed);
+      motors.stop(true);
+      delay(500);
+      forward(-70, turn_leadin_speed);
+      motors.stop(true);
+      delay(500);
     }
+}
 
-    DebugPort.print("running mode: ");
-    DebugPort.println(mode);
-
-    sensors.startSensors();
-
-    delay(1500);
-
-    // Take a sample and use the left/right readings as midpoint between the two initial walls
-    // We will use this as a centre line when following subsequent walls
-    sensors.calibrateLRSensors();
-
-    // Confirm the calibrated readings
-    DebugPort.println("Calibration:");
-    DebugPort.println("LeftCal,LeftRaw, FrontLCal,FrontLRaw, FrontRCal,FrontRRaw, RightCal,RightRaw");
-    DebugPort.print(sensors.left().getCalibrated());      DebugPort.print(",");
-    DebugPort.print(sensors.left().getRaw());             DebugPort.print(", ");
-    DebugPort.print(sensors.frontLeft().getCalibrated()); DebugPort.print(",");
-    DebugPort.print(sensors.frontLeft().getRaw());        DebugPort.print(", ");
-    DebugPort.print(sensors.frontRight().getCalibrated());DebugPort.print(",");
-    DebugPort.print(sensors.frontRight().getRaw());       DebugPort.print(", ");
-    DebugPort.print(sensors.right().getCalibrated());     DebugPort.print(",");
-    DebugPort.print(sensors.right().getRaw());
-    DebugPort.println();
-
-    delay(500);
-
+void fullWallFollow(int mode)
+{
     // Go
     bool justTurned = false;
 
     // Reset PID
     reset_PID();
-
-    // Test mode
-    while(mode == 3) 
-    {
-        sensors.waitForSample();
-        forward(70, turn_leadin_speed);
-        motors.stop(true);
-        delay(500);
-        forward(-70, turn_leadin_speed);
-        motors.stop(true);
-        delay(500);
-    }
 
     while(true) 
     {
@@ -585,4 +505,192 @@ void loop()
 
         //yield();
     }
+}
+
+// Very simplistic mode
+void simpleWallFollow(int mode)
+{
+    // Reset PID
+    reset_PID();
+
+    int leftTurnCount = 0;
+    int basespeed = mode_profiles[mode].ahead_max_speed;
+    
+    // How many loops for delay?
+    int wallFollowerLeftTurnDelay = wall_follower_simple_left_turn_delay;
+ 
+    while(true) 
+    {
+      sensors.waitForSample();
+      
+      // Gap on left?
+      bool gapLeft = sensors.left().getCalibrated() < wall_follow_simple_left_gap_threshold;
+      bool blockedAhead = sensors.frontLeft().getCalibrated() > wall_follow_simple_ahead_blocked_threshold ||
+                          sensors.frontRight().getCalibrated() > wall_follow_simple_ahead_blocked_threshold;
+      bool blockedRight = sensors.right().getCalibrated() > wall_follow_simple_right_gap_threshold;
+    
+      float followerError = get_wall_follow_error();
+
+      if(!gapLeft)
+      {
+        if(!blockedAhead)
+        {
+          // Keep on following left wall
+          motors.turn(basespeed, -followerError);
+
+          digitalWrite(ledGreen, 0); // Left indicator
+          digitalWrite(ledRed, 0); // Right indicator
+
+          // We've seen a wall, reset the coast counter
+          leftTurnCount = 0;
+        }
+        else
+        {
+          // Blocked ahead - turn right
+          motors.turn(int(basespeed * 0.5), -int(basespeed * 0.8));
+
+          digitalWrite(ledGreen, 0); // Left indicator
+          digitalWrite(ledRed, 1); // Right indicator
+
+          // May need a very short turn
+          leftTurnCount = wallFollowerLeftTurnDelay;
+        }
+      }
+      else if(++leftTurnCount <= wallFollowerLeftTurnDelay)
+      {
+        if(blockedAhead)
+        {
+          // Blocked ahead - turn right a bit
+          motors.turn(int(basespeed * 0.5), -int(basespeed * 0.8));
+
+          digitalWrite(ledGreen, 0); // Left indicator
+          digitalWrite(ledRed, 1); // Right indicator
+        }
+        else
+        {
+          // Gap on left, but keep going ahead a small amount first
+          motors.turn(basespeed, 0); //int(basespeed * 0.1));
+
+          digitalWrite(ledGreen, 1); // Left indicator
+          digitalWrite(ledRed, 0); // Right indicator
+        }
+      }
+      else
+      {
+          // Gap on left, turn into it now
+          motors.turn(basespeed, int(basespeed * 0.5));
+
+          digitalWrite(ledGreen, 1); // Left indicator
+          digitalWrite(ledRed, 0); // Right indicator
+      }
+    }
+}
+
+
+int getMode()
+{
+    // Display starting flashes
+    bool triggered = false;
+    int mode = 0;
+    DebugPort.println("ready for start");
+
+    for(int count = 0; !triggered; count++)
+    {
+      if(count % 30 == 0)
+      {
+        // On - Red=0 (1/2 size), Green=1 (full), Blue=2 (Full faster), 3 = cyan (Test) 
+        pixels.setPixelColor(0, pixels.Color(mode == 0 ? 8 : 0, mode == 1 || mode == 3 ? 8 : 0, mode == 2 || mode == 3 ? 8 : 0));
+        pixels.show();
+      }
+      else if(count % 30 == 20)
+      {
+        // Off
+        pixels.setPixelColor(0, pixels.Color(0, 0, 0));
+        pixels.show();
+      }
+
+      if(digitalRead(buttonA) == 0)
+      {
+        if(++mode > 3)
+          mode = 0;
+          
+        DebugPort.print("mode ");
+        DebugPort.println(mode);
+        
+        // On - Red=0 (1/2 size), Green=1 (full), Blue=2 (Full faster), 3 = cyan (Test) 
+        pixels.setPixelColor(0, pixels.Color(mode == 0 ? 8 : 0, mode == 1 || mode == 3 ? 8 : 0, mode == 2 || mode == 3 ? 8 : 0));
+        pixels.show();
+
+        delay(100);
+        while(digitalRead(buttonA) == 0)
+          delay(100);
+      }
+
+      if(digitalRead(buttonB) == 0)
+      {
+        triggered = true;
+        DebugPort.println("go");
+
+        // Show starting - Solid white
+        pixels.setPixelColor(0, pixels.Color(8, 8, 8));
+        pixels.show();
+      
+        delay(100);
+        while(digitalRead(buttonB) == 0)
+          delay(100);
+      }
+      
+      delay(20);
+    }
+
+    return mode;
+}
+
+void loop() 
+{
+    encoder_r.begin(pull_direction::up, resolution::full);
+    encoder_l.begin(pull_direction::up, resolution::full);
+
+    int mode = getMode();
+
+    DebugPort.print("running mode: ");
+    DebugPort.println(mode);
+
+    sensors.startSensors();
+
+    delay(1500);
+
+    // Take a sample and use the left/right readings as midpoint between the two initial walls
+    // We will use this as a centre line when following subsequent walls
+    sensors.calibrateLRSensors();
+
+    // Confirm the calibrated readings
+    DebugPort.println("Calibration:");
+    DebugPort.println("LeftCal,LeftRaw, FrontLCal,FrontLRaw, FrontRCal,FrontRRaw, RightCal,RightRaw");
+    DebugPort.print(sensors.left().getCalibrated());      DebugPort.print(",");
+    DebugPort.print(sensors.left().getRaw());             DebugPort.print(", ");
+    DebugPort.print(sensors.frontLeft().getCalibrated()); DebugPort.print(",");
+    DebugPort.print(sensors.frontLeft().getRaw());        DebugPort.print(", ");
+    DebugPort.print(sensors.frontRight().getCalibrated());DebugPort.print(",");
+    DebugPort.print(sensors.frontRight().getRaw());       DebugPort.print(", ");
+    DebugPort.print(sensors.right().getCalibrated());     DebugPort.print(",");
+    DebugPort.print(sensors.right().getRaw());
+    DebugPort.println();
+
+    delay(500);
+
+    // Test mode
+    if(mode == 0) 
+    {
+      simpleWallFollow(mode);
+    }
+    else if(mode == 3) 
+    {
+      testMode();
+    }
+    else
+    {
+      fullWallFollow(mode-1);
+    }
+   
 }

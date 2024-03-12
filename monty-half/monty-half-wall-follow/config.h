@@ -16,7 +16,7 @@ static const int turn_angle_inertia_compensation = 8; // End the turns this much
 
 static const float turning_diameter_mm = 39.0;  // Bigger means turns more
 
-static const float wall_sensor_filter_ratio = 0.1;  // average = old * (1.0-ratio) + new * ratio
+static const float wall_sensor_filter_ratio = 0.5;  // average = old * (1.0-ratio) + new * ratio
 
 static const int forward_speed = 128;
 static const int turn_leadin_speed = 64;
@@ -31,6 +31,12 @@ static const int wall_follow_forward_min_distance = 98; //90; //95;
 static const int wall_follow_left_gap_threshold = 40;
 static const int wall_follow_right_gap_threshold = 40;
 static const int wall_follow_ahead_blocked_threshold = 40;
+
+// Distance parameters during simple wall follower
+static const int wall_follow_simple_left_gap_threshold = 40;
+static const int wall_follow_simple_right_gap_threshold = 40;
+static const int wall_follow_simple_ahead_blocked_threshold = 95;
+static const int wall_follower_simple_left_turn_delay = 50; // In loops
 
 // Distances to move during various manoevres
 static const int wall_follow_move_left_initial_forward = 85;
