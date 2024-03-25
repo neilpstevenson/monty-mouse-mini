@@ -535,6 +535,9 @@ void simpleWallFollow(int mode)
       {
         if(!blockedAhead)
         {
+          // Limit the turn to 20%
+          followerError = std::max(std::min(followerError, 0.2F), -0.2F);
+
           // Keep on following left wall
           motors.turn(basespeed, -followerError);
 
@@ -558,27 +561,16 @@ void simpleWallFollow(int mode)
       }
       else if(++leftTurnCount <= wallFollowerLeftTurnDelay)
       {
-        if(blockedAhead)
-        {
-          // Blocked ahead - turn right a bit
-          motors.turn(int(basespeed * 0.5), -int(basespeed * 0.8));
+        // Gap on left, but keep going ahead a small amount first
+        motors.turn(basespeed, 0); //int(basespeed * 0.1));
 
-          digitalWrite(ledGreen, 0); // Left indicator
-          digitalWrite(ledRed, 1); // Right indicator
-        }
-        else
-        {
-          // Gap on left, but keep going ahead a small amount first
-          motors.turn(basespeed, 0); //int(basespeed * 0.1));
-
-          digitalWrite(ledGreen, 1); // Left indicator
-          digitalWrite(ledRed, 0); // Right indicator
-        }
+        digitalWrite(ledGreen, 1); // Left indicator
+        digitalWrite(ledRed, 0); // Right indicator
       }
       else
       {
           // Gap on left, turn into it now
-          motors.turn(basespeed, int(basespeed * 0.5));
+          motors.turn(basespeed, int(basespeed * 0.7));
 
           digitalWrite(ledGreen, 1); // Left indicator
           digitalWrite(ledRed, 0); // Right indicator
