@@ -75,7 +75,7 @@ class Switches {
   }
 
   inline bool button_pressed() {
-    return read() == 16;
+    return !digitalRead(SWITCH_GO_PIN); //read() == 16;
   }
 
   void wait_for_button_press() {

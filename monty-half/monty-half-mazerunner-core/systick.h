@@ -11,6 +11,7 @@
 
 #ifndef SYSTICK_H
 #define SYSTICK_H
+#include <mbed.h>
 #include "Arduino.h"
 #include "adc.h"
 #include "config.h"
@@ -18,11 +19,18 @@
 #include "motors.h"
 #include "sensors.h"
 #include "switches.h"
+using namespace std::chrono;
+
 class Systick {
+ private:
+  mbed::Ticker ticker;
+
  public:
   // don't let this start firing up before we are ready.
   // call the begin method explicitly.
   void begin() {
+    // Start a 500Hz ticker
+    ticker.attach(update, 2ms);
     /*
     // set
     bitClear(TCCR2B, WGM22);
@@ -63,7 +71,7 @@ class Systick {
    *
    *
    */
-  void update() {
+  static void update() {
     // digitalWriteFast(LED_BUILTIN, 1);
     // NOTE - the code here seems to get inlined and so the function is 2800 bytes!
     // grab the encoder values first because they will continue to change

@@ -14,6 +14,10 @@
 #include <Arduino.h>
 #include <stdint.h>
 #include "config.h"
+#include "quadrature.h"
+
+Quadrature_encoder<ENCODER_LEFT_CLK, ENCODER_LEFT_B> encoder_l;
+Quadrature_encoder<ENCODER_RIGHT_CLK, ENCODER_RIGHT_B> encoder_r;
 
 /*******************************************************************************
  *
@@ -46,63 +50,28 @@ void callback_right_encoder_isr();
 class Encoders {
  public:
   void begin() {
-    pinMode(ENCODER_LEFT_CLK, INPUT);
-    pinMode(ENCODER_LEFT_B, INPUT);
-    pinMode(ENCODER_RIGHT_CLK, INPUT);
-    pinMode(ENCODER_RIGHT_B, INPUT);
-    attachInterrupt(digitalPinToInterrupt(ENCODER_LEFT_CLK), callback_left_encoder_isr, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(ENCODER_RIGHT_CLK), callback_right_encoder_isr, CHANGE);
+    encoder_r.begin(pull_direction::up, resolution::full);
+    encoder_l.begin(pull_direction::up, resolution::full);
+//    pinMode(ENCODER_LEFT_CLK, INPUT);
+//    pinMode(ENCODER_LEFT_B, INPUT);
+//    pinMode(ENCODER_RIGHT_CLK, INPUT);
+//    pinMode(ENCODER_RIGHT_B, INPUT);
+
+//    attachInterrupt(digitalPinToInterrupt(ENCODER_LEFT_CLK), callback_left_encoder_isr, CHANGE);
+//    attachInterrupt(digitalPinToInterrupt(ENCODER_RIGHT_CLK), callback_right_encoder_isr, CHANGE);
     reset();
   }
 
   void reset() {
     ATOMIC {
-      m_left_counter = 0;
-      m_right_counter = 0;
+      encoder_l.reset_count();
+      encoder_r.reset_count();
       m_robot_distance = 0;
       m_robot_angle = 0;
     }
   }
 
-  /**
-   * For the ATmega328 and ATmega4809:
-   *   Measurements indicate that even at 1500mm/s the total load due to
-   *   the encoder interrupts is less than 3% of the available bandwidth.
-   *   The ISR will respond to the XOR-ed pulse train from the encoder
-   *   Runs in constant time of around 3us per interrupt.
-   *   Would be faster with direct port access
-   *
-   * A more generic solution where the pin names are not constants would be slower
-   * unless we can make their definition known at compile time.
-   *
-   * Note that the decoding method used here assumes that one of the channels
-   * is a frequency-doubled clock signal. It is not decoding a 'normal'
-   * quadrature input.
-   */
-  void left_input_change() {
-    static bool oldA = false;
-    static bool oldB = false;
-    // bool newB = digitalReadFast(ENCODER_LEFT_B);
-    bool newB = fast_read_pin(ENCODER_LEFT_B);
-    bool newA = fast_read_pin(ENCODER_LEFT_CLK) ^ newB;
-    int delta = ENCODER_LEFT_POLARITY * ((oldA ^ newB) - (newA ^ oldB));
-    m_left_counter += delta;
-    oldA = newA;
-    oldB = newB;
-  }
-
-  void right_input_change() {
-    static bool oldA = false;
-    static bool oldB = false;
-    bool newB = fast_read_pin(ENCODER_RIGHT_B);
-    bool newA = fast_read_pin(ENCODER_RIGHT_CLK) ^ newB;
-    int delta = ENCODER_RIGHT_POLARITY * ((oldA ^ newB) - (newA ^ oldB));
-    m_right_counter += delta;
-    oldA = newA;
-    oldB = newB;
-  }
-
-  /**
+ /**
    * @brief update the robot speeds and positions from the encoders
    *
    * The update method is called during each control cycle from the
@@ -135,10 +104,11 @@ class Encoders {
     int right_delta = 0;
     // Make sure values don't change while being read. Be quick.
     ATOMIC {
-      left_delta = m_left_counter;
-      right_delta = m_right_counter;
-      m_left_counter = 0;
-      m_right_counter = 0;
+      left_delta = encoder_l.reset_count();
+      right_delta = encoder_r.reset_count();
+      //right_delta = m_right_counter;
+      //m_left_counter = 0;
+      //m_right_counter = 0;
     }
     float left_change = left_delta * MM_PER_COUNT_LEFT;
     float right_change = right_delta * MM_PER_COUNT_RIGHT;
@@ -222,17 +192,7 @@ class Encoders {
   float m_fwd_change;
   float m_rot_change;
   // internal use only to track encoder input edges
-  int m_left_counter;
-  int m_right_counter;
+  //int m_left_counter;
+  //int m_right_counter;
 };
 
-// A bit of indirection for convenience because the encoder instance is
-// unknown until the linker has done its thing
-// This is ugly
-inline void callback_left_encoder_isr() {
-  encoders.left_input_change();
-}
-
-inline void callback_right_encoder_isr() {
-  encoders.right_input_change();
-}

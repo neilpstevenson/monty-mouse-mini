@@ -22,7 +22,7 @@
  * The sensors consist of SFH4550 emitters and SFH309FA detectors.
  *
  *****************************************************************************/
-#define NAME "HALF MONTY CORE"
+#define NAME "HALF MONTY"
 
 //***** SENSOR CALIBRATION **************************************************//
 /**
@@ -57,25 +57,28 @@ RAW values for the front sensor when the robot is backed up to a wall
 // wall sensor thresholds and constants
 // RAW values for the front sensor when the robot is backed up to a wall
 // with another wall ahead
-const int FRONT_LEFT_CALIBRATION = 97;
-const int FRONT_RIGHT_CALIBRATION = 48;
+const int FRONT_LEFT_CALIBRATION = 3240;
+const int FRONT_RIGHT_CALIBRATION = 3130;
 // RAW values for the side sensors when the robot is centered in a cell
 // and there is no wall ahead
-const int LEFT_CALIBRATION = 87;
-const int RIGHT_CALIBRATION = 80;
+const int LEFT_CALIBRATION = 920;
+const int RIGHT_CALIBRATION = 840;
 
 // The front linear constant is the value of k needed to make the function
-// sensors.get_distance(sensor,k) return 68 when the mouse is backed up
+// sensors.get_distance(sensor,k) return 68mm (15mm) when the mouse is backed up
 // against a wall with only a wall ahead
-const int FRONT_LINEAR_CONSTANT = 1030;
-const int FRONT_REFERENCE = 850;  // reading when mouse centered with wall ahead
+const int FRONT_LINEAR_CONSTANT = 420; //i.e = sqrt(sum(FL,FR)) * 68
+const int FRONT_REFERENCE = 226;  // reading when mouse centered with wall ahead
 
 // SS90E turn thresholds. This is the front sum reading to trigger a turn
 // it changes a bit if there is an adjacent wall. The threshold is set for
 // when the robot is 20mm past the cell boundary. That is, the distance
 // from the front of the mouse to the wall ahead is 92mm
-const int TURN_THRESHOLD_SS90E = 115;
+const int TURN_THRESHOLD_SS90E = 100;
 const int EXTRA_WALL_ADJUST = 5;
+
+// Threshold used for starting the robot runs
+const int OCCLUDED_THRESHOLD_FRONT_RAW = 3000;
 
 #elif EVENT == EVENT_UK
 // RAW values for the front sensor when the robot is backed up to a wall
@@ -127,10 +130,10 @@ const int EMITTER_DIAGONAL = EMITTER_B;
 // hardware ADC channel numbers
 
 // ADVANCED SENSOR
-const int RFS_ADC_CHANNEL = 0;
-const int RSS_ADC_CHANNEL = 1;
-const int LSS_ADC_CHANNEL = 2;
-const int LFS_ADC_CHANNEL = 3;
+const int RFS_ADC_CHANNEL = 1;
+const int RSS_ADC_CHANNEL = 3;
+const int LSS_ADC_CHANNEL = 0;
+const int LFS_ADC_CHANNEL = 2;
 
 // BASIC SENSOR - just repeat the front sensor to make the code cleaner
 // #define RFS_ADC_CHANNEL 1
@@ -152,7 +155,7 @@ const int REPORTING_INTERVAL = 10;
 //***************************************************************************//
 // Some physical constants that are likely to be robot-specific
 // with robot against back wall, how much travel is there to the cell center?
-const int BACK_WALL_TO_CENTER = 48;
+const int BACK_WALL_TO_CENTER = 14;
 
 //***************************************************************************//
 // We need to know about the drive mechanics.
@@ -162,8 +165,8 @@ const int BACK_WALL_TO_CENTER = 48;
 // Finally, move the mouse in a straight line through 1000mm of travel to work
 // out the wheel diameter.
 const float ENCODER_PULSES = 12.00;
-const float GEAR_RATIO = 19.540;
-const float WHEEL_DIAMETER = 32.00;
+const float GEAR_RATIO = 42.0;
+const float WHEEL_DIAMETER = 20.00;
 
 // Mouse radius is the distance between the contact patches of the drive wheels.
 // A good starting approximation is half the distance between the wheel centres.
@@ -178,7 +181,7 @@ const float MOUSE_RADIUS = 18.5; // Adjust on test
 // reliably drive in a straight line.
 // This number adjusts the encoder count and must be  added to the right
 // and subtracted from the left motor.
-const float ROTATION_BIAS = 0.0000;  // Negative makes robot curve to left
+const float ROTATION_BIAS = -5.0000;  // Negative makes robot curve to left
 
 // Now we can pre-calculate the key constats for the motion control
 const float MM_PER_COUNT = PI * WHEEL_DIAMETER / (ENCODER_PULSES * GEAR_RATIO);

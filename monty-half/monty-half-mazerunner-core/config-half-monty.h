@@ -152,7 +152,9 @@ int serial_putchar(char c, FILE *f) {
 void redirectPrintf() {
   // Redirect stdout so that we can use printf() with the console
   //fdev_setup_stream(&serial_stdout, serial_putchar, NULL, _FDEV_SETUP_WRITE);
-  stdout = fdopen(Serial, "rw+");
+  //serial_stdout = FDEV_SETUP_STREAM(serial_putchar, NULL, NULL, _FDEV_SETUP_RW);
+  //stdout = &serial_stdout;
+  //stdout = mbed::fdopen(Serial, "w+");
 }
 #else
 void redirectPrintf(){};

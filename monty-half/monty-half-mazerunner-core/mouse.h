@@ -749,6 +749,35 @@ class Mouse {
   }
 
   /***
+   * A basic function to let you test the configuration of forward moves.
+   *
+   * These are the turns used during the search of the maze and need to be
+   * accurate and repeatable.
+   *
+   * You may need to spend some time with this function to get the move
+   * to drive straight
+   *
+   * NOTE: that the motor scale parameters are stored in the robot config file
+   * NOTE: that the left and right motor powers are likely to be different.
+   *
+   */
+  void test_forward(int distance) {
+    // note that changes to the speeds are likely to affect
+    // the other turn parameters
+    sensors.wait_for_user_start();
+    motion.reset_drive_system();
+    sensors.set_steering_mode(STEERING_OFF);
+    // move 
+    motion.move(distance, SEARCH_SPEED, 0, SEARCH_ACCELERATION);
+    //motion.turn(90, SEARCH_SPEED, 0, SEARCH_ACCELERATION);
+    // Be sure robot has come to a halt.
+    motion.stop();
+    // return to idle
+    motion.reset_drive_system();
+    sensors.set_steering_mode(STEERING_OFF);
+  }
+
+  /***
    * loop until the user button is pressed while
    * pumping out sensor readings. The first four numbers are
    * the raw readings, the next four are normalised then there

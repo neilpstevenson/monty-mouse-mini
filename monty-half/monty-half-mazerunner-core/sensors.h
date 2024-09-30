@@ -259,11 +259,11 @@ class Sensors {
   // such as when starting the robot by putting your hand in front
 
   bool occluded_left() {
-    return lfs.raw > 100 && sensors.rfs.raw < 100;
+    return lfs.raw > OCCLUDED_THRESHOLD_FRONT_RAW && sensors.rfs.raw < OCCLUDED_THRESHOLD_FRONT_RAW;
   }
 
   bool occluded_right() {
-    return lfs.raw < 100 && sensors.rfs.raw > 100;
+    return lfs.raw < OCCLUDED_THRESHOLD_FRONT_RAW && sensors.rfs.raw > OCCLUDED_THRESHOLD_FRONT_RAW;
   }
 
   /**

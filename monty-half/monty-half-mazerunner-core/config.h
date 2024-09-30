@@ -65,11 +65,11 @@ struct TurnParameters {
 #define HARDWARE_UKMARSBOT_1_3A 1
 #define HARDWARE_HALF_MONTY_1 2
 
-#define HARDWARE HARDWARE_HALF_MONTY_1
+#define HARDWARE_TYPE HARDWARE_HALF_MONTY_1
 
-#if HARDWARE == HARDWARE_UKMARSBOT_1_3A
+#if HARDWARE_TYPE == HARDWARE_UKMARSBOT_1_3A
 #include "config-ukmarsbot.h"
-#elif HARDWARE == HARDWARE_HALF_MONTY_1
+#elif HARDWARE_TYPE == HARDWARE_HALF_MONTY_1
 #include "config-half-monty.h"
 #else
 #error "NO HARDWARE DEFINED"
@@ -89,7 +89,7 @@ struct TurnParameters {
 #define EVENT_APEC 4
 
 // choose the one you will be using BEFORE selecting the robot below
-#define EVENT EVENT_UK
+#define EVENT EVENT_HOME
 #if EVENT == EVENT_HOME
 #define GOAL Location(2, 2)
 #else

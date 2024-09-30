@@ -42,7 +42,7 @@ class Battery {
   }
 
   float voltage() {
-    return m_battery_volts;
+    return 7; //m_battery_volts;
   }
 
  private:

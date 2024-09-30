@@ -72,8 +72,8 @@ class Motors {
     pinMode(MOTOR_LEFT_B, OUTPUT);
     pinMode(MOTOR_RIGHT_B, OUTPUT);
     digitalWrite(MOTOR_LEFT_A, 0);
-    digitalWrite(MOTOR_LEFT_A, 0);
-    digitalWrite(MOTOR_RIGHT_B, 0);
+    digitalWrite(MOTOR_RIGHT_A, 0);
+    digitalWrite(MOTOR_LEFT_B, 0);
     digitalWrite(MOTOR_RIGHT_B, 0);
     set_pwm_frequency();
     stop();
