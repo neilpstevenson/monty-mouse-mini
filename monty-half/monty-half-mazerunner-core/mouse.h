@@ -188,6 +188,7 @@ class Mouse {
     bool has_wall = sensors.see_front_wall;
     sensors.set_steering_mode(STEERING_OFF);
     float remaining = (FULL_CELL + HALF_CELL) - motion.position();
+  printf("-- remaining %f ---\n", remaining);
     // finish at very low speed so we can adjust from the wall ahead if present
     motion.start_move(remaining, motion.velocity(), 30, motion.acceleration());
     if (has_wall) {
@@ -548,11 +549,13 @@ class Mouse {
    */
   void blink(int count) {
     for (int i = 0; i < count; i++) {
-      digitalWrite(LED_USER, 1);
-      digitalWrite(LED_BUILTIN, 1);
+      indicators.showRedIndicator(1);
+      //digitalWrite(LED_USER, 1);
+      //digitalWrite(LED_BUILTIN, 1);
       delay(100);
-      digitalWrite(LED_USER, 0);
-      digitalWrite(LED_BUILTIN, 0);
+      indicators.showRedIndicator(0);
+      //digitalWrite(LED_USER, 0);
+      //digitalWrite(LED_BUILTIN, 0);
       delay(100);
     }
   }
@@ -565,7 +568,8 @@ class Mouse {
       blink(1);
     }
     switches.wait_for_button_release();
-    digitalWrite(LED_BUILTIN, 0);
+    indicators.showRedIndicator(0);
+    //digitalWrite(LED_BUILTIN, 0);
   }
 
   /***

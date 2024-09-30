@@ -96,7 +96,7 @@ struct TurnParameters {
 #define GOAL Location(7, 7)
 #endif
 // This is the size, in mm,  for each cell in the maze.
-const float FULL_CELL = 180.0f;
+const float FULL_CELL = 90.0f;
 const float HALF_CELL = FULL_CELL / 2.0;
 
 /*************************************************************************/

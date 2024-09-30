@@ -412,6 +412,7 @@ class Reporter {
 #define POST 'o'
 #define ERR '?'
 #define GAP F("   ")
+#define TARG F(" X ")
 #define H_WALL F("---")
 #define H_EXIT F("   ")
 #define H_UNKN F("···")
@@ -483,6 +484,8 @@ class Reporter {
           printer.print(' ');
           printer.print(arrow);
           printer.print(' ');
+        } else if (location == GOAL) {
+          printer.print(TARG);
         } else {
           printer.print(GAP);
         }

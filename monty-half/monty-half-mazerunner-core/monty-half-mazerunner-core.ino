@@ -10,10 +10,11 @@
  ******************************************************************************/
 
 #include <Arduino.h>
+#include "config.h"
+#include "indicators.h"
 #include "adc.h"
 #include "battery.h"
 #include "cli.h"
-#include "config.h"
 #include "encoders.h"
 #include "maze.h"
 #include "motion.h"
@@ -42,6 +43,7 @@ Maze maze PERSISTENT;                     // holds maze map (even after a reset)
 Mouse mouse;                              // all the main robot logic is here
 CommandLineInterface cli;                 // user interaction on the SerialPort port
 Reporter reporter;                        // formatted reporting of robot state
+Indicators indicators;                    // More complex indicators/display
 
 /******************************************************************************/
 

@@ -59,24 +59,24 @@ RAW values for the front sensor when the robot is backed up to a wall
 // wall sensor thresholds and constants
 // RAW values for the front sensor when the robot is backed up to a wall
 // with another wall ahead
-const int FRONT_LEFT_CALIBRATION = 3240;
-const int FRONT_RIGHT_CALIBRATION = 3130;
+const int FRONT_LEFT_CALIBRATION = 3720;
+const int FRONT_RIGHT_CALIBRATION = 3430;
 // RAW values for the side sensors when the robot is centered in a cell
 // and there is no wall ahead
-const int LEFT_CALIBRATION = 920;
-const int RIGHT_CALIBRATION = 840;
+const int LEFT_CALIBRATION = 1690;
+const int RIGHT_CALIBRATION = 1500;
 
 // The front linear constant is the value of k needed to make the function
 // sensors.get_distance(sensor,k) return 68mm (15mm) when the mouse is backed up
 // against a wall with only a wall ahead
 const int FRONT_LINEAR_CONSTANT = 420; //i.e = sqrt(sum(FL,FR)) * 68
-const int FRONT_REFERENCE = 226;  // reading when mouse centered with wall ahead
+const int FRONT_REFERENCE = 200;  // reading when mouse centered with wall ahead
 
 // SS90E turn thresholds. This is the front sum reading to trigger a turn
 // it changes a bit if there is an adjacent wall. The threshold is set for
 // when the robot is 20mm past the cell boundary. That is, the distance
 // from the front of the mouse to the wall ahead is 92mm
-const int TURN_THRESHOLD_SS90E = 100;
+const int TURN_THRESHOLD_SS90E = 140;
 const int EXTRA_WALL_ADJUST = 5;
 
 // Threshold used for starting the robot runs
@@ -116,7 +116,7 @@ const int EXTRA_WALL_ADJUST = 6;
 // the ADVANCED sensor board has only one LED so use the value twice
 const int LED_LEFT = LED_LEFT_IO;
 const int LED_RIGHT = LED_RIGHT_IO;
-const int LED_USER = LED_NEOPIXEL_IO; // TODO
+//const int LED_USER = LED_NEOPIXEL_IO; // TODO
 // but two emitter pins
 const int EMITTER_FRONT = EMITTER_A;
 const int EMITTER_DIAGONAL = EMITTER_B;
@@ -295,9 +295,9 @@ const float LEFT_SCALE = (float)SIDE_NOMINAL / LEFT_CALIBRATION;
 const float RIGHT_SCALE = (float)SIDE_NOMINAL / RIGHT_CALIBRATION;
 
 // the values above which, a wall is seen
-const int LEFT_THRESHOLD = 40;   // minimum value to register a wall
-const int RIGHT_THRESHOLD = 40;  // minimum value to register a wall
-const int FRONT_THRESHOLD = 20;  // minimum value to register a wall
+const int LEFT_THRESHOLD = 80;   // minimum value to register a wall
+const int RIGHT_THRESHOLD = 80;  // minimum value to register a wall
+const int FRONT_THRESHOLD = 80;  // minimum value to register a wall
 
 // the distance through the cell at which the corresponding sensor
 // will see a falling edge
@@ -308,10 +308,10 @@ const int RIGHT_EDGE_POS = 90;
 // These take no storage - the compiler uses the values directly
 const TurnParameters turn_params[4] = {
     //           speed, entry,   exit, angle, omega,  alpha, sensor threshold
-    {SEARCH_TURN_SPEED,    70,     80,  90.0, 287.0, 2866.0, TURN_THRESHOLD_SS90E}, // 0 => SS90EL
-    {SEARCH_TURN_SPEED,    70,     80, -90.0, 287.0, 2866.0, TURN_THRESHOLD_SS90E}, // 0 => SS90ER
-    {SEARCH_TURN_SPEED,    70,     80,  90.0, 287.0, 2866.0, TURN_THRESHOLD_SS90E}, // 0 => SS90L
-    {SEARCH_TURN_SPEED,    70,     80, -90.0, 287.0, 2866.0, TURN_THRESHOLD_SS90E}, // 0 => SS90R
+    {SEARCH_TURN_SPEED,    15,     20,  90.0, 287.0, 2866.0, TURN_THRESHOLD_SS90E}, // 0 => SS90EL
+    {SEARCH_TURN_SPEED,    15,     20, -90.0, 287.0, 2866.0, TURN_THRESHOLD_SS90E}, // 0 => SS90ER
+    {SEARCH_TURN_SPEED,    15,     20,  90.0, 287.0, 2866.0, TURN_THRESHOLD_SS90E}, // 0 => SS90L
+    {SEARCH_TURN_SPEED,    15,     20, -90.0, 287.0, 2866.0, TURN_THRESHOLD_SS90E}, // 0 => SS90R
 };
 // clang-format on
 
@@ -350,4 +350,4 @@ const float BATTERY_MULTIPLIER = (ADC_REF_VOLTS / ADC_FSR / BATTERY_DIVIDER_RATI
 const int MOTOR_MAX_PWM = 255;
 
 // the position in the cell where the sensors are sampled.
-const float SENSING_POSITION = 170.0;
+const float SENSING_POSITION = 80.0;

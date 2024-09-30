@@ -280,34 +280,48 @@ class Sensors {
    */
   uint8_t wait_for_user_start() {
     int state = 0;
-    digitalWrite(LED_USER, 1);
+    indicators.showRedIndicator(1);
+    //digitalWrite(LED_USER, 1);
     enable();
     uint8_t choice = NO_START;
     while (choice == NO_START) {
       int count = 0;
       while (occluded_left()) {
         count++;
+        digitalWrite(LED_LEFT_IO, 1);
         delay(20);
       }
       if (count > 5) {
         choice = LEFT_START;
         break;
       }
+      else
+      {
+        digitalWrite(LED_LEFT_IO, 0);
+      }
       count = 0;
       while (occluded_right()) {
         count++;
+        digitalWrite(LED_RIGHT_IO, 1);
         delay(20);
       }
       if (count > 5) {
         choice = RIGHT_START;
         break;
       }
-      digitalWrite(LED_USER, state);
+      else
+      {
+        digitalWrite(LED_RIGHT_IO, 0);
+      }
+      indicators.showRedIndicator(state);
       state = 1 - state;
-      delay(25);
+      delay(35);
     }
     disable();
-    digitalWrite(LED_USER, 0);
+    indicators.showRedIndicator(0);
+    digitalWrite(LED_LEFT_IO, 0);
+    digitalWrite(LED_RIGHT_IO, 0);
+    //digitalWrite(LED_USER, 0);
     delay(250);
     return choice;
   }
