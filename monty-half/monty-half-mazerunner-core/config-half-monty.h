@@ -40,6 +40,16 @@ const uint8_t SWITCH_SELECT_PIN = 12;
 const uint8_t SWITCH_GO_PIN = 13;
 //const uint8_t BATTERY_PIN = A7;
 
+// SerialPort port
+const int SERIAL_PORT_TX = 0;
+const int SERIAL_PORT_RX = 1;
+
+#ifdef USE_USB_SERIAL_PORT
+static UART &SerialPort = Serial;    // USB Serial
+#else
+static UART &SerialPort = Serial1;   // UART0 (pins 0 & 1)
+#endif
+
 /******************************************************************************
  * The switch input is driven by a resistor chain forming a potential divider.
  * These are the measured thresholds if using the specified resistor values.
@@ -128,9 +138,9 @@ const uint8_t SWITCH_GO_PIN = 13;
 /***
  * Finally, a little-known provision of the compiler lets you
  * configure the standard printf() function to print directly
- * to a serial device. There is a cost overhead if you are not
+ * to a SerialPort device. There is a cost overhead if you are not
  * using printf() or sprintf() elsewhere but it is a great convenience
- * if you want formatted printing to the serial port.
+ * if you want formatted printing to the SerialPort port.
  *
  * To use this facility add a call to redirectPrintf() early in the
  * setup() function of your code.
@@ -143,9 +153,9 @@ const uint8_t SWITCH_GO_PIN = 13;
 int serial_putchar(char c, FILE *f) {
   if (c == '\n') {
     // TODO do we need to add carriage returns? I think not.
-    Serial.write('\r');
+    SerialPort.write('\r');
   }
-  return Serial.write(c) == 1 ? 0 : 1;
+  return SerialPort.write(c) == 1 ? 0 : 1;
 }
 
 //FILE serial_stdout;
@@ -154,7 +164,7 @@ void redirectPrintf() {
   //fdev_setup_stream(&serial_stdout, serial_putchar, NULL, _FDEV_SETUP_WRITE);
   //serial_stdout = FDEV_SETUP_STREAM(serial_putchar, NULL, NULL, _FDEV_SETUP_RW);
   //stdout = &serial_stdout;
-  //stdout = mbed::fdopen(Serial, "w+");
+  //stdout = mbed::fdopen(SerialPort, "w+");
 }
 #else
 void redirectPrintf(){};

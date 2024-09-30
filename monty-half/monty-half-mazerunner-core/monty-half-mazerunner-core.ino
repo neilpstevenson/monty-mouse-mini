@@ -40,7 +40,7 @@ Profile forward;                          // speed profiles for forward motion
 Profile rotation;                         // speed profiles for rotary motion
 Maze maze PERSISTENT;                     // holds maze map (even after a reset)
 Mouse mouse;                              // all the main robot logic is here
-CommandLineInterface cli;                 // user interaction on the serial port
+CommandLineInterface cli;                 // user interaction on the SerialPort port
 Reporter reporter;                        // formatted reporting of robot state
 
 /******************************************************************************/
@@ -61,11 +61,15 @@ ISR(TIMER2_COMPA_vect, ISR_NOBLOCK) {
 
 /******************************************************************************/
 void setup() {
-  Serial.begin(BAUDRATE);
+  Serial.begin(BAUDRATE); // Need to do this always, else it prevents the USB programmer/bootloader being available
+#ifndef USE_USB_SERIAL_PORT 
+  SerialPort.begin(BAUDRATE);
+#endif
+
   //_UART_USB_.begin(BAUDRATE);
-  delay(1000);  // Allow any USB serial to be established
+  delay(1000);  // Allow any USB SerialPort to be established
   //_UART_USB_.println("Hello");
-  redirectPrintf(); // send printf output to Serial (uses 20 bytes RAM)
+  redirectPrintf(); // send printf output to SerialPort (uses 20 bytes RAM)
   printf("Hello %d\n", 99);
 
   pinMode(LED_LEFT_IO, OUTPUT);
@@ -83,23 +87,23 @@ void setup() {
   if (switches.button_pressed()) {
     maze.initialise();
     mouse.blink(2);
-    Serial.println(F("Maze cleared"));
+    SerialPort.println(F("Maze cleared"));
     switches.wait_for_button_release();
   }
   /// leave the emitters off unless we are actually using the sensors
   /// less power, less risk
   sensors.disable();
   maze.set_goal(GOAL);
-  reporter.set_printer(Serial);
-  Serial.println();
-  Serial.println(F(CODE));
-  Serial.println(F(NAME));
-  Serial.println(F("RDY"));
+  reporter.set_printer(SerialPort);
+  SerialPort.println();
+  SerialPort.println(F(CODE));
+  SerialPort.println(F(NAME));
+  SerialPort.println(F("RDY"));
   cli.prompt();
 }
 
 /// the main loop exists only to initiate tasks either as a result
-/// of pressing the button or sending a command through the serial port
+/// of pressing the button or sending a command through the SerialPort port
 void loop() {
   if (switches.button_pressed()) {
     switches.wait_for_button_release();

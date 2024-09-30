@@ -144,7 +144,7 @@ const int BATTERY_ADC_CHANNEL = 7;
 const uint32_t BAUDRATE = 115200;
 
 //***************************************************************************//
-// set this to zero to disable profile data logging over serial
+// set this to zero to disable profile data logging over SerialPort
 // #define DEBUG_LOGGING 1
 // time between logged lines when reporting is enabled (milliseconds)
 const int REPORTING_INTERVAL = 10;

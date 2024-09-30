@@ -30,9 +30,9 @@
  * sensor readings. Many of these will be used a lot during development and
  * you can use any of them as a template for custom reports.
  *
- * Most commonly the only output device will be the normal Arduino Serial
- * device. However, if you have a second serial port or some other device such
- * as a serial logger you can divert reporter output to that. The method
+ * Most commonly the only output device will be the normal Arduino SerialPort
+ * device. However, if you have a second SerialPort port or some other device such
+ * as a SerialPort logger you can divert reporter output to that. The method
  * set_printer() will change the destination for _all_ reporter output. Any
  * interaction on the command line interface will not be affected except, of
  * course a cli command that fires off a report may not see the output if you
@@ -40,16 +40,16 @@
  * as you like.
  *
  * I would suggest that any interactive use might leave the reporter output
- * destination as Serial and you could switch it to a logger, for example,
+ * destination as SerialPort and you could switch it to a logger, for example,
  * at the start of a maze run.
  *
- * Although the Serial device on an Arduino normally requires the USB connection
+ * Although the SerialPort device on an Arduino normally requires the USB connection
  * UKMARSBOT has a connector specially intended for a cheap Bluetooth
  * module like the HC-05. This can be left plugged in all the time so that
- * reporting can be done while running. You could also connect a serial
+ * reporting can be done while running. You could also connect a SerialPort
  * logger to this port and record data throughout a contest run.
  *
- * Note that the Serial device has a 64 character buffer and, at 115200 baud
+ * Note that the SerialPort device has a 64 character buffer and, at 115200 baud
  * 64 characters will take about 6ms to go out over the wire.
  *
  * The BT connector also makes it possible to use the interactive Command
@@ -74,7 +74,7 @@ const char hdg_letters[] = "NESW";
 
 #define case_print(x)      \
   case (x):                \
-    Serial.println(F(#x)); \
+    SerialPort.println(F(#x)); \
     break;
 
 // and use a case statement to display the output
@@ -86,7 +86,7 @@ void print_name(int operation) {
     case_print(OP_MAKE_MOVE);
     case_print(OP_STOP);
     default:
-      Serial.println(F("UNKNOWN"));
+      SerialPort.println(F("UNKNOWN"));
   }
 }
 */
@@ -95,7 +95,7 @@ void print_name(int operation) {
 enum MazeView { PLAIN, COSTS, DIRS };
 //***************************************************************************//
 
-static Stream& printer = Serial;
+static Stream& printer = SerialPort;
 
 class Reporter;
 extern Reporter reporter;
@@ -342,8 +342,8 @@ class Reporter {
 
   //***************************************************************************//
   /**
-   * log_action_status outputs a formatted block of test to the serial device.
-   * You could connect the Serial device to a BT radio or datalogger if you want.
+   * log_action_status outputs a formatted block of test to the SerialPort device.
+   * You could connect the SerialPort device to a BT radio or datalogger if you want.
    *
    * A typical block might look like this:
    *

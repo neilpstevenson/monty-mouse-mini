@@ -24,6 +24,8 @@
  *****************************************************************************/
 #define NAME "HALF MONTY"
 
+//#define USE_USB_SERIAL_PORT
+
 //***** SENSOR CALIBRATION **************************************************//
 /**
 RAW side sensor values when robot is centred in a cell and no wall ahead
@@ -147,7 +149,7 @@ const int BATTERY_ADC_CHANNEL = -1; // dummy - we don't have this
 const uint32_t BAUDRATE = 115200;
 
 //***************************************************************************//
-// set this to zero to disable profile data logging over serial
+// set this to zero to disable profile data logging over SerialPort
 // #define DEBUG_LOGGING 1
 // time between logged lines when reporting is enabled (milliseconds)
 const int REPORTING_INTERVAL = 10;
@@ -165,8 +167,8 @@ const int BACK_WALL_TO_CENTER = 14;
 // Finally, move the mouse in a straight line through 1000mm of travel to work
 // out the wheel diameter.
 const float ENCODER_PULSES = 12.00;
-const float GEAR_RATIO = 42.0;
-const float WHEEL_DIAMETER = 20.00;
+const float GEAR_RATIO = 37.6; //42.0;
+const float WHEEL_DIAMETER = 20.20;
 
 // Mouse radius is the distance between the contact patches of the drive wheels.
 // A good starting approximation is half the distance between the wheel centres.
@@ -181,7 +183,7 @@ const float MOUSE_RADIUS = 18.5; // Adjust on test
 // reliably drive in a straight line.
 // This number adjusts the encoder count and must be  added to the right
 // and subtracted from the left motor.
-const float ROTATION_BIAS = -5.0000;  // Negative makes robot curve to left
+const float ROTATION_BIAS = -0.0025; //-0.035; // Negative makes robot curve to left
 
 // Now we can pre-calculate the key constats for the motion control
 const float MM_PER_COUNT = PI * WHEEL_DIAMETER / (ENCODER_PULSES * GEAR_RATIO);
@@ -225,7 +227,7 @@ const float MAX_MOTOR_VOLTS = 6.0;
 
 const float SPEED_FF = (1.0 / FWD_KM);
 const float ACC_FF = (FWD_TM / FWD_KM);
-const float BIAS_FF = 0.121;
+const float BIAS_FF = 0.08; //0.121;
 const float TOP_SPEED = (6.0 - BIAS_FF) / SPEED_FF;
 
 //*** MOTION CONTROL CONSTANTS **********************************************//
@@ -250,8 +252,8 @@ const float STEERING_KD = 0.00;
 const float STEERING_ADJUST_LIMIT = 10.0;  // deg/s
 
 // encoder polarity is either 1 or -1 and is used to account for reversal of the encoder phases
-#define ENCODER_LEFT_POLARITY (-1)
-#define ENCODER_RIGHT_POLARITY (1)
+//#define ENCODER_LEFT_POLARITY (1)
+//#define ENCODER_RIGHT_POLARITY (-1)
 
 // similarly, the motors may be wired with different polarity and that is defined here so that
 // setting a positive voltage always moves the robot forwards

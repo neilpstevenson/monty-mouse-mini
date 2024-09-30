@@ -256,7 +256,7 @@ class Mouse {
    * cell.
    */
   void follow_to(Location target) {
-    Serial.println(F("Follow TO"));
+    SerialPort.println(F("Follow TO"));
     m_handStart = true;
     m_location = START;
     m_heading = NORTH;
@@ -267,21 +267,21 @@ class Mouse {
     sensors.set_steering_mode(STEERING_OFF);
     motion.move(BACK_WALL_TO_CENTER, SEARCH_SPEED, SEARCH_SPEED, SEARCH_ACCELERATION);
     motion.set_position(HALF_CELL);
-    Serial.println(F("Off we go..."));
+    SerialPort.println(F("Off we go..."));
     motion.wait_until_position(SENSING_POSITION);
     // at the start of this loop we are always at the sensing point
     while (m_location != target) {
       if (switches.button_pressed()) {
         break;
       }
-      Serial.println();
+      SerialPort.println();
       reporter.log_action_status('-', ' ', m_location, m_heading);
       sensors.set_steering_mode(STEER_NORMAL);
       m_location = m_location.neighbour(m_heading);
       update_map();
-      Serial.write(' ');
-      Serial.write('|');
-      Serial.write(' ');
+      SerialPort.write(' ');
+      SerialPort.write('|');
+      SerialPort.write(' ');
       char action = '#';
       if (m_location != target) {
         if (!sensors.see_left_wall) {
@@ -303,8 +303,8 @@ class Mouse {
     // we are entering the target cell so come to an orderly
     // halt in the middle of that cell
     stop_at_center();
-    Serial.println();
-    Serial.println(F("Arrived!  "));
+    SerialPort.println();
+    SerialPort.println(F("Arrived!  "));
     delay(250);
     sensors.disable();
     motion.reset_drive_system();
@@ -358,13 +358,13 @@ class Mouse {
     }
     motion.move(BACK_WALL_TO_CENTER, SEARCH_SPEED, SEARCH_SPEED, SEARCH_ACCELERATION);
     motion.set_position(HALF_CELL);
-    Serial.print(F("Off we go..."));
+    SerialPort.print(F("Off we go..."));
     printer.print('[');
     printer.print(target.x);
     printer.print(',');
     printer.print(target.y);
     printer.print(']');
-    Serial.println();
+    SerialPort.println();
 
     motion.wait_until_position(SENSING_POSITION);
     // Each iteration of this loop starts at the sensing point
@@ -372,7 +372,7 @@ class Mouse {
       if (switches.button_pressed()) {  // allow user to abort gracefully
         break;
       }
-      Serial.println();
+      SerialPort.println();
       reporter.log_action_status('-', ' ', m_location, m_heading);
       sensors.set_steering_mode(STEER_NORMAL);
       m_location = m_location.neighbour(m_heading);  // the cell we are about to enter
@@ -404,8 +404,8 @@ class Mouse {
     // halt in the middle of that cell
     stop_at_center();
     sensors.disable();
-    Serial.println();
-    Serial.println(F("Arrived!  "));
+    SerialPort.println();
+    SerialPort.println(F("Arrived!  "));
     delay(250);
     motion.reset_drive_system();
     sensors.set_steering_mode(STEERING_OFF);
@@ -469,7 +469,7 @@ class Mouse {
     if (rightWall) {
       w[2] = 'R';
     };
-    Serial.print(w);
+    SerialPort.print(w);
     switch (m_heading) {
       case NORTH:
         maze.update_wall_state(m_location, NORTH, frontWall ? WALL : EXIT);
@@ -520,7 +520,7 @@ class Mouse {
    */
   int search_maze() {
     sensors.wait_for_user_start();
-    Serial.println(F("Search TO"));
+    SerialPort.println(F("Search TO"));
     m_handStart = true;
     m_location = START;
     m_heading = NORTH;
@@ -586,6 +586,20 @@ class Mouse {
     motion.reset_drive_system();
     motion.disable_drive();
     sensors.set_steering_mode(STEERING_OFF);
+    sensors.disable();
+  }
+
+/* Simple test of encoder info
+*/
+void test_log_position_sensors() {
+    sensors.enable();
+    motion.reset_drive_system();
+    reporter.report_profile_header();
+    while (not switches.button_pressed()) {
+      reporter.report_profile();
+      delay(50);
+    }
+    motion.reset_drive_system();
     sensors.disable();
   }
 
@@ -659,7 +673,7 @@ class Mouse {
     delay(100);
     motion.reset_drive_system();
     sensors.set_steering_mode(STEERING_OFF);
-    Serial.println(F("Edge positions:"));
+    SerialPort.println(F("Edge positions:"));
     motion.start_move(FULL_CELL - 30.0, 100, 0, 1000);
     while (not motion.move_finished()) {
       if (sensors.lss.value > left_max) {
@@ -684,20 +698,20 @@ class Mouse {
       }
       delay(5);
     }
-    Serial.print(F("Left: "));
+    SerialPort.print(F("Left: "));
     if (left_edge_found) {
-      Serial.print(BACK_WALL_TO_CENTER + left_edge_position);
+      SerialPort.print(BACK_WALL_TO_CENTER + left_edge_position);
     } else {
-      Serial.print('-');
+      SerialPort.print('-');
     }
 
-    Serial.print(F("  Right: "));
+    SerialPort.print(F("  Right: "));
     if (right_edge_found) {
-      Serial.print(BACK_WALL_TO_CENTER + right_edge_position);
+      SerialPort.print(BACK_WALL_TO_CENTER + right_edge_position);
     } else {
-      Serial.print('-');
+      SerialPort.print('-');
     }
-    Serial.println();
+    SerialPort.println();
     motion.reset_drive_system();
     sensors.set_steering_mode(STEERING_OFF);
     sensors.disable();
@@ -792,7 +806,7 @@ class Mouse {
       reporter.print_wall_sensors();
     }
     switches.wait_for_button_release();
-    Serial.println();
+    SerialPort.println();
     delay(200);
     sensors.disable();
   }
