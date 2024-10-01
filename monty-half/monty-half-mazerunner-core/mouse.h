@@ -85,6 +85,7 @@ class Mouse {
    *
    * TODO: It would be better to use the distance rather than sensor readigs here
    */
+   /*
   static void stopAndAdjust() {
     float remaining = (FULL_CELL + HALF_CELL) - motion.position();
     sensors.set_steering_mode(STEERING_OFF);
@@ -107,7 +108,7 @@ class Mouse {
       }
     }
   }
-
+*/
   /**
    * These convenience functions will bring the robot to a halt
    * before actually turning.
@@ -188,20 +189,23 @@ class Mouse {
     bool has_wall = sensors.see_front_wall;
     sensors.set_steering_mode(STEERING_OFF);
     float remaining = (FULL_CELL + HALF_CELL) - motion.position();
-  printf("-- remaining %f ---\n", remaining);
+  //printf("-- remaining %f ---\n", remaining);
     // finish at very low speed so we can adjust from the wall ahead if present
     motion.start_move(remaining, motion.velocity(), 30, motion.acceleration());
     if (has_wall) {
       while (sensors.get_front_sum() < FRONT_REFERENCE) {
+  //printf("wall dist: %d\n", sensors.get_front_sum());
         delay(2);
       }
     } else {
       while (not motion.move_finished()) {
+  //printf("no wall dist: %d\n", sensors.get_front_sum());
         delay(2);
       };
     }
     // Be sure robot has come to a halt.
-    motion.stop();
+  //printf("stop dist: %d\n", sensors.get_front_sum());
+    motion.stop_move();
   }
 
   //***************************************************************************//
@@ -219,13 +223,29 @@ class Mouse {
 
   //***************************************************************************//
   void turn_left() {
-    turn_smooth(SS90EL);
+    stop_at_center();
+    sensors.set_steering_mode(STEERING_OFF);
+    motion.set_target_velocity(0);
+    turn_IP90L();
+    float distance = SENSING_POSITION - HALF_CELL;
+    sensors.set_steering_mode(STEER_NORMAL);
+    motion.move(distance, SEARCH_SPEED, SEARCH_SPEED, SEARCH_ACCELERATION);
+    motion.set_position(SENSING_POSITION);
+    //turn_smooth(SS90EL);
     m_heading = left_from(m_heading);
   }
 
   //***************************************************************************//
   void turn_right() {
-    turn_smooth(SS90ER);
+    stop_at_center();
+    sensors.set_steering_mode(STEERING_OFF);
+    motion.set_target_velocity(0);
+    turn_IP90R();
+    float distance = SENSING_POSITION - HALF_CELL;
+    sensors.set_steering_mode(STEER_NORMAL);
+    motion.move(distance, SEARCH_SPEED, SEARCH_SPEED, SEARCH_ACCELERATION);
+    motion.set_position(SENSING_POSITION);
+    //turn_smooth(SS90ER);
     m_heading = right_from(m_heading);
   }
 
@@ -370,7 +390,7 @@ class Mouse {
     motion.wait_until_position(SENSING_POSITION);
     // Each iteration of this loop starts at the sensing point
     while (m_location != target) {
-      if (switches.button_pressed()) {  // allow user to abort gracefully
+      if (switches.button_pressed()) {  // allow user to abort gracefullyf 
         break;
       }
       SerialPort.println();
@@ -717,6 +737,7 @@ void test_log_position_sensors() {
     }
     SerialPort.println();
     motion.reset_drive_system();
+    motion.disable_drive();
     sensors.set_steering_mode(STEERING_OFF);
     sensors.disable();
     delay(100);
@@ -763,6 +784,7 @@ void test_log_position_sensors() {
     reporter.print_justified(sensor_left, 5);
     reporter.print_justified(sensor_right, 5);
     motion.reset_drive_system();
+    motion.disable_drive();
     sensors.set_steering_mode(STEERING_OFF);
   }
 
@@ -792,6 +814,7 @@ void test_log_position_sensors() {
     motion.stop();
     // return to idle
     motion.reset_drive_system();
+    motion.disable_drive();
     sensors.set_steering_mode(STEERING_OFF);
   }
 

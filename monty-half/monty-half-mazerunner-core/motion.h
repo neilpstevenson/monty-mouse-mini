@@ -101,6 +101,10 @@ class Motion {
     forward.start(distance, top_speed, final_speed, acceleration);
   }
 
+  void stop_move() {
+    forward.stop();
+  }
+
   bool move_finished() {
     return forward.is_finished();
   }

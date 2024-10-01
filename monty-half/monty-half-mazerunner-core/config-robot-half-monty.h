@@ -63,8 +63,8 @@ const int FRONT_LEFT_CALIBRATION = 3720;
 const int FRONT_RIGHT_CALIBRATION = 3430;
 // RAW values for the side sensors when the robot is centered in a cell
 // and there is no wall ahead
-const int LEFT_CALIBRATION = 1690;
-const int RIGHT_CALIBRATION = 1500;
+const int LEFT_CALIBRATION = 1810;
+const int RIGHT_CALIBRATION = 1900;
 
 // The front linear constant is the value of k needed to make the function
 // sensors.get_distance(sensor,k) return 68mm (15mm) when the mouse is backed up
@@ -76,7 +76,7 @@ const int FRONT_REFERENCE = 200;  // reading when mouse centered with wall ahead
 // it changes a bit if there is an adjacent wall. The threshold is set for
 // when the robot is 20mm past the cell boundary. That is, the distance
 // from the front of the mouse to the wall ahead is 92mm
-const int TURN_THRESHOLD_SS90E = 140;
+const int TURN_THRESHOLD_SS90E = 104;
 const int EXTRA_WALL_ADJUST = 5;
 
 // Threshold used for starting the robot runs
@@ -176,7 +176,7 @@ const float WHEEL_DIAMETER = 20.20;
 // small amount. AFTER you have the wheel diameter and gear ratio calibrated,
 // have the mouse turn in place and adjust the MOUSE_RADIUS until these turns are
 // as accurate as you can get them
-const float MOUSE_RADIUS = 18.5; // Adjust on test
+const float MOUSE_RADIUS = 21.0; //18.5; // Adjust on test
 
 // The robot is likely to have wheels of different diameters or motors of slightly
 // different characteristics and that must be compensated for if the robot is to
@@ -247,7 +247,7 @@ const float ROT_KP = 16 * ROT_TM / (ROT_KM * ROT_ZETA * ROT_ZETA * ROT_TD * ROT_
 const float ROT_KD = LOOP_FREQUENCY * (8 * ROT_TM - ROT_TD) / (ROT_KM * ROT_TD);
 
 // controller constants for the steering controller
-const float STEERING_KP = 0.25;
+const float STEERING_KP = 0.01; //0.05; //0.25;
 const float STEERING_KD = 0.00;
 const float STEERING_ADJUST_LIMIT = 10.0;  // deg/s
 
@@ -295,23 +295,26 @@ const float LEFT_SCALE = (float)SIDE_NOMINAL / LEFT_CALIBRATION;
 const float RIGHT_SCALE = (float)SIDE_NOMINAL / RIGHT_CALIBRATION;
 
 // the values above which, a wall is seen
-const int LEFT_THRESHOLD = 80;   // minimum value to register a wall
-const int RIGHT_THRESHOLD = 80;  // minimum value to register a wall
-const int FRONT_THRESHOLD = 80;  // minimum value to register a wall
+const int LEFT_THRESHOLD = 60;   // minimum value to register a wall
+const int RIGHT_THRESHOLD = 60;  // minimum value to register a wall
+const int FRONT_THRESHOLD = 60;  // minimum value to register a wall
 
 // the distance through the cell at which the corresponding sensor
 // will see a falling edge
-const int LEFT_EDGE_POS = 90;
-const int RIGHT_EDGE_POS = 90;
+const int LEFT_EDGE_POS = 20;
+const int RIGHT_EDGE_POS = 20;
+
+// the position in the cell where the sensors are sampled.
+const float SENSING_POSITION = 60.0;
 
 // clang-format off
 // These take no storage - the compiler uses the values directly
 const TurnParameters turn_params[4] = {
     //           speed, entry,   exit, angle, omega,  alpha, sensor threshold
-    {SEARCH_TURN_SPEED,    15,     20,  90.0, 287.0, 2866.0, TURN_THRESHOLD_SS90E}, // 0 => SS90EL
-    {SEARCH_TURN_SPEED,    15,     20, -90.0, 287.0, 2866.0, TURN_THRESHOLD_SS90E}, // 0 => SS90ER
-    {SEARCH_TURN_SPEED,    15,     20,  90.0, 287.0, 2866.0, TURN_THRESHOLD_SS90E}, // 0 => SS90L
-    {SEARCH_TURN_SPEED,    15,     20, -90.0, 287.0, 2866.0, TURN_THRESHOLD_SS90E}, // 0 => SS90R
+    {SEARCH_TURN_SPEED,    15,     5,  90.0, 287.0 * 2, 2866.0, TURN_THRESHOLD_SS90E}, // 0 => SS90EL
+    {SEARCH_TURN_SPEED,    15,     5, -90.0, 287.0 * 2, 2866.0, TURN_THRESHOLD_SS90E}, // 0 => SS90ER
+    {SEARCH_TURN_SPEED,    15,     5,  90.0, 287.0 * 2, 2866.0, TURN_THRESHOLD_SS90E}, // 0 => SS90L
+    {SEARCH_TURN_SPEED,    15,     5, -90.0, 287.0 * 2, 2866.0, TURN_THRESHOLD_SS90E}, // 0 => SS90R
 };
 // clang-format on
 
@@ -349,5 +352,3 @@ const float BATTERY_MULTIPLIER = (ADC_REF_VOLTS / ADC_FSR / BATTERY_DIVIDER_RATI
 
 const int MOTOR_MAX_PWM = 255;
 
-// the position in the cell where the sensors are sampled.
-const float SENSING_POSITION = 80.0;
