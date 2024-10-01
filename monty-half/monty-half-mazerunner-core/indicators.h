@@ -21,6 +21,21 @@ class Indicators
         pixels.show();
     }
 
+    /***
+    * Visual feedback by flashing the LED indicators
+    */
+    void blink(int count, int r, int g, int b) 
+    {
+      for (int i = 0; i < count; i++) {
+        pixels.setPixelColor(0, pixels.Color(r, g, b));
+        pixels.show();
+        delay(100);
+        pixels.setPixelColor(0, pixels.Color(0, 0, 0));
+        pixels.show();
+        delay(100);
+      }
+  }
+
   private:
     Adafruit_NeoPixel pixels;
 };

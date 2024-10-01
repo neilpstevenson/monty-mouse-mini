@@ -329,7 +329,9 @@ class Mouse {
     delay(250);
     sensors.disable();
     motion.reset_drive_system();
+    motion.disable_drive();
     sensors.set_steering_mode(STEERING_OFF);
+    indicators.blink(4, 0, 16, 0); // Green
   }
 
   /***
@@ -429,8 +431,10 @@ class Mouse {
     SerialPort.println(F("Arrived!  "));
     delay(250);
     motion.reset_drive_system();
+    motion.disable_drive();
     sensors.set_steering_mode(STEERING_OFF);
-  }
+    indicators.blink(4, 0, 16, 0); // Green
+}
 
   /***
    * run_to should take the mouse to the target cell by whatever
@@ -568,16 +572,7 @@ class Mouse {
    * Visual feedback by flashing the LED indicators
    */
   void blink(int count) {
-    for (int i = 0; i < count; i++) {
-      indicators.showRedIndicator(1);
-      //digitalWrite(LED_USER, 1);
-      //digitalWrite(LED_BUILTIN, 1);
-      delay(100);
-      indicators.showRedIndicator(0);
-      //digitalWrite(LED_USER, 0);
-      //digitalWrite(LED_BUILTIN, 0);
-      delay(100);
-    }
+    indicators.blink(count, 8, 0, 0); // Red
   }
 
   /***
