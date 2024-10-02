@@ -64,15 +64,13 @@ ISR(TIMER2_COMPA_vect, ISR_NOBLOCK) {
 /******************************************************************************/
 void setup() {
   Serial.begin(BAUDRATE); // Need to do this always, else it prevents the USB programmer/bootloader being available
-#ifndef USE_USB_SERIAL_PORT 
+#ifdef USE_USB_SERIAL_PORT 
+  delay(1000);      // Allow any USB SerialPort to be established
+  redirectPrintf(); // send printf output to SerialPort (uses 20 bytes RAM)
+#else
+  // Also the serial port
   SerialPort.begin(BAUDRATE);
 #endif
-
-  //_UART_USB_.begin(BAUDRATE);
-  delay(1000);  // Allow any USB SerialPort to be established
-  //_UART_USB_.println("Hello");
-  redirectPrintf(); // send printf output to SerialPort (uses 20 bytes RAM)
-  printf("Hello %d\n", 99);
 
   pinMode(LED_LEFT_IO, OUTPUT);
   digitalWrite(LED_LEFT_IO, 0);
