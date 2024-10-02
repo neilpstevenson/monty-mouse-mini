@@ -32,7 +32,7 @@
 Systick systick;                          // the main system control loop
 AnalogueConverter adc;                    // controls all analogue conversions
 Battery battery(BATTERY_ADC_CHANNEL);     // monitors battery voltage
-Switches switches(SWITCHES_ADC_CHANNEL);  // monitors the button and switches
+Switches switches;                        // monitors the button and switches
 Encoders encoders;                        // tracks the wheel encoder counts
 Sensors sensors;                          // make sensor alues from adc vdata
 Motion motion;                            // high level motion operations
@@ -111,7 +111,11 @@ void loop() {
     switches.wait_for_button_release();
     int function = switches.read();
     cli.run_function(function);
+    switches.show_select_state();
   } else if (cli.read_serial()) {
     cli.interpret_line();
+  } else {
+    switches.update();
+    delay(2);
   }
 }

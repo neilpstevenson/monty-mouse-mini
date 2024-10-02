@@ -21,6 +21,13 @@ class Indicators
         pixels.show();
     }
 
+    // Simple 3-bit RGB colour
+    void showColourIndex(int colour)
+    {
+        pixels.setPixelColor(0, pixels.Color((colour & 4) ? 8 : 0, (colour & 2) ? 8 : 0, (colour & 1) ? 8 : 0));
+        pixels.show();
+    }
+
     /***
     * Visual feedback by flashing the LED indicators
     */
