@@ -74,7 +74,7 @@ public:
     int32_t speed() { return direction * (1000000L / interval()); }
     
     //Resets the count to 0 or a specified value.
-    void reset_count(int new_value = 0) { count = new_value; }
+    void reset_count(int new_value = 0) { cnt = new_value; }
 
     //Initializes the pins, pulls them as specified and attaches the interrupts
     void begin(pull_direction = pull_direction::none, resolution = resolution::quarter);
