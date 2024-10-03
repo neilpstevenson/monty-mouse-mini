@@ -565,7 +565,7 @@ class Mouse {
   int search_maze() {
     sensors.wait_for_user_start();
     SerialPort.println(F("Search TO"));
-    m_handStart = true;
+    m_handStart = true; // Assumes backed-up against a wall
     m_location = START;
     m_heading = NORTH;
     search_to(maze.goal());
@@ -573,7 +573,7 @@ class Mouse {
 
     Heading best_direction = maze.heading_to_smallest(m_location, m_heading);
     turn_to_face(best_direction);
-    m_handStart = false;
+    m_handStart = false;  // Assumes central in a cell
     search_to(START);
     turn_to_face(NORTH);
     motion.stop();
