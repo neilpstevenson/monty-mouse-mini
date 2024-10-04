@@ -77,20 +77,23 @@ void Encoders::reset() {
 void Encoders::update() {
     int left_delta = 0;
     int right_delta = 0;
+    float left_speed;
     // Make sure values don't change while being read. Be quick.
     ATOMIC {
-      left_delta = encoder_l.reset_count();
-      right_delta = encoder_r.reset_count();
+      //left_delta = encoder_l.reset_count();
+      //right_delta = encoder_r.reset_count();
+      left_speed = encoder_l.speed();
       //right_delta = m_right_counter;
       //m_left_counter = 0;
       //m_right_counter = 0;
     }
-    float left_change = left_delta; // * MM_PER_COUNT_LEFT;
-    float right_change = right_delta; // * MM_PER_COUNT_RIGHT;
-    m_fwd_change = 0.5 * (right_change + left_change);
+    //float left_change = left_delta * DEG_PER_COUNT; // * MM_PER_COUNT_LEFT;
+    float left_change = left_speed * DEG_PER_COUNT / 500.0; // Convert back to 2mS equivalent
+    //float right_change = right_delta; // * MM_PER_COUNT_RIGHT;
+    m_fwd_change = left_change;
     m_robot_distance += m_fwd_change;
-    m_rot_change = (right_change - left_change) * DEG_PER_COUNT;
-    m_robot_angle += m_rot_change;
+    //m_rot_change = (right_change - left_change) * DEG_PER_COUNT;
+    //m_robot_angle += m_rot_change;
   }
 
   /**

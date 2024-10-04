@@ -83,6 +83,8 @@ const float LOOP_FREQUENCY = 500.0f;
 const float LOOP_INTERVAL = (1.0f / LOOP_FREQUENCY);
 
 const int MOTOR_MAX_PWM = 255;
+const int TEST_SPEED_DEFAULT = 1800; //3600
+const int TEST_ACCEL_DEFAULT = 14400; //3600
 /*************************************************************************/
 /***
  * Since you may build for different physical robots, their characteristics

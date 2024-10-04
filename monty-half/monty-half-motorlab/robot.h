@@ -155,13 +155,13 @@ public:
       dist = 1440;
     }
     if (topSpeed == 0) {
-      topSpeed = 3600;
+      topSpeed = TEST_SPEED_DEFAULT; //3600;
     }
     if (endSpeed == 0) {
       endSpeed = 0;
     }
     if (accel == 0) {
-      accel = 14400;
+      accel = TEST_ACCEL_DEFAULT; //14400;
     }
     enable_drive();
     Serial.print(F("# "));

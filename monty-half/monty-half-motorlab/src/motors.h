@@ -177,9 +177,13 @@ public:
     if (pwm < 0) {
       analogWrite(MOTOR_LEFT_A, 255+pwm);
       analogWrite(MOTOR_LEFT_B, 255);
+      analogWrite(MOTOR_RIGHT_A, 255);  // 0 = coast mode, 255 = break-mode
+      analogWrite(MOTOR_RIGHT_B, 255+pwm);
     } else {
       analogWrite(MOTOR_LEFT_A, 255);  // 0 = coast mode, 255 = break-mode
       analogWrite(MOTOR_LEFT_B, 255-pwm);
+      analogWrite(MOTOR_RIGHT_A, 255-pwm);
+      analogWrite(MOTOR_RIGHT_B, 255);
     }
   }
 

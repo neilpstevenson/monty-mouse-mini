@@ -87,6 +87,7 @@ void setup() {
   cli.add_cmd(set_get_td, PSTR("TD"), PSTR("Set/Get settling time, Td"));
   cli.add_cmd(set_get_bias_ff, PSTR("BIASFF"), PSTR("Set/Get bias feed forward"));
   cli.add_cmd(set_get_speed_ff, PSTR("SPEEDFF"), PSTR("Set/Get speed feedforward"));
+  cli.add_cmd(set_get_acc_ff, PSTR("ACCFF"), PSTR("Set/Get accel feedforward"));
   cli.add_cmd(get_battery_volts, PSTR("BATT"), PSTR("Get battery Voltage"));
   cli.add_cmd(do_move, PSTR("MOVE"), PSTR("Execute move profile"));
   cli.add_cmd(do_step, PSTR("STEP"), PSTR("Execute single step"));
