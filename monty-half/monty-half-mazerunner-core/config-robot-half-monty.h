@@ -174,8 +174,8 @@ const int BACK_WALL_TO_CENTER = 14;
 // Finally, move the mouse in a straight line through 1000mm of travel to work
 // out the wheel diameter.
 const float ENCODER_PULSES = 12.00;
-const float GEAR_RATIO = 37.6; //42.0;
-const float WHEEL_DIAMETER = 20.20;
+const float GEAR_RATIO = 42.0; //37.6; //42.0;
+const float WHEEL_DIAMETER = 20.05; //20.20;
 
 // Mouse radius is the distance between the contact patches of the drive wheels.
 // A good starting approximation is half the distance between the wheel centres.
@@ -190,7 +190,7 @@ const float MOUSE_RADIUS = 21.0; //18.5; // Adjust on test
 // reliably drive in a straight line.
 // This number adjusts the encoder count and must be  added to the right
 // and subtracted from the left motor.
-const float ROTATION_BIAS = -0.0025; //-0.035; // Negative makes robot curve to left
+const float ROTATION_BIAS = -0.0017; //-0.0025; //-0.035; // Negative makes robot curve to left
 
 // Now we can pre-calculate the key constats for the motion control
 const float MM_PER_COUNT = PI * WHEEL_DIAMETER / (ENCODER_PULSES * GEAR_RATIO);
