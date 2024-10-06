@@ -36,7 +36,8 @@ static const int wall_follow_ahead_blocked_threshold = 40;
 static const int wall_follow_simple_left_gap_threshold = 40;
 static const int wall_follow_simple_right_gap_threshold = 40;
 static const int wall_follow_simple_ahead_blocked_threshold = 95;
-static const int wall_follower_simple_left_turn_delay = 50; // In loops
+static const int wall_follower_simple_left_turn_delay = 50; // In 2ms intervals
+static const int wall_follower_simple_max_turn_adjust = 50; // PID error steering limit to speed change
 
 // Distances to move during various manoevres
 static const int wall_follow_move_left_initial_forward = 85;
@@ -44,9 +45,9 @@ static const int wall_follow_move_left_initial_forward = 85;
 // Sensor sensitivities
 static const int sensor_left_min_raw = 7000;
 static const int sensor_left_max_raw = 12000;
-static const int sensor_frontleft_min_raw = 8000;
+static const int sensor_frontleft_min_raw = 10000;
 static const int sensor_frontleft_max_raw = 55000;
-static const int sensor_frontright_min_raw = 8000;
+static const int sensor_frontright_min_raw = 10000;
 static const int sensor_frontright_max_raw = 55000;
 static const int sensor_right_min_raw = 7000;
 static const int sensor_right_max_raw = 12000;

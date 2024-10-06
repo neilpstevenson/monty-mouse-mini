@@ -536,10 +536,11 @@ void simpleWallFollow(int mode)
         if(!blockedAhead)
         {
           // Limit the turn to 20%
-          followerError = std::max(std::min(followerError, 0.2F), -0.2F);
+          int steering = constrain((int)followerError, -wall_follower_simple_max_turn_adjust, wall_follower_simple_max_turn_adjust);
+          //Serial.println(steering);
 
           // Keep on following left wall
-          motors.turn(basespeed, -followerError);
+          motors.turn(basespeed, -steering);
 
           digitalWrite(ledGreen, 0); // Left indicator
           digitalWrite(ledRed, 0); // Right indicator
@@ -556,7 +557,7 @@ void simpleWallFollow(int mode)
           digitalWrite(ledRed, 1); // Right indicator
 
           // May need a very short turn
-          leftTurnCount = wallFollowerLeftTurnDelay;
+          leftTurnCount = wallFollowerLeftTurnDelay; // * 2 / 3;
         }
       }
       else if(++leftTurnCount <= wallFollowerLeftTurnDelay)
@@ -570,7 +571,7 @@ void simpleWallFollow(int mode)
       else
       {
           // Gap on left, turn into it now
-          motors.turn(basespeed, int(basespeed * 0.7));
+          motors.turn(basespeed, int(basespeed * 0.5));
 
           digitalWrite(ledGreen, 1); // Left indicator
           digitalWrite(ledRed, 0); // Right indicator
