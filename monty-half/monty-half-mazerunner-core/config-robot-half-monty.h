@@ -86,12 +86,12 @@ const int OCCLUDED_THRESHOLD_FRONT_RAW = 3000;
 // wall sensor thresholds and constants
 // RAW values for the front sensor when the robot is backed up to a wall
 // with another wall ahead
-const int FRONT_LEFT_CALIBRATION = 3720;
-const int FRONT_RIGHT_CALIBRATION = 3430;
+const int FRONT_LEFT_CALIBRATION = 3844;
+const int FRONT_RIGHT_CALIBRATION = 3815;
 // RAW values for the side sensors when the robot is centered in a cell
 // and there is no wall ahead
-const int LEFT_CALIBRATION = 1810;
-const int RIGHT_CALIBRATION = 1900;
+const int LEFT_CALIBRATION = 1710;
+const int RIGHT_CALIBRATION = 1729;
 
 // The front linear constant is the value of k needed to make the function
 // sensors.get_distance(sensor,k) return 68mm (15mm) when the mouse is backed up
@@ -254,7 +254,7 @@ const float ROT_KP = 16 * ROT_TM / (ROT_KM * ROT_ZETA * ROT_ZETA * ROT_TD * ROT_
 const float ROT_KD = LOOP_FREQUENCY * (8 * ROT_TM - ROT_TD) / (ROT_KM * ROT_TD);
 
 // controller constants for the steering controller
-const float STEERING_KP = 0.01; //0.05; //0.25;
+const float STEERING_KP = 0.005; //0.05; //0.25;
 const float STEERING_KD = 0.00;
 const float STEERING_ADJUST_LIMIT = 10.0;  // deg/s
 
