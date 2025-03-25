@@ -24,8 +24,6 @@
  *****************************************************************************/
 #define NAME "HALF MONTY"
 
-//#define USE_USB_SERIAL_PORT
-
 //***** SENSOR CALIBRATION **************************************************//
 /**
 RAW side sensor values when robot is centred in a cell and no wall ahead
@@ -175,7 +173,7 @@ const int BACK_WALL_TO_CENTER = 14;
 // out the wheel diameter.
 const float ENCODER_PULSES = 12.00;
 const float GEAR_RATIO = 42.0; //37.6; //42.0;
-const float WHEEL_DIAMETER = 20.05; //20.20;
+const float WHEEL_DIAMETER = 19.85; //20.05; //20.20;
 
 // Mouse radius is the distance between the contact patches of the drive wheels.
 // A good starting approximation is half the distance between the wheel centres.

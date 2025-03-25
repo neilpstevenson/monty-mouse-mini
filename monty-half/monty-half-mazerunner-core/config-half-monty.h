@@ -44,6 +44,8 @@ const uint8_t SWITCH_GO_PIN = 13;
 const int SERIAL_PORT_TX = 0;
 const int SERIAL_PORT_RX = 1;
 
+//#define USE_USB_SERIAL_PORT
+
 #ifdef USE_USB_SERIAL_PORT
 static UART &SerialPort = Serial;    // USB Serial
 #else
@@ -131,7 +133,7 @@ static UART &SerialPort = Serial1;   // UART0 (pins 0 & 1)
 #include <util/atomic.h>
 #define ATOMIC ATOMIC_BLOCK(ATOMIC_RESTORESTATE)
 #else
-#define ATOMIC
+#define ATOMIC bool criticalSectionLockBlock = true; for(mbed::CriticalSectionLock criticalSectionLock; criticalSectionLockBlock; criticalSectionLockBlock = false)
 #endif
 //***************************************************************************//
 

@@ -24,14 +24,19 @@ using namespace std::chrono;
 class Systick {
  private:
   mbed::Ticker ticker;
+  rtos::Thread tickerThread;
+  rtos::EventFlags tickerEvents;
 
  public:
   // don't let this start firing up before we are ready.
   // call the begin method explicitly.
   void begin() {
     // Start a 500Hz ticker
-    ticker.attach(update, 2ms);
-    /*
+    //ticker.attach(update, 2ms);
+    ticker.attach({this, &Systick::tickerTick}, 2ms);
+    // And a thread that will run on each tick
+    tickerThread.start({this, &Systick::tickerRun});
+  /*
     // set
     bitClear(TCCR2B, WGM22);
     bitClear(TCCR2A, WGM20);
@@ -83,6 +88,19 @@ class Systick {
     motors.update_controllers(motion.velocity(), motion.omega(), sensors.get_steering_feedback());
     adc.start_conversion_cycle();
     // NOTE: no code should follow this line;
+  }
+
+  void tickerTick() {
+      // Trigger ticker update
+      tickerEvents.set(1);
+  }
+  
+  void tickerRun() {
+    while(1)
+    {
+      tickerEvents.wait_any(1);
+      update();
+    }
   }
 };
 

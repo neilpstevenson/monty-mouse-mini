@@ -821,11 +821,14 @@ void test_log_position_sensors() {
     sensors.wait_for_user_start();
     motion.reset_drive_system();
     sensors.set_steering_mode(STEERING_OFF);
+    reporter.print_justified(encoders.robot_distance(), 5);
     // move 
     motion.move(distance, SEARCH_SPEED, 0, SEARCH_ACCELERATION);
     //motion.turn(90, SEARCH_SPEED, 0, SEARCH_ACCELERATION);
     // Be sure robot has come to a halt.
     motion.stop();
+    // Show actual distance measured
+    reporter.print_justified(encoders.robot_distance(), 5);
     // return to idle
     motion.reset_drive_system();
     motion.disable_drive();
