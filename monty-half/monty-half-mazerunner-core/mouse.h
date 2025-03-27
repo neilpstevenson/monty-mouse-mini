@@ -406,6 +406,9 @@ class Mouse {
         break;
       }
       SerialPort.println();
+#ifdef DEBUG_LOGGING
+      reporter.print_wall_sensors();
+#endif
       reporter.log_action_status('-', ' ', m_location, m_heading);
       sensors.set_steering_mode(STEER_NORMAL);
       m_location = m_location.neighbour(m_heading);  // the cell we are about to enter

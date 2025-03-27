@@ -1,3 +1,4 @@
+#include "cmsis_os2.h"
 /******************************************************************************
  * Project: mazerunner-core                                                   *
  * -----                                                                      *
@@ -28,6 +29,9 @@ class Systick {
   rtos::EventFlags tickerEvents;
 
  public:
+  Systick() : tickerThread(osPriorityRealtime)
+  {}
+
   // don't let this start firing up before we are ready.
   // call the begin method explicitly.
   void begin() {

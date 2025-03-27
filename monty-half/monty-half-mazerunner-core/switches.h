@@ -45,7 +45,7 @@ class Switches;
 // so that we can declare the instance
 extern Switches switches;
 
-const int MAX_SWITCH_VALUE = 7;
+const int MAX_SWITCH_VALUE = 10;
 
 class Switches {
  public:
@@ -119,7 +119,7 @@ class Switches {
 
   void show_select_state()
   {
-    indicators.showColourIndex(m_switches);
+    indicators.showMenuIndex(m_switches);
   }
 
   void wait_for_button_press() {

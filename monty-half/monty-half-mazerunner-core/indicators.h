@@ -28,6 +28,15 @@ class Indicators
         pixels.show();
     }
 
+    // Simple 3-bit RGB colour + G for 0x08 and R for 0x10
+    void showMenuIndex(int index)
+    {
+        pixels.setPixelColor(0, pixels.Color((index & 4) ? 8 : 0, (index & 2) ? 8 : 0, (index & 1) ? 8 : 0));
+        pixels.show();
+        digitalWrite(LED_LEFT_IO, (index & 0x08));
+        digitalWrite(LED_RIGHT_IO, (index & 0x10));
+    }
+
     /***
     * Visual feedback by flashing the LED indicators
     */

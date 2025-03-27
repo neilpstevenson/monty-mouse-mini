@@ -90,6 +90,16 @@ void setup() {
     SerialPort.println(F("Maze cleared"));
     switches.wait_for_button_release();
   }
+  else
+  {
+    // Quick flash to signal all ok
+    digitalWrite(LED_LEFT_IO, 1);
+    digitalWrite(LED_RIGHT_IO, 1);
+    delay(50);
+    digitalWrite(LED_LEFT_IO, 0);
+    digitalWrite(LED_RIGHT_IO, 0);
+  }
+  switches.show_select_state();
   /// leave the emitters off unless we are actually using the sensors
   /// less power, less risk
   sensors.disable();

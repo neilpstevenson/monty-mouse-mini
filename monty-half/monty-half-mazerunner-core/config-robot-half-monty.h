@@ -57,35 +57,35 @@ RAW values for the front sensor when the robot is backed up to a wall
 // wall sensor thresholds and constants
 // RAW values for the front sensor when the robot is backed up to a wall
 // with another wall ahead
-const int FRONT_LEFT_CALIBRATION = 3720;
-const int FRONT_RIGHT_CALIBRATION = 3430;
+const int FRONT_LEFT_CALIBRATION = 2000; //3720;
+const int FRONT_RIGHT_CALIBRATION = 1550; //3430;
 // RAW values for the side sensors when the robot is centered in a cell
 // and there is no wall ahead
-const int LEFT_CALIBRATION = 1810;
-const int RIGHT_CALIBRATION = 1900;
+const int LEFT_CALIBRATION = 1550; //1810;
+const int RIGHT_CALIBRATION = 1450; //1900;
 
 // The front linear constant is the value of k needed to make the function
-// sensors.get_distance(sensor,k) return 68mm (15mm) when the mouse is backed up
+// sensors.get_distance(sensor,k) return 68mm (half=30mm) when the mouse is backed up
 // against a wall with only a wall ahead
-const int FRONT_LINEAR_CONSTANT = 420; //i.e = sqrt(sum(FL,FR)) * 68
-const int FRONT_REFERENCE = 200;  // reading when mouse centered with wall ahead
+const int FRONT_LINEAR_CONSTANT = 452; //420; //i.e = sqrt(sum(FL,FR)) * 68
+const int FRONT_REFERENCE = 200;  // sum reading when mouse centered with wall ahead
 
 // SS90E turn thresholds. This is the front sum reading to trigger a turn
 // it changes a bit if there is an adjacent wall. The threshold is set for
 // when the robot is 20mm past the cell boundary. That is, the distance
-// from the front of the mouse to the wall ahead is 92mm
+// from the front of the mouse to the wall ahead is 92mm (half=50mm)
 const int TURN_THRESHOLD_SS90E = 104;
 const int EXTRA_WALL_ADJUST = 5;
 
 // Threshold used for starting the robot runs
-const int OCCLUDED_THRESHOLD_FRONT_RAW = 3000;
+const int OCCLUDED_THRESHOLD_FRONT_RAW = 2000;
 
 #elif EVENT == EVENT_UK
 // wall sensor thresholds and constants
 // RAW values for the front sensor when the robot is backed up to a wall
 // with another wall ahead
-const int FRONT_LEFT_CALIBRATION = 3844;
-const int FRONT_RIGHT_CALIBRATION = 3815;
+const int FRONT_LEFT_CALIBRATION = 2050; //3844;
+const int FRONT_RIGHT_CALIBRATION = 1650; //3815;
 // RAW values for the side sensors when the robot is centered in a cell
 // and there is no wall ahead
 const int LEFT_CALIBRATION = 1710;
@@ -105,7 +105,7 @@ const int TURN_THRESHOLD_SS90E = 104;
 const int EXTRA_WALL_ADJUST = 5;
 
 // Threshold used for starting the robot runs
-const int OCCLUDED_THRESHOLD_FRONT_RAW = 3000;
+const int OCCLUDED_THRESHOLD_FRONT_RAW = 2000;
 
 #endif
 
@@ -155,7 +155,7 @@ const uint32_t BAUDRATE = 115200;
 
 //***************************************************************************//
 // set this to zero to disable profile data logging over SerialPort
-// #define DEBUG_LOGGING 1
+#define DEBUG_LOGGING 1
 // time between logged lines when reporting is enabled (milliseconds)
 const int REPORTING_INTERVAL = 10;
 
@@ -173,7 +173,7 @@ const int BACK_WALL_TO_CENTER = 14;
 // out the wheel diameter.
 const float ENCODER_PULSES = 12.00;
 const float GEAR_RATIO = 42.0; //37.6; //42.0;
-const float WHEEL_DIAMETER = 19.85; //20.05; //20.20;
+const float WHEEL_DIAMETER = 20.19; //19.85; //20.05; //20.20;
 
 // Mouse radius is the distance between the contact patches of the drive wheels.
 // A good starting approximation is half the distance between the wheel centres.
@@ -302,7 +302,7 @@ const float RIGHT_SCALE = (float)SIDE_NOMINAL / RIGHT_CALIBRATION;
 // the values above which, a wall is seen
 const int LEFT_THRESHOLD = 60;   // minimum value to register a wall
 const int RIGHT_THRESHOLD = 60;  // minimum value to register a wall
-const int FRONT_THRESHOLD = 60;  // minimum value to register a wall
+const int FRONT_THRESHOLD = 48; //60;  // minimum value to register a wall
 
 // the distance through the cell at which the corresponding sensor
 // will see a falling edge
@@ -310,7 +310,7 @@ const int LEFT_EDGE_POS = 20;
 const int RIGHT_EDGE_POS = 20;
 
 // the position in the cell where the sensors are sampled.
-const float SENSING_POSITION = 60.0;
+const float SENSING_POSITION = 85.0;  // HALF_CELL + 40mm, i.e. around 65mm before a subsequent 1/2 size wall
 
 // clang-format off
 // These take no storage - the compiler uses the values directly
