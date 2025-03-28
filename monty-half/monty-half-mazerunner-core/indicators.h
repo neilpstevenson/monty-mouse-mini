@@ -45,9 +45,13 @@ class Indicators
       for (int i = 0; i < count; i++) {
         pixels.setPixelColor(0, pixels.Color(r, g, b));
         pixels.show();
+        digitalWrite(LED_LEFT_IO, 1);
+        digitalWrite(LED_RIGHT_IO, 1);
         delay(100);
         pixels.setPixelColor(0, pixels.Color(0, 0, 0));
         pixels.show();
+        digitalWrite(LED_LEFT_IO, 0);
+        digitalWrite(LED_RIGHT_IO, 0);
         delay(100);
       }
   }
