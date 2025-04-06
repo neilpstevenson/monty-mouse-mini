@@ -96,7 +96,7 @@ const int RIGHT_CALIBRATION = 1000;
 // sensors.get_distance(sensor,k) return 68mm (15mm) when the mouse is backed up
 // against a wall with only a wall ahead
 const int FRONT_LINEAR_CONSTANT = 961; //i.e = sqrt(sum(FL,FR)) * 68 = sqrt(200) * 68
-const int FRONT_REFERENCE = 530;  // reading when mouse centered with wall ahead
+const int FRONT_REFERENCE = 500;  // reading when mouse centered with wall ahead
 
 // SS90E turn thresholds. This is the front sum reading to trigger a turn
 // it changes a bit if there is an adjacent wall. The threshold is set for
