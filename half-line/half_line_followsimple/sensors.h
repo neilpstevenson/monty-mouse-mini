@@ -85,8 +85,8 @@ class Sensor
 class LineSensors
 {
   public:
-    static const int adcPollIntervalMs = 5;
-    static const int adcSettlingDelayNs = 100000;
+    static const int adcPollIntervalMs = 2;
+    static const int adcSettlingDelayNs = 20000;
 
   private:
     mbed::DigitalOut leftLeds;

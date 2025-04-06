@@ -119,10 +119,10 @@ class Motors
       if(power >= 0)
       {
         // clamp to max power
-        if(turn > power)
-          turn = power;
-        else if(turn < -power)
-          turn = -power;
+        if(turn > power - 2)
+          turn = power - 2;
+        else if(turn < -(power - 2))
+          turn = -(power - 2);
         if(turn >= 0)
         {
           // Turn left

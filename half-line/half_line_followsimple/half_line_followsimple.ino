@@ -174,7 +174,7 @@ int getMode()
 
       if(digitalRead(buttonA) == 0)
       {
-        if(++mode > 3)
+        if(++mode > 4)
           mode = 0;
           
         DebugPort.print("mode ");
@@ -277,14 +277,19 @@ void loop()
     }
     else if(mode == 1)
     {
-      delay(500);
-      calibrateSensors();
+      delay(200);
+      simple_line_follow(500000,forward_speed);
     }
     else if(mode == 2)
     {
-      testSensors();
+      delay(500);
+      calibrateSensors();
     }
     else if(mode == 3)
+    {
+      testSensors();
+    }
+    else if(mode == 4)
     {
       motors.left.setPower(-64);
       delay(500);

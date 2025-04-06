@@ -3,8 +3,8 @@
 #define SERIAL_DEBUG_PORT 
 //#define LOG_RAW_SENSORS
 
-static const float kp = 1.0;
-static const float kd = 0.05;
+static const float kp = 4.0;
+static const float kd = 0.5;
 
 static const float encode_calibrate_l = 0.123;// 0.132; // smaller = bigger turns
 static const float encode_calibrate_r = 0.123;// 0.132;
@@ -17,7 +17,7 @@ static const int turn_angle_inertia_compensation = 8; // End the turns this much
 
 static const float turning_diameter_mm = 39.0;  // Bigger means turns more
 
-static const int forward_speed = 64;
+static const int forward_speed = 200;
 
 // Sensor sensitivities defaults
 static const int sensor_left_min_raw = 5000;
@@ -33,4 +33,4 @@ static UART &DebugPort = Serial1; // i.e. UART0 (pins 0&1)
 static UART &DebugPort = Serial;  // i.e. USB serial
 #endif
 
-static const int log_frequency = 1; // Number of sensor ticks, e.g. 2mS * 5 = 10mS
+static const int log_frequency = 200000; // Number of sensor ticks, e.g. 2mS * 5 = 10mS
