@@ -108,26 +108,26 @@ template<int A_pin, int B_pin>
 void Quadrature_encoder<A_pin, B_pin>::begin(pull_direction pull_dir, resolution res)
 {
     // configure the pins
- /*   gpio_init(A_pin);
-    gpio_init(B_pin);
-    mbed::gpio_set_dir(A_pin, GPIO_IN);
-    mbed::gpio_set_dir(B_pin, GPIO_IN);
+ //    gpio_init(A_pin);
+//    gpio_init(B_pin);
+    gpio_set_dir(A_pin, GPIO_IN);
+    gpio_set_dir(B_pin, GPIO_IN);
     switch (pull_dir)
     {
     case pull_direction::up:
-        mbed::gpio_pull_up(A_pin);
-        mbed::gpio_pull_up(B_pin);
+        gpio_pull_up(A_pin);
+        gpio_pull_up(B_pin);
         break;
     case pull_direction::down:
-        mbed::gpio_pull_down(A_pin);
-        mbed::gpio_pull_down(B_pin);
+        gpio_pull_down(A_pin);
+        gpio_pull_down(B_pin);
         break;
     case pull_direction::none:
-        mbed::gpio_disable_pulls(A_pin);
-        mbed::gpio_disable_pulls(B_pin);
+        gpio_disable_pulls(A_pin);
+        gpio_disable_pulls(B_pin);
         break;
     }
-*/
+
     // configure the interrupts according to resolution parameter
     switch (res)
     {

@@ -1,18 +1,17 @@
 #include "hardware.h"
 #include "config.h"
 
-#define MOTORS_USE_BREAK_MODE
-
 class Motor
 {
   private:
     int pinA;
     int pinB;
     int currentPower;
+    int maxAcceleration;
     
   public:
-    Motor(int pinA, int pinB)
-      : pinA(pinA), pinB(pinB), currentPower(0)
+    Motor(int pinA, int pinB, int maxAcceleration = max_acceleration_per_update)
+      : pinA(pinA), pinB(pinB), currentPower(0), maxAcceleration(maxAcceleration)
     {
       pinMode(pinA, OUTPUT);
       pinMode(pinB, OUTPUT);
@@ -21,10 +20,19 @@ class Motor
       analogWrite(pinB, 0);
     }
 
-#ifdef MOTORS_USE_BREAK_MODE
     // Set power, -255 to +255
-    void setPower(int power)
+    void setPower(int power, bool limit_accel = true)    
     {
+      if(limit_accel)
+      {
+        // Limit acceleration
+        if(power > currentPower + maxAcceleration)
+          power = currentPower + maxAcceleration;
+        else if(power < currentPower - maxAcceleration)
+          power = currentPower - maxAcceleration;
+      }
+      
+#ifdef MOTORS_USE_BREAK_MODE
       // Break mode
       if(power >= 0)
       {
@@ -43,10 +51,7 @@ class Motor
       currentPower = power;
     } 
 #else //MOTORS_USE_BREAK_MODE
-    // Set power, -255 to +255
-    void setPower(int power)
-    {
-      // Break mode
+      // Freewheel mode
       if(power >= 0)
       {
         if(power > 255)
@@ -156,13 +161,13 @@ class Motors
     {
       if(turn >= 0)
       {
-        left.setPower(turn * motor_compensation_left);
-        right.setPower(-turn);
+        left.setPower(turn * motor_compensation_left, false);
+        right.setPower(-turn, false);
       }
       else
       {
-        left.setPower(turn);
-        right.setPower(-turn * motor_compensation_right);
+        left.setPower(turn, false);
+        right.setPower(-turn * motor_compensation_right, false);
       }
     }
 

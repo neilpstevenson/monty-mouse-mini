@@ -45,15 +45,15 @@ class Sensor
     }
 
     // Get the calibrated value where 0 = black, 100 = max
-    unsigned int getCalibrated()
+    float getCalibrated()
     {
-      unsigned int raw = getRaw();
+      float raw = getRaw();
       if(raw <= litMinimum)
         return 0;
       else if(raw >= litMaximum)
         return 100;
       else
-        return (unsigned int)((raw - litMinimum) * 100L / (litMaximum - litMinimum));
+        return (raw - litMinimum) * 100.0 / (litMaximum - litMinimum);
     }
 
     void setCalibration(unsigned int litMinimum, unsigned int litMaximum)
@@ -109,12 +109,12 @@ class LineSensors
     LineSensors()
     : leftLeds(p14), // TODO - Use hardware constants
       sensorLeft(p26, sensor_left_min_raw, sensor_left_max_raw),
-      sensorMidLeft(p27, sensor_line_min_raw, sensor_line_max_raw),
-      sensorCentreLeft(p28, sensor_line_min_raw, sensor_line_max_raw),
+      sensorMidLeft(p27, sensor_left_mid_min_raw, sensor_left_mid_max_raw),
+      sensorCentreLeft(p28, sensor_left_centre_min_raw, sensor_left_centre_max_raw),
       rightLeds(p15),
       sensorRight(p26, sensor_right_min_raw, sensor_right_max_raw),
-      sensorMidRight(p27, sensor_line_min_raw, sensor_line_max_raw),
-      sensorCentreRight(p28, sensor_line_min_raw, sensor_line_max_raw),
+      sensorMidRight(p27, sensor_right_mid_min_raw, sensor_right_mid_max_raw),
+      sensorCentreRight(p28, sensor_right_centre_min_raw, sensor_right_centre_max_raw),
       sensorThread(osPriorityRealtime)
     {
       // Ensure LEDs off

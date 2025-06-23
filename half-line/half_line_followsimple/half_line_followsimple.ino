@@ -47,28 +47,30 @@ void logSensors(const char *mode, float error, bool logNew = false)
     
     // Sensors
     DebugPort.print(sensors.getWeightedCentreOffset());    DebugPort.print(",");
-    DebugPort.print(error);                                DebugPort.print(",");
+    DebugPort.print(error);                                DebugPort.print(", ");
+    
     DebugPort.print(sensors.left().getCalibrated());       DebugPort.print(",");
     DebugPort.print(sensors.midLeft().getCalibrated());    DebugPort.print(",");
     DebugPort.print(sensors.centreLeft().getCalibrated()); DebugPort.print(",");
     DebugPort.print(sensors.centreRight().getCalibrated());DebugPort.print(",");
     DebugPort.print(sensors.midRight().getCalibrated());   DebugPort.print(",");
-    DebugPort.print(sensors.right().getCalibrated());      DebugPort.print(",");
+    DebugPort.print(sensors.right().getCalibrated());      DebugPort.print(", ");
+
     DebugPort.print(motors.left.getPower());               DebugPort.print(",");
-    DebugPort.print(motors.right.getPower());              DebugPort.print(",");
+    DebugPort.print(motors.right.getPower());              DebugPort.print(", ");
     
     // Encoders
     DebugPort.print(encoder_l.count() * encode_calibrate_l);  DebugPort.print("mm,");
     DebugPort.print(encoder_r.count() * encode_calibrate_r);  DebugPort.print("mm");
 
   #ifdef LOG_RAW_SENSORS  
-    DebugPort.print(",");
+    DebugPort.print(", ");
     DebugPort.print(sensors.left().getRaw());       DebugPort.print(",");
     DebugPort.print(sensors.midLeft().getRaw());    DebugPort.print(",");
     DebugPort.print(sensors.centreLeft().getRaw()); DebugPort.print(",");
     DebugPort.print(sensors.centreRight().getRaw());DebugPort.print(",");
     DebugPort.print(sensors.midRight().getRaw());   DebugPort.print(",");
-    DebugPort.print(sensors.right().getRaw());      DebugPort.print(",");
+    DebugPort.print(sensors.right().getRaw());      DebugPort.print(", ");
     
     // Encoders
     DebugPort.print(encoder_l.count());             DebugPort.print(",");
@@ -86,7 +88,13 @@ float get_line_follow_error()
   // Simple P(I)D controller using 4 centre sensors, weighted at 3:1
   float lineDist = sensors.getWeightedCentreOffset();
   float error = lineDist * kp + (lineDist - lastDist) * kd * interval;
-
+/*
+  DebugPort.print(lineDist);        DebugPort.print(",");
+  DebugPort.print(kp);              DebugPort.print(",");
+  DebugPort.print(kd * interval);   DebugPort.print(",");
+  DebugPort.print(error);           
+  DebugPort.println();
+*/
   lastDist = lineDist;
 
   //DebugPort.print("PID in=");
@@ -94,7 +102,7 @@ float get_line_follow_error()
   //DebugPort.print(", err=");
   //DebugPort.println(error);
 
-  return error;
+  return error * forward_speed;
 }
 
 void reset_PID()
@@ -212,7 +220,7 @@ int getMode()
 void calibrateSensors()
 {
   // Rotate for 1 second, which should travel over a while line completely
-  motors.turn(-64); // Rotate anti-clockwise
+  motors.turn(-64); // Rotate anti-clockwise at exacly this speed
   sensors.calibrateSensors(1000);
   motors.stop();
 
