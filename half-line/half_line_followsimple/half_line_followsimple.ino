@@ -41,21 +41,30 @@ void logSensors(const char *mode, float error, bool logNew = false)
   // Limit log frequency
   if(++log_count % log_frequency == 0)
   {
-    DebugPort.print(millis() - startTime);                DebugPort.print(",");
+    // Get these first, else could change during prints
+    float w = sensors.getWeightedCentreOffset();
+    float l = sensors.left().getCalibrated();
+    float ml = sensors.midLeft().getCalibrated();
+    float cl = sensors.centreLeft().getCalibrated();
+    float cr = sensors.centreRight().getCalibrated();
+    float mr = sensors.midRight().getCalibrated();
+    float r = sensors.right().getCalibrated();
 
-    //DebugPort.print(mode);        DebugPort.print(",");
-    
+    DebugPort.print(millis() - startTime);                DebugPort.print(", ");
+
     // Sensors
-    DebugPort.print(sensors.getWeightedCentreOffset());    DebugPort.print(",");
-    DebugPort.print(error);                                DebugPort.print(", ");
-    
-    DebugPort.print(sensors.left().getCalibrated());       DebugPort.print(",");
-    DebugPort.print(sensors.midLeft().getCalibrated());    DebugPort.print(",");
-    DebugPort.print(sensors.centreLeft().getCalibrated()); DebugPort.print(",");
-    DebugPort.print(sensors.centreRight().getCalibrated());DebugPort.print(",");
-    DebugPort.print(sensors.midRight().getCalibrated());   DebugPort.print(",");
-    DebugPort.print(sensors.right().getCalibrated());      DebugPort.print(", ");
+    DebugPort.print(w);       DebugPort.print(",");
+    // PID error
+    DebugPort.print(error);   DebugPort.print(", ");
+    // Calibrated sensors
+    DebugPort.print(l);   DebugPort.print(",");
+    DebugPort.print(ml);  DebugPort.print(",");
+    DebugPort.print(cl);  DebugPort.print(",");
+    DebugPort.print(cr);  DebugPort.print(",");
+    DebugPort.print(mr);  DebugPort.print(",");
+    DebugPort.print(r);   DebugPort.print(", ");
 
+    // Motors
     DebugPort.print(motors.left.getPower());               DebugPort.print(",");
     DebugPort.print(motors.right.getPower());              DebugPort.print(", ");
     
@@ -124,8 +133,8 @@ void simple_line_follow(int distance, int speed)
   {
       sensors.waitForSample();
       float error = get_line_follow_error();
-      motors.turn(speed, error);
-      logSensors("FOLLOW", error);
+      motors.turn(speed, int(error));
+      logSensors("FOLLOW", int(error));
   }
 
   unsigned long endTime = millis();
@@ -299,22 +308,32 @@ void loop()
     }
     else if(mode == 4)
     {
-      motors.left.setPower(-64);
-      delay(500);
-      motors.left.setPower(0);
-      delay(500);
-      motors.left.setPower(64);
-      delay(500);
-      motors.left.setPower(0);
-      delay(500);
-      motors.right.setPower(-64);
-      delay(500);
-      motors.right.setPower(0);
-      delay(500);
-      motors.right.setPower(64);
-      delay(500);
-      motors.right.setPower(0);
-      delay(500);
+      delay(100);
+      for(int i = 0; i < 100; i++) {
+        motors.left.setPower(64);  delay(5);
+      }
+      for(int i = 0; i < 100; i++) {
+        motors.left.setPower(0);  delay(5);
+      }
+      for(int i = 0; i < 100; i++) {
+        motors.left.setPower(-64);  delay(5);
+      }
+      for(int i = 0; i < 100; i++) {
+        motors.left.setPower(0);  delay(5);
+      }
+
+      for(int i = 0; i < 100; i++) {
+        motors.right.setPower(64);  delay(5);
+      }
+      for(int i = 0; i < 100; i++) {
+        motors.right.setPower(0);  delay(5);
+      }
+      for(int i = 0; i < 100; i++) {
+        motors.right.setPower(-64);  delay(5);
+      }
+      for(int i = 0; i < 100; i++) {
+        motors.right.setPower(0);  delay(5);
+      }
     }
   
 }

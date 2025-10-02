@@ -1,11 +1,11 @@
 #pragma once
 
-#define SERIAL_DEBUG_PORT 
-//#define LOG_RAW_SENSORS
+//#define SERIAL_DEBUG_PORT 
+#define LOG_RAW_SENSORS
 #define MOTORS_USE_BREAK_MODE
 
-static const float kp = 0.009; //4.0;
-static const float kd = 0.0002; //0.5;
+static const float kp = 0.015; //0.009; //4.0;
+static const float kd = 0.0015; //0.0002; //0.5;
 
 static const float encode_calibrate_l = 0.123;// 0.132; // smaller = bigger turns
 static const float encode_calibrate_r = 0.123;// 0.132;
@@ -17,9 +17,9 @@ static const int max_acceleration_per_update  = 15;
 
 static const int turn_angle_inertia_compensation = 8; // End the turns this much short, to allow for inertia taking it the rest of the way
 
-static const float turning_diameter_mm = 39.0;  // Bigger means turns more
+//static const float turning_diameter_mm = 39.0;  // Bigger means turns more
 
-static const int forward_speed = 100;
+static const int forward_speed = 150;
 
 // Sensor sensitivities defaults
 static const int sensor_left_min_raw = 3500;

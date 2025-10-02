@@ -4,20 +4,28 @@
 class Motor
 {
   private:
-    int pinA;
-    int pinB;
+    // we use the mbed call rather than the Arduino interfaces to access the PWM channels as it gives us more 
+    // control of PWM frequency etc. and also a much faster interface
+    mbed::PwmOut motorA;
+    mbed::PwmOut motorB;
     int currentPower;
     int maxAcceleration;
-    
+
+    const float MOTOR_PWM_PERIOD = 1.0 / 20000; // 20kHz give a reasonable response
+   
   public:
-    Motor(int pinA, int pinB, int maxAcceleration = max_acceleration_per_update)
-      : pinA(pinA), pinB(pinB), currentPower(0), maxAcceleration(maxAcceleration)
+    Motor(int pinA, int pinB, int maxAcceleration = max_acceleration_per_update): 
+      motorA(PinName(pinA)),
+      motorB(PinName(pinB)),
+      currentPower(0),
+      maxAcceleration(maxAcceleration)
     {
-      pinMode(pinA, OUTPUT);
-      pinMode(pinB, OUTPUT);
-      // Set initial state
-      analogWrite(pinA, 0);  // 0 = coast mode, 255 = break-mode
-      analogWrite(pinB, 0);
+      // Set PWM frequency
+      motorA.period(MOTOR_PWM_PERIOD);
+      motorB.period(MOTOR_PWM_PERIOD);
+      // Default to "brake" mode - both inputs high
+      motorA.write(1);
+      motorB.write(1);
     }
 
     // Set power, -255 to +255
@@ -38,15 +46,15 @@ class Motor
       {
         if(power > 255)
           power = 255;
-        analogWrite(pinA, 255);  // 0 = coast mode, 255 = break-mode
-        analogWrite(pinB, 255-power);
+        motorA.write(1);  // 1 = break mode for better control
+        motorB.write((255-power) / 255.0);
       }
       else
       {
         if(power < -255)
           power = -255;
-        analogWrite(pinA, 255+power);
-        analogWrite(pinB, 255);
+        motorB.write(1);  // 1 = break mode for better control
+        motorA.write((255+power) / 255.0);
       }
       currentPower = power;
     } 
@@ -56,15 +64,15 @@ class Motor
       {
         if(power > 255)
           power = 255;
-        analogWrite(pinA, power);  // 0 = coast mode, 255 = break-mode
-        analogWrite(pinB, 0);
+        motorB.write(0);  // 0 = coast mode for better power & speed
+        motorA.write(power / 255.0);
       }
       else
       {
         if(power < -255)
           power = -255;
-        analogWrite(pinA, 0);
-        analogWrite(pinB, -power);
+        motorA.write(0);  // 0 = coast mode for better power & speed
+        motorB.write(-power / 255.0);
       }
       currentPower = power;
     } 
@@ -79,13 +87,13 @@ class Motor
     {
       if(breakMode)
       {
-        analogWrite(pinA, 255);  // 0 = coast mode, 255 = break-mode
-        analogWrite(pinB, 255);
+        motorA.write(1);  // Breaking to a halt
+        motorB.write(1);
       }
       else
       {
-        analogWrite(pinA, 0);
-        analogWrite(pinB, 0);
+        motorA.write(0);  // Coast to a halt
+        motorB.write(0);
       }
       currentPower = 0;
     }      

@@ -86,7 +86,7 @@ class LineSensors
 {
   public:
     static const int adcPollIntervalMs = 2;
-    static const int adcSettlingDelayNs = 20000;
+    static const int adcSettlingDelayNs = 40000;
 
   private:
     mbed::DigitalOut leftLeds;
@@ -199,31 +199,40 @@ class LineSensors
           sensorLeft.sampleAmbient();
           sensorMidLeft.sampleAmbient();
           sensorCentreLeft.sampleAmbient();
+          
+          {
+            mbed::CriticalSectionLock criticalSectionLock; // To prevent encoder interrupts
+            // Sample left sensors lit values
+            leftLeds = 1;
+            wait_ns(adcSettlingDelayNs);
+            sensorLeft.sampleLit();
+            sensorMidLeft.sampleLit();
+            sensorCentreLeft.sampleLit();
+            leftLeds = 0;
+          }
+
+          rtos::ThisThread::sleep_for(adcPollIntervalMs/2);
+
           // ToDo - Optimimise combined readings
           sensorRight.sampleAmbient();
           sensorMidRight.sampleAmbient();
           sensorCentreRight.sampleAmbient();
-          
-          // Sample left sensors lit values
-          leftLeds = 1;
-          wait_ns(adcSettlingDelayNs);
-          sensorLeft.sampleLit();
-          sensorMidLeft.sampleLit();
-          sensorCentreLeft.sampleLit();
-          leftLeds = 0;
-          // Then the side sensors lit values
-          rightLeds = 1;
-          wait_ns(adcSettlingDelayNs);
-          sensorRight.sampleLit();
-          sensorMidRight.sampleLit();
-          sensorCentreRight.sampleLit();
-          rightLeds = 0;
+          {
+            mbed::CriticalSectionLock criticalSectionLock; // To prevent encoder interrupts
+            // Then the side sensors lit values
+            rightLeds = 1;
+            wait_ns(adcSettlingDelayNs);
+            sensorRight.sampleLit();
+            sensorMidRight.sampleLit();
+            sensorCentreRight.sampleLit();
+            rightLeds = 0;
+          }
 
           // Signal to listeners
           adcReadyEvents.set(1);
 
           // Loop delay
-          rtos::ThisThread::sleep_for(adcPollIntervalMs);
+          rtos::ThisThread::sleep_for(adcPollIntervalMs/2);
        }
     }
 };
