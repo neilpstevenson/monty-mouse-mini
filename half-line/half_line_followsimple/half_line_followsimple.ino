@@ -133,7 +133,7 @@ void simple_line_follow(int distance, int speed)
   {
       sensors.waitForSample();
       float error = get_line_follow_error();
-      motors.turn(speed, int(error));
+      motors.turn(speed, std::max(std::min(int(error), speed - 10), 10 - speed));
       logSensors("FOLLOW", int(error));
   }
 
@@ -229,8 +229,8 @@ int getMode()
 void calibrateSensors()
 {
   // Rotate for 1 second, which should travel over a while line completely
-  motors.turn(-64); // Rotate anti-clockwise at exacly this speed
-  sensors.calibrateSensors(1000);
+  motors.turn(64); // Rotate anti-clockwise at exacly this speed
+  sensors.calibrateSensors(1200);
   motors.stop();
 
   // Print results
@@ -290,7 +290,7 @@ void loop()
     if(mode == 0) 
     {
       delay(500);
-      simple_line_follow(1000,forward_speed);
+      calibrateSensors();
     }
     else if(mode == 1)
     {
@@ -300,7 +300,7 @@ void loop()
     else if(mode == 2)
     {
       delay(500);
-      calibrateSensors();
+      simple_line_follow(500000,forward_speed * 1.2);
     }
     else if(mode == 3)
     {
