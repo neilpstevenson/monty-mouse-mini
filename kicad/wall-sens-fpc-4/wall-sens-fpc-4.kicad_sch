@@ -5864,7 +5864,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "22uF"
+		(property "Value" "47uF"
 			(at 105.41 62.2362 0)
 			(effects
 				(font
@@ -5873,7 +5873,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" "Capacitor_SMD:C_0805_2012Metric"
+		(property "Footprint" "Capacitor_SMD:C_1206_3216Metric"
 			(at 102.87 60.96 0)
 			(effects
 				(font
