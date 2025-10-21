@@ -9178,7 +9178,7 @@
 				(justify left bottom)
 			)
 		)
-		(property "Sheetfile" "untitled.kicad_sch"
+		(property "Sheetfile" "half-monty-2-sensors.kicad_sch"
 			(at 195.58 149.1746 0)
 			(effects
 				(font

@@ -481,7 +481,7 @@
 		(property ki_fp_filters "LED*1206*3216Metric*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/6f471542-5c8c-4d63-a9d3-cb8d676e0d24")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start 0.747 1)
@@ -1242,7 +1242,7 @@
 		(property ki_fp_filters "Pin* Test*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/4d8b72ed-3e96-43c0-bfaa-fb800f39d260")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr exclude_from_pos_files)
 		(fp_circle
 			(center 0 0)
@@ -1343,7 +1343,7 @@
 		(property ki_fp_filters "C_*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/a4328b63-b0db-4727-95ef-8e6750f75d8b")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -0.711252 -0.91)
@@ -1743,7 +1743,7 @@
 		(property ki_fp_filters "R_*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/4f55ec96-3b04-4f42-8b14-1656cde7c4e0")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -0.227064 0.735)
@@ -3115,7 +3115,7 @@
 		(property ki_fp_filters "R_*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/61afaca0-ca3b-4b51-ad68-9a29b81f5e9a")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -0.227064 -0.735)
@@ -3314,7 +3314,7 @@
 		(property ki_fp_filters "R_*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/6c60fcbb-f13a-4019-aefd-284cdd425fa1")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -0.227064 -0.735)
@@ -3511,7 +3511,7 @@
 		(property ki_fp_filters "LED*1206*3216Metric*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/76c870b0-895e-4d11-8456-93171fda0d81")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start 0.747 1)
@@ -3867,7 +3867,7 @@
 		(property ki_fp_filters "SOT?23*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/9025a2d5-78bc-4f4f-896b-c871d2df9f9c")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start 0 1.56)
@@ -4198,7 +4198,7 @@
 		(property ki_fp_filters "LED*1206*3216Metric*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/8e8b0c5f-ea7f-441f-bc1e-10ae19db0ee0")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start 0.747 1)
@@ -4555,7 +4555,7 @@
 		(property ki_fp_filters "SOT?523*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/f7abfa5a-d87c-4a22-b74d-7f3fb98154ca")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -1.1303 -0.9779)
@@ -4995,7 +4995,7 @@
 		(property ki_fp_filters "R_*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/07b62d63-8568-4850-a71c-03fa80efd0e0")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -0.227064 0.735)
@@ -5194,7 +5194,7 @@
 		(property ki_fp_filters "R_*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/1b92c1f2-7f0c-421d-96a0-8a49b4591718")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -0.227064 -0.735)
@@ -5616,7 +5616,7 @@
 		(property ki_fp_filters "R_*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/523ed2e7-cb7c-4ec6-b48a-a147a7779e46")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -0.227064 -0.735)
@@ -5918,7 +5918,7 @@
 		(property ki_fp_filters "Pin* Test*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/68e92b62-12f6-45f7-b2c4-5ec0adc4685c")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr exclude_from_pos_files)
 		(fp_circle
 			(center 0 0)
@@ -6019,7 +6019,7 @@
 		(property ki_fp_filters "R_*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/f0f83e4b-8668-4527-abba-af1cc7bb95fb")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -0.227064 -0.735)
@@ -6216,7 +6216,7 @@
 		(property ki_fp_filters "LED*1206*3216Metric*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/6483f925-15e8-4146-a1b4-ad89d2192ef9")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -0.58 -0.55)
@@ -6873,7 +6873,7 @@
 		(property ki_fp_filters "R_*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/25c6ec24-83df-4447-b1dd-d08a5b41bf9e")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -0.227064 0.735)
@@ -7612,7 +7612,7 @@
 		(property ki_fp_filters "SOT?523*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/811cb273-3d94-407d-9e2d-d4d49f47cd9a")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start 1.1303 0.582471)
@@ -8054,7 +8054,7 @@
 		(property ki_fp_filters "Pin* Test*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/d935bcf8-dab5-4380-9737-eb383c53ab45")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr exclude_from_pos_files)
 		(fp_line
 			(start -0.95 -0.95)
@@ -8215,7 +8215,7 @@
 		(property ki_fp_filters "R_*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/93159810-5cc2-476b-bded-89ce42e5adac")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -0.227064 -0.735)
@@ -8615,7 +8615,7 @@
 		(property ki_fp_filters "R_*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/17869a45-63f6-4899-934d-b1cbcb4ab2fd")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -0.227064 -0.735)
@@ -8814,7 +8814,7 @@
 		(property ki_fp_filters "SOT?23*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/d53b3f99-d36c-4bd2-a3a6-e2297eb91861")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start 0 1.56)
@@ -9147,7 +9147,7 @@
 		(property ki_fp_filters "R_*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/3979f51b-081a-40cb-bfb1-85173bca24e0")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -0.227064 -0.735)
@@ -9346,7 +9346,7 @@
 		(property ki_fp_filters "C_*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/4d541f52-e6e9-457e-957a-962d59f663ae")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -0.261252 -0.735)
@@ -10210,7 +10210,7 @@
 		(property ki_fp_filters "R_*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/9ea644ab-066b-4956-82e8-83ce36f20f05")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_line
 			(start -0.227064 0.735)
@@ -11263,7 +11263,7 @@
 		(property ki_fp_filters "LED*D5.0mm*Clear*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/36efc967-10f3-41d8-a379-9fe387cd858a")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_circle
 			(center -2.1438 0)
@@ -11584,7 +11584,7 @@
 		(property ki_fp_filters "LED*D5.0mm*Clear*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/4ec4a4fc-17fb-4a03-a079-ec5346dd0201")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_circle
 			(center -2.1438 0)
@@ -12626,7 +12626,7 @@
 		(property ki_fp_filters "LED*D5.0mm*Clear*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/f9d24485-1d50-44a9-a393-d5f2eaddac63")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_circle
 			(center -2.1438 0)
@@ -12949,7 +12949,7 @@
 		(sheetname "/")
 		(sheetfile "half-monty-2.kicad_sch")
 		(zone_connect 1)
-		(attr exclude_from_pos_files dnp allow_soldermask_bridges)
+		(attr exclude_from_pos_files allow_soldermask_bridges)
 		(fp_rect
 			(start -0.15 0.75)
 			(end 0.15 -0.75)
@@ -13121,7 +13121,7 @@
 		(property ki_fp_filters "LED*D5.0mm*Clear*")
 		(path "/5d0e4d1a-94fe-4c95-92d8-f670d5352395/605616e5-39a6-4e6c-b032-4dcfd26e35ca")
 		(sheetname "/Sensors/")
-		(sheetfile "untitled.kicad_sch")
+		(sheetfile "half-monty-2-sensors.kicad_sch")
 		(attr smd)
 		(fp_circle
 			(center -2.1438 0)
