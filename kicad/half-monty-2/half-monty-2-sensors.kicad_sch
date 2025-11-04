@@ -3168,7 +3168,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "2k2"
+		(property "Value" "270R"
 			(at 175.26 137.1599 0)
 			(effects
 				(font
@@ -3375,7 +3375,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "100nF"
+		(property "Value" "2.2uF"
 			(at 120.65 137.1663 0)
 			(effects
 				(font
@@ -3650,7 +3650,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "1k5"
+		(property "Value" "200R"
 			(at 195.58 137.1599 0)
 			(effects
 				(font
@@ -3790,7 +3790,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "22R"
+		(property "Value" "20R"
 			(at 142.24 38.0999 0)
 			(effects
 				(font
@@ -4418,7 +4418,7 @@
 		(fields_autoplaced yes)
 		(uuid "93159810-5cc2-476b-bded-89ce42e5adac")
 		(property "Reference" "R7"
-			(at 120.65 104.14 0)
+			(at 120.65 104.1399 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4426,8 +4426,8 @@
 				(justify left)
 			)
 		)
-		(property "Value" "220R"
-			(at 120.65 106.68 0)
+		(property "Value" "10R"
+			(at 120.65 106.6799 0)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4562,7 +4562,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "1k5"
+		(property "Value" "200R"
 			(at 134.62 137.1599 0)
 			(effects
 				(font
@@ -4977,7 +4977,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "2k2"
+		(property "Value" "270R"
 			(at 154.94 137.1599 0)
 			(effects
 				(font
