@@ -56,8 +56,8 @@ void setup() {
   //pinMode(9, OUTPUT);
 
   // Encoder
-  encoder_l.begin(pull_direction::up, resolution::quarter);
-  encoder_r.begin(pull_direction::up, resolution::quarter);
+  encoder_l.begin(pull_direction::up, resolution::full);
+  encoder_r.begin(pull_direction::up, resolution::full);
 
   // LED
   neoPixel.clear();
@@ -126,7 +126,7 @@ void loop()
   }
 
 #endif
-#if defined(LINE_SENSOR_MINI_5) || defined(WALL_SENSOR_MINI_4)
+#if defined(LINE_SENSOR_MINI_5)
   // Sensors (raw)
   int a0 = analogRead(A0);
   int a1 = analogRead(A1);
@@ -175,6 +175,67 @@ void loop()
     SerialPort.print(", ");
     SerialPort.print((a1i-a1) - (a2i-a2));   // Centre diff
     SerialPort.print(", ");
+    SerialPort.print(enc_left_count);
+    SerialPort.print(", ");
+    SerialPort.print(enc_right_count);
+    SerialPort.println();
+  }
+#endif
+#if defined(WALL_SENSOR_MINI_4)
+  // Sensors (raw)
+  int a0 = analogRead(A0);
+  int a1 = analogRead(A1);
+  int a2 = analogRead(A2);
+  int a3 = analogRead(A3);
+  
+  // Sensors FRONT illuminated
+  digitalWrite(14, 1);
+  delayMicroseconds(20);
+  int a0i = analogRead(A0);
+  int a3i = analogRead(A3);
+  digitalWrite(14, 0);
+
+  // Sensors SIDES illuminated
+  digitalWrite(15, 1);
+  delayMicroseconds(20);
+  int a1i = analogRead(A1);
+  int a2i = analogRead(A2);
+  digitalWrite(15, 0);
+
+  if(count % 10 == 0)
+  {
+    // Differences
+    SerialPort.print(a0i-a0); // Centre Left
+    SerialPort.print(", "); 
+    SerialPort.print(a1i-a1); // Left
+    SerialPort.print(", ");
+    SerialPort.print(a2i-a2); // Right
+    SerialPort.print(", ");
+    SerialPort.print(a3i-a3); // Centre Right
+    SerialPort.print(",  ");
+    // Unlit, Lit
+    SerialPort.print(a0);   // Centre Left
+    SerialPort.print(", "); 
+    SerialPort.print(a0i);  // Centre Left
+    SerialPort.print(", "); 
+    SerialPort.print(a1);   // Left
+    SerialPort.print(", ");
+    SerialPort.print(a1i);  // Left
+    SerialPort.print(", ");
+    SerialPort.print(a2);   // Right
+    SerialPort.print(", ");
+    SerialPort.print(a2i);  // Right
+    SerialPort.print(", ");
+    SerialPort.print(a3);   // Centre Right
+    SerialPort.print(", ");
+    SerialPort.print(a3i);  // Centre Right
+    SerialPort.print(",  ");
+    // Centre sum & diff
+    SerialPort.print((a0i-a0) + (a3i-a3));   // Centre sum
+    SerialPort.print(", ");
+    SerialPort.print((a0i-a0) - (a3i-a3));   // Centre diff
+    SerialPort.print(",  ");
+    // Encoders
     SerialPort.print(enc_left_count);
     SerialPort.print(", ");
     SerialPort.print(enc_right_count);

@@ -15,8 +15,8 @@ static const int buttonA = 13;  // Left - Select
 static const int buttonB = 12;  // Right - Go
 
 // Motors
-static const int motorLeftA1 = 8;
-static const int motorLeftA2 = 9;
+static const int motorLeftA1 = 9;//8;
+static const int motorLeftA2 = 8; //9;
 
 static const int motorRightB1 = 7;
 static const int motorRightB2 = 6;

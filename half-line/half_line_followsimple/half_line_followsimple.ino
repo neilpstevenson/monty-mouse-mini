@@ -229,7 +229,7 @@ int getMode()
 void calibrateSensors()
 {
   // Rotate for 1 second, which should travel over a while line completely
-  motors.turn(64); // Rotate anti-clockwise at exacly this speed
+  motors.turn(calibrate_speed); // Rotate anti-clockwise at exacly this speed
   sensors.calibrateSensors(1200);
   motors.stop();
 
