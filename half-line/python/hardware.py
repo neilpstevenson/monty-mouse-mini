@@ -1,0 +1,38 @@
+
+# Motor Encoder GPIO pins
+ENCODER_LEFT_CLK = 2
+ENCODER_LEFT_B = 3
+ENCODER_RIGHT_CLK = 4
+ENCODER_RIGHT_B = 5
+ENCODER_LEFT_POLARITY = 1
+ENCODER_RIGHT_POLARITY = -1
+
+# LEDs
+LED_LEFT_IO = 10   # Green
+LED_RIGHT_IO = 11  # RED
+LED_NEOPIXEL_IO = 16
+
+# Motors
+MOTOR_LEFT_A = 9
+MOTOR_LEFT_B = 8
+MOTOR_RIGHT_A = 7
+MOTOR_RIGHT_B = 6
+MOTOR_PWM_FREQ = 20000
+MOTOR_LEFT_POLARITY = 1
+MOTOR_RIGHT_POLARITY = 1
+
+# Wall Illimuination
+EMITTER_A = 14 # Forward
+EMITTER_B = 15 # Sides
+
+# Switches
+SWITCH_SELECT_PIN = 13
+SWITCH_GO_PIN = 12
+
+# Delay between the sensor illuminator on to first ADC reading stable
+ILLUMINATION_TO_ADC_DELAY_uS = 20
+
+# SerialPort port
+SERIAL_PORT_TX = 0
+SERIAL_PORT_RX = 1
+
