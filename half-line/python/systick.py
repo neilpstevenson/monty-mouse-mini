@@ -29,17 +29,16 @@ class SysTick:
             # time stats
             tick_time = time.ticks_us()
 
+            sensors.update_a()
             encoders.update()
-            sensors.update()
-
             forward_profile.update()
             rotation_profile.update()
+            sensors.update_b()
 
             motors.update_controllers(
-                velocity=forward_profile.speed(),
-                omega=rotation_profile.speed(),
-                steering_adjustment=sensors.line_error() / 20000
-            )
+                velocity = forward_profile.speed(),
+                omega = rotation_profile.speed(),
+                steering_adjustment = sensors.get_steering_feedback())
             
             self.loop_tick_time_us = time.ticks_us() - tick_time
             

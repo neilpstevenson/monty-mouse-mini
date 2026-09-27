@@ -1,18 +1,25 @@
 from machine import Pin,ADC
 import time
 from hardware import *
+from config import *
+from globals import constrain
 
-# Test thresholds
-RADIUS_THRESH = 20000
-START_STOP_THRESH = 20000
+# Steering Modes
+STEERING_OFF = 0
+STEER_NORMAL = 1
+STEER_LEFT_WALL = 2
+STEER_RIGHT_WALL = 3
 
 class LineSensors:
     def __init__(self):
+        self.enabled = False
         self.radius = False
         self.start_stop = False
         self._line_error = 0
         self.clear_markers()
-        pass
+        self.last_steering_error = 0
+        self.steering_adjustment = 0
+        self.steering_mode = STEERING_OFF
     
     def begin(self):
         # Create the IO
@@ -23,38 +30,65 @@ class LineSensors:
         self.sensorEdge = ADC(26)
         self.sensorMid = ADC(27)
         self.sensorCentre = ADC(28)
+
+    def disable(self):
+        self.enabled = False
         
-    def update(self):
+    def enable(self):
+        self.enabled = True
+        self.clear_markers()
+
+    # This has a 2-phase update to separate the reads when they share the same ADC channel.
+    # If the reads are done in rapid succession, then one phatotransistor can affect the
+    # reading from another on the same ADC due to capacitive effects.
+    # 
+    # update_a - read the ambient and left side sensors
+    # update_b - read the right hand sensors
+    # 
+    def update_a(self):
         # Sample unlit
-        unlit_sensorEdge = self.sensorEdge.read_u16()
-        unlit_sensorMid = self.sensorMid.read_u16()
-        unlit_sensorCentre = self.sensorCentre.read_u16()
-        # Read the left sensors
-        self.leftLeds.on()
-        time.sleep_us(ILLUMINATION_TO_ADC_DELAY_uS)
-        lit_sensorEdgeLeft = self.sensorEdge.read_u16()
-        lit_sensorMidLeft = self.sensorMid.read_u16()
-        lit_sensorCentreLeft = self.sensorCentre.read_u16()
-        self.leftLeds.off()
-        self.rightLeds.on()
-        time.sleep_us(ILLUMINATION_TO_ADC_DELAY_uS * 2)	# decay takes longer typically
-        lit_sensorEdgeRight = self.sensorEdge.read_u16()
-        lit_sensorMidRight = self.sensorMid.read_u16()
-        lit_sensorCentreRight = self.sensorCentre.read_u16()
-        self.rightLeds.off()
-        # Update return values
-        self.radius = (lit_sensorEdgeLeft - unlit_sensorEdge) > RADIUS_THRESH
-        self.start_stop = (lit_sensorEdgeRight - unlit_sensorEdge) > START_STOP_THRESH
-        self._line_error = ((lit_sensorMidLeft - unlit_sensorMid) // 2 + (lit_sensorCentreLeft - unlit_sensorCentre) // 6) - \
-                          ((lit_sensorMidRight - unlit_sensorMid) // 2 + (lit_sensorCentreRight - unlit_sensorCentre) // 6)
-        # Keep track of what we've seen to date
-        if self.radius:
-            self._radius_seen = True
-        if self.start_stop:
-            self._start_stop_seen = True
+        self.unlit_sensorEdge = self.sensorEdge.read_u16()
+        self.unlit_sensorMid = self.sensorMid.read_u16()
+        self.unlit_sensorCentre = self.sensorCentre.read_u16()
+        if self.enabled:
+            # Read the left sensors
+            self.leftLeds.on()
+            time.sleep_us(ILLUMINATION_TO_ADC_DELAY_uS)
+            lit_sensorEdgeLeft = self.sensorEdge.read_u16()
+            lit_sensorMidLeft = self.sensorMid.read_u16()
+            lit_sensorCentreLeft = self.sensorCentre.read_u16()
+            self.leftLeds.off()
+            self.radius = (lit_sensorEdgeLeft - self.unlit_sensorEdge) > RADIUS_THRESH
+            self.left_raw = (lit_sensorMidLeft - self.unlit_sensorMid) // 2 + (lit_sensorCentreLeft - self.unlit_sensorCentre) // 6
+            # Keep track of what we've seen to date
+            if self.radius:
+                self._radius_seen = True
     
+    def update_b(self):
+        if self.enabled:
+            # Read the right sensors
+            self.rightLeds.on()
+            time.sleep_us(ILLUMINATION_TO_ADC_DELAY_uS)
+            lit_sensorEdgeRight = self.sensorEdge.read_u16()
+            lit_sensorMidRight = self.sensorMid.read_u16()
+            lit_sensorCentreRight = self.sensorCentre.read_u16()
+            self.rightLeds.off()
+            # Update return values
+            self.start_stop = (lit_sensorEdgeRight - self.unlit_sensorEdge) > START_STOP_THRESH
+            self.right_raw = (lit_sensorMidRight - self.unlit_sensorMid) // 2 + (lit_sensorCentreRight - self.unlit_sensorCentre) // 6
+            # Keep track of what we've seen to date
+            if self.start_stop:
+                self._start_stop_seen = True
+            self.calculate_steering_adjustment()
+        else:
+            self.left_raw = 0
+            self.right_raw = 0
+            self.steering_adjustment = 0
+            
     def line_error(self):
-        return self._line_error
+        if self.steering_mode == STEER_NORMAL:
+            return self.left_raw - self.right_raw
+        return 0
 
     def radius_seen(self):
         # We've seen a radius only once passed and not seen a start/stop as well
@@ -72,5 +106,43 @@ class LineSensors:
         self._radius_seen = False
         self._start_stop_seen = False
 
+    '''
+    The steering adjustment is an angular error that is added to the
+    current encoder angle so that the robot can be kept central in
+    a maze cell.
+   
+    A PD controller is used to generate the adjustment and the two constants
+    will need to be adjusted for the best response. You may find that only
+    the P term is needed
+   
+    The steering adjustment is limited to prevent over-correction. You should
+    experiment with that as well.
+   
+    @brief Calculate the steering adjustment from the cross-track error.
+    @param error calculated from wall sensors, Negative if too far right
+    @return steering adjustment in degrees
+   
+    TODO: It is not clear that this belongs here rather tham for example,
+          in a Robot class.
+    '''
+    def calculate_steering_adjustment(self):
+        # always calculate the adjustment for testing. It may not get used.
+        cross_track_error = self.line_error()
+        pTerm = config.STEERING_KP * cross_track_error
+        dTerm = config.STEERING_KD * (cross_track_error - self.last_steering_error)
+        adjustment = pTerm + dTerm * LOOP_FREQUENCY
+        adjustment = constrain(adjustment, -config.STEERING_ADJUST_LIMIT, config.STEERING_ADJUST_LIMIT)
+        self.last_steering_error = cross_track_error
+        self.steering_adjustment = adjustment
+        return adjustment
+    
+    def set_steering_mode(self, mode):
+        self.last_steering_error = self.line_error()
+        self.steering_adjustment = 0
+        self.steering_mode = mode
+      
+    def get_steering_feedback(self):
+        return self.steering_adjustment
+    
 # Create single instance
 sensors = LineSensors()

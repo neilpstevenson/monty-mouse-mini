@@ -2,7 +2,7 @@ from machine import UART, Pin, PWM
 from hardware import *
 from config import *
 from encoders import encoders
-#from globals import encoders
+from globals import constrain
 
 # =============================================================================
 # Helper classes
@@ -13,10 +13,6 @@ class Battery:
         return MAX_MOTOR_VOLTS
 
 battery = Battery()
-
-def constrain(value, minimum, maximum):
-    return max(minimum, min(value, maximum))
-
 
 # =============================================================================
 # Motors
@@ -96,7 +92,7 @@ class Motors:
         diff = self.fwd_error - self.previous_fwd_error
         self.previous_fwd_error = self.fwd_error
 
-        output = FWD_KP * self.fwd_error + FWD_KD * diff
+        output = config.FWD_KP * self.fwd_error + config.FWD_KD * diff
         return output
 
     # -------------------------------------------------------------------------
@@ -114,7 +110,7 @@ class Motors:
         diff = self.rot_error - self.previous_rot_error
         self.previous_rot_error = self.rot_error
 
-        output = ROT_KP * self.rot_error + ROT_KD * diff
+        output = config.ROT_KP * self.rot_error + config.ROT_KD * diff
         return output
 
     # -------------------------------------------------------------------------
@@ -122,31 +118,31 @@ class Motors:
     # -------------------------------------------------------------------------
 
     def left_feed_forward(self, speed):
-        ff = speed * SPEED_FF
+        ff = speed * config.SPEED_FF
 
         if speed > 0:
-            ff += BIAS_FF
+            ff += config.BIAS_FF
         elif speed < 0:
-            ff -= BIAS_FF
+            ff -= config.BIAS_FF
 
         acc = (speed - self._left_old_speed) * LOOP_FREQUENCY
         self._left_old_speed = speed
 
-        ff += ACC_FF * acc
+        ff += config.ACC_FF * acc
         return ff
 
     def right_feed_forward(self, speed):
-        ff = speed * SPEED_FF
+        ff = speed * config.SPEED_FF
 
         if speed > 0:
-            ff += BIAS_FF
+            ff += config.BIAS_FF
         elif speed < 0:
-            ff -= BIAS_FF
+            ff -= config.BIAS_FF
 
         acc = (speed - self._right_old_speed) * LOOP_FREQUENCY
         self._right_old_speed = speed
 
-        ff += ACC_FF * acc
+        ff += config.ACC_FF * acc
         return ff
 
     # -------------------------------------------------------------------------

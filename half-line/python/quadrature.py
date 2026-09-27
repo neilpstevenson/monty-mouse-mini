@@ -63,7 +63,11 @@ class Quadrature:
         nop()
 
     def begin(self, sm_number, pin_a, pin_b):
-        self.sm = StateMachine(sm_number, Quadrature.encoder, freq=125_000_000, in_base=Pin(pin_a), jmp_pin=Pin(pin_b))
+        if pin_b != pin_a + 1:
+            raise Exception("pin_b must be pin_a + 1")
+        base_pin = Pin(pin_a, Pin.IN, Pin.PULL_UP)
+        Pin(pin_b, Pin.IN, Pin.PULL_UP)
+        self.sm = StateMachine(sm_number, Quadrature.encoder, freq=125_000_000, in_base=base_pin)
         self.sm.active(1)
         self.buf = array.array('i', [0])
         self.reset_count()
