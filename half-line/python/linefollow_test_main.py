@@ -4,6 +4,7 @@ from machine import UART
 import neopixel
 #from hardware import *
 from config import *
+from track_config import track_config
 from indicators import indicators
 from switches import switches
 from encoders import encoders
@@ -12,6 +13,7 @@ from motors import motors
 from sensors import sensors, STEER_NORMAL, STEERING_OFF
 from systick import systick
 from globals import *
+from debug_log import debug_log
 
 indicators.begin()
 switches.begin()
@@ -21,7 +23,9 @@ sensors.begin()
 
 # Load the config from file
 #config.save()
+#track_config.save()
 config.load()
+track_config.load()
 
 def print_debug(type, time):
     #print("{}, {}, {:.1f}, {:.1f}, {:.3f}, {:.3f}, {:.2f}, {:.2f}, {:.2f}, {}".format(type, time,
@@ -105,22 +109,19 @@ indicators.red_on(True)
 #  - Go up to 100mm to get over start line
 #  - Go rest of predicted distance
 #  - Slow to a halt
+debug_log.open("_log.csv")
 start_tick_time = time.ticks_ms()
-TOP_SPEED = 1000
-ACCELERATION = 4000
-DECELERATION = 2000
 
 sensors.set_steering_mode(STEER_NORMAL)
 motors.enable_controllers()
 
-# Headers
-print("phase, time, p-position, r-position, p-speed, r-speed, motor-l, motor-r, steer")
-
 sensors.clear_markers()
-forward_profile.start(distance=200.0, top_speed=TOP_SPEED, final_speed=TOP_SPEED, acceleration=ACCELERATION)
+forward_profile.start(distance=200.0, top_speed=track_config.TOP_SPEED, final_speed=track_config.TOP_SPEED, acceleration=track_config.ACCELERATION)
+debug_log.log('a')
 while not forward_profile.is_finished() and not sensors.radius_seen() and not sensors.start_stop_seen() and not sensors.crossover_seen():
-    time.sleep(0.01)
-    print_debug('a', time.ticks_ms() - start_tick_time)
+    time.sleep(0.001)
+    debug_log.log('a')
+    #print(systick.last_tick_loop_us())
     #print("a, {}, {:.1f}, {:.1f}, {:.3f}, {:.3f}, {:.2f}, {:.2f}, {:.2f}, {}".format(time.ticks_ms() - start_tick_time,
     #                                                                  forward_profile.position(), encoders.robot_distance(),
     #                                                                  forward_profile.speed(), encoders.robot_speed(),
@@ -134,47 +135,30 @@ indicators.green_on(False)
 indicators.red_on(False)
 
 sensors.clear_markers()
-forward_profile.start(distance=800.0, top_speed=TOP_SPEED, final_speed=500.0, acceleration=ACCELERATION)
+forward_profile.start(distance=track_config.TRACK_MEASURED_LENGTH / 3, top_speed=track_config.TOP_SPEED, final_speed=track_config.TOP_SPEED, acceleration=track_config.ACCELERATION)
 while not forward_profile.is_finished() and not sensors.radius_seen() and not sensors.start_stop_seen() and not sensors.crossover_seen():
-    time.sleep(0.01)
-    print_debug('t', time.ticks_ms() - start_tick_time)
-    #print("t, {}, {:.1f}, {:.1f}, {:.3f}, {:.3f}, {:.2f}, {:.2f}, {:.2f}, {}".format(time.ticks_ms() - start_tick_time,
-    #                                                                  forward_profile.position(), encoders.robot_distance(),
-    #                                                                  forward_profile.speed(), encoders.robot_speed(),
-    #                                                                  motors.get_left_motor_volts(), motors.get_right_motor_volts(),
-    #                                                                  motors.get_fwd_error(),
-    #                                                                  sensors.get_steering_feedback()))
-    #uart.write(str(time.ticks_ms() - start_tick_time))
-    #uart.write(', ')
-    #uart.write(str(forward_profile.position()))
-    #uart.write(', ')
-    #uart.write(str(encoders.robot_distance()))
-    #uart.write(', ')
-    #uart.write(str(forward_profile.speed()))
-    #uart.write(', ')
-    #uart.write(str(encoders.robot_speed()))
-    #uart.write(', ')
-    #uart.write(str(motors.get_fwd_error()))
-    #uart.write('\n')
-    #
-    #print("{}, {}, {}".format(sensors.radius, sensors.start_stop, sensors.line_error()))
+    time.sleep(0.001)
+    debug_log.log('t')
+    #print(systick.last_tick_loop_us(), encoders.robot_distance())
+
+forward_profile.start(distance=track_config.TRACK_MEASURED_LENGTH * 2/3, top_speed=track_config.TOP_SPEED, final_speed=track_config.FINISH_LINE_SPEED, acceleration=track_config.DECELERATION)
+while not forward_profile.is_finished() and not sensors.radius_seen() and not sensors.start_stop_seen() and not sensors.crossover_seen():
+    time.sleep(0.001)
+    debug_log.log('T')
+    #print(systick.last_tick_loop_us(), encoders.robot_distance())
 
 indicators.show_colour((64,64,0))	# yellow
 indicators.green_on(True)
 indicators.red_on(True)
 
 sensors.clear_markers()
-forward_profile.start(distance=100.0, top_speed=500, final_speed=0.0, acceleration=DECELERATION)
+forward_profile.start(distance=track_config.TRACK_STOPPING_TARGET, top_speed=track_config.FINISH_LINE_SPEED, final_speed=0.0, acceleration=track_config.DECELERATION)
 while not forward_profile.is_finished():
-    time.sleep(0.01)
-    print_debug('s', time.ticks_ms() - start_tick_time)
-    #print("s, {}, {:.1f}, {:.1f}, {:.3f}, {:.3f}, {:.2f}, {:.2f}, {:.2f}, {}".format(time.ticks_ms() - start_tick_time,
-    #                                                                  forward_profile.position(), encoders.robot_distance(),
-    #                                                                  forward_profile.speed(), encoders.robot_speed(),
-    #                                                                  motors.get_left_motor_volts(), motors.get_right_motor_volts(),
-    #                                                                  motors.get_fwd_error(),
-    #                                                                  sensors.get_steering_feedback()))
-    #print("{}, {}, {}".format(sensors.radius, sensors.start_stop, sensors.line_error()))
+    time.sleep(0.001)
+    debug_log.log('s')
+    #print(systick.last_tick_loop_us())
+
+debug_log.close()
 
 indicators.show_colour((4,4,4))	# dim white
 indicators.green_on(False)

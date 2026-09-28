@@ -39,10 +39,10 @@ class SysTick:
                 velocity = forward_profile.speed(),
                 omega = rotation_profile.speed(),
                 steering_adjustment = sensors.get_steering_feedback())
-            
+          
+            #time.sleep_us(1_000_000//LOOP_FREQUENCY - 2_000)
+            time.sleep(LOOP_INTERVAL - 0.002)
             self.loop_tick_time_us = time.ticks_us() - tick_time
-            
-            time.sleep(LOOP_INTERVAL - 0.003)
 
     def last_tick_loop_us(self):
         return self.loop_tick_time_us

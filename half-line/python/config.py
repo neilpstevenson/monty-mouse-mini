@@ -5,16 +5,17 @@ import os
 # Configuration
 # ============================================================================
 
-LOOP_INTERVAL = 0.005      # Control loop period
-LOOP_FREQUENCY = 1.0 / LOOP_INTERVAL
+LOOP_FREQUENCY = 200
+LOOP_INTERVAL = 1/LOOP_FREQUENCY      # Control loop period
 
 # =============================================================================
 # Configuration Constants
 # =============================================================================
 
 MM_PER_COUNT = 0.310
-MM_PER_COUNT_LEFT = MM_PER_COUNT
-MM_PER_COUNT_RIGHT = MM_PER_COUNT
+MM_PER_COUNT_BIAS = -0.0527	# Bigger to turn more left
+MM_PER_COUNT_LEFT = MM_PER_COUNT * (1 + MM_PER_COUNT_BIAS/2)
+MM_PER_COUNT_RIGHT = MM_PER_COUNT * (1 - MM_PER_COUNT_BIAS/2)
 
 DEG_PER_MM_DIFFERENCE = 1.0
 
@@ -64,7 +65,3 @@ MOTOR_MAX_PWM = 65535
 
 MOUSE_RADIUS = 34.0
 RADIANS_PER_DEGREE = 0.01745329252
-
-# Marker thresholds
-RADIUS_THRESH = 25000
-START_STOP_THRESH = 25000

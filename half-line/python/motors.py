@@ -1,4 +1,5 @@
 from machine import UART, Pin, PWM
+import time
 from hardware import *
 from config import *
 from encoders import encoders
@@ -36,6 +37,9 @@ class Motors:
     _left_old_speed: float = 0.0
     _right_old_speed: float = 0.0
     
+    #last_fwd_update_us: int = 0
+    #last_rot_update_us: int = 0
+    
     def __init__(self):
       self.motorLeftA = PWM(Pin(MOTOR_LEFT_A))
       self.motorLeftB = PWM(Pin(MOTOR_LEFT_B))
@@ -62,6 +66,9 @@ class Motors:
         self.rot_error = 0.0
         self.previous_fwd_error = 0.0
         self.previous_rot_error = 0.0
+        #self.last_fwd_update_us = time.ticks_us()
+        #self.last_rot_update_us = time.ticks_us()
+
 
     def stop(self):
         self.set_left_motor_volts(0.0)
@@ -82,7 +89,12 @@ class Motors:
     def position_controller(self):
         global encoders
         
-        increment = self.velocity * LOOP_INTERVAL
+        # Work out actual time interval
+        #update_us = time.ticks_us()
+        #interval = (time.ticks_us() - self.last_fwd_update_us) / 1_000_000
+        #self.last_fwd_update_us = update_us
+        
+        increment = self.velocity * LOOP_INTERVAL #interval
         change = encoders.robot_fwd_change()
 
         #print("req={}, act={}".format(increment, change))
@@ -102,7 +114,12 @@ class Motors:
     def angle_controller(self, steering_adjustment):
         global encoders
 
-        increment = self.omega * LOOP_INTERVAL
+        # Work out actual time interval
+        #update_us = time.ticks_us()
+        #interval = (time.ticks_us() - self.last_rot_update_us) / 1_000_000
+        #self.last_rot_update_us = update_us
+        
+        increment = self.omega * LOOP_INTERVAL #interval
 
         self.rot_error += increment - encoders.robot_rot_change()
         self.rot_error += steering_adjustment

@@ -2,6 +2,7 @@ from machine import Pin,ADC
 import time
 from hardware import *
 from config import *
+from track_config import track_config
 from globals import constrain
 
 # Steering Modes
@@ -58,7 +59,7 @@ class LineSensors:
             lit_sensorMidLeft = self.sensorMid.read_u16()
             lit_sensorCentreLeft = self.sensorCentre.read_u16()
             self.leftLeds.off()
-            self.radius = (lit_sensorEdgeLeft - self.unlit_sensorEdge) > RADIUS_THRESH
+            self.radius = (lit_sensorEdgeLeft - self.unlit_sensorEdge) > track_config.RADIUS_THRESH
             self.left_raw = (lit_sensorMidLeft - self.unlit_sensorMid) // 2 + (lit_sensorCentreLeft - self.unlit_sensorCentre) // 6
             # Keep track of what we've seen to date
             if self.radius:
@@ -74,7 +75,7 @@ class LineSensors:
             lit_sensorCentreRight = self.sensorCentre.read_u16()
             self.rightLeds.off()
             # Update return values
-            self.start_stop = (lit_sensorEdgeRight - self.unlit_sensorEdge) > START_STOP_THRESH
+            self.start_stop = (lit_sensorEdgeRight - self.unlit_sensorEdge) > track_config.START_STOP_THRESH
             self.right_raw = (lit_sensorMidRight - self.unlit_sensorMid) // 2 + (lit_sensorCentreRight - self.unlit_sensorCentre) // 6
             # Keep track of what we've seen to date
             if self.start_stop:
