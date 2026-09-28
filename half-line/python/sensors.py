@@ -101,7 +101,13 @@ class LineSensors:
     def crossover_seen(self):
         # We've seen a crossover only once passed and seen both a radius and start/stop
         return not self.radius and not self.start_stop and self._radius_seen and self._start_stop_seen
-        
+
+    def current_radius(self):
+        return self.radius
+    
+    def current_start_stop(self):
+        return self.start_stop
+    
     def clear_markers(self):
         self._radius_seen = False
         self._start_stop_seen = False
