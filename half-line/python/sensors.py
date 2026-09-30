@@ -3,6 +3,8 @@ import time
 from hardware import *
 from config import *
 from track_config import track_config
+from serial import serial
+from switches import switches
 from globals import constrain
 
 # Steering Modes
@@ -18,7 +20,7 @@ class LineSensors:
         self.start_stop = False
         self._line_error = 0
         self.clear_markers()
-        self.last_steering_error = 0
+        self.last_cross_track_error = 0
         self.steering_adjustment = 0
         self.steering_mode = STEERING_OFF
     
@@ -31,6 +33,8 @@ class LineSensors:
         self.sensorEdge = ADC(26)
         self.sensorMid = ADC(27)
         self.sensorCentre = ADC(28)
+        self.sensorsRaw = [0,0,0,0,0,0]
+        self.sensorsRawMaxMin = [(0,0),(0,0),(0,0),(0,0),(0,0),(0,0)]
 
     def disable(self):
         self.enabled = False
@@ -60,10 +64,16 @@ class LineSensors:
             lit_sensorCentreLeft = self.sensorCentre.read_u16()
             self.leftLeds.off()
             self.radius = (lit_sensorEdgeLeft - self.unlit_sensorEdge) > track_config.RADIUS_THRESH
-            self.left_raw = (lit_sensorMidLeft - self.unlit_sensorMid) // 2 + (lit_sensorCentreLeft - self.unlit_sensorCentre) // 6
+            raw_mid_left = max(0, lit_sensorMidLeft - self.unlit_sensorMid)
+            raw_centre_left = max(0, lit_sensorCentreLeft - self.unlit_sensorCentre)
+            self.line_error_left_raw = (raw_mid_left) // 2 + (raw_centre_left) // 6
             # Keep track of what we've seen to date
             if self.radius:
                 self._radius_seen = True
+            # Remember raw values
+            self.sensorsRaw[0] = max(0, lit_sensorEdgeLeft - self.unlit_sensorEdge)
+            self.sensorsRaw[1] = raw_mid_left
+            self.sensorsRaw[2] = raw_centre_left
     
     def update_b(self):
         if self.enabled:
@@ -76,19 +86,35 @@ class LineSensors:
             self.rightLeds.off()
             # Update return values
             self.start_stop = (lit_sensorEdgeRight - self.unlit_sensorEdge) > track_config.START_STOP_THRESH
-            self.right_raw = (lit_sensorMidRight - self.unlit_sensorMid) // 2 + (lit_sensorCentreRight - self.unlit_sensorCentre) // 6
+            raw_mid_right = max(0, lit_sensorMidRight - self.unlit_sensorMid)
+            raw_centre_right = max(0, lit_sensorCentreRight - self.unlit_sensorCentre)
+            self.line_error_right_raw = (raw_mid_right) // 2 + (raw_centre_right) // 6
             # Keep track of what we've seen to date
             if self.start_stop:
                 self._start_stop_seen = True
             self.calculate_steering_adjustment()
+            # Remember raw values
+            self.sensorsRaw[3] = raw_centre_right 
+            self.sensorsRaw[4] = raw_mid_right
+            self.sensorsRaw[5] = max(0, lit_sensorEdgeRight - self.unlit_sensorEdge)
+            # Update seen max/min
+            for s in range(6):
+                self.sensorsRawMaxMin[s] = (min(self.sensorsRawMaxMin[s][0], self.sensorsRaw[s]), max(self.sensorsRawMaxMin[s][1], self.sensorsRaw[s]))
         else:
-            self.left_raw = 0
-            self.right_raw = 0
+            self.line_error_left_raw = 0
+            self.line_error_right_raw = 0
             self.steering_adjustment = 0
-            
-    def line_error(self):
+
+    def clear_max_min(self):
+        for s in range(6):
+            self.sensorsRawMaxMin[s] = (self.sensorsRaw[s], self.sensorsRaw[s])
+
+    def raw_max_min(self):
+        return self.sensorsRawMaxMin
+
+    def cross_track_error(self):
         if self.steering_mode == STEER_NORMAL:
-            return self.left_raw - self.right_raw
+            return self.line_error_left_raw - self.line_error_right_raw
         return 0
 
     def radius_seen(self):
@@ -134,22 +160,34 @@ class LineSensors:
     '''
     def calculate_steering_adjustment(self):
         # always calculate the adjustment for testing. It may not get used.
-        cross_track_error = self.line_error()
+        cross_track_error = self.cross_track_error()
         pTerm = config.STEERING_KP * cross_track_error
-        dTerm = config.STEERING_KD * (cross_track_error - self.last_steering_error)
+        dTerm = config.STEERING_KD * (cross_track_error - self.last_cross_track_error)
         adjustment = pTerm + dTerm * LOOP_FREQUENCY
         adjustment = constrain(adjustment, -config.STEERING_ADJUST_LIMIT, config.STEERING_ADJUST_LIMIT)
-        self.last_steering_error = cross_track_error
+        self.last_cross_track_error = cross_track_error
         self.steering_adjustment = adjustment
         return adjustment
     
     def set_steering_mode(self, mode):
-        self.last_steering_error = self.line_error()
+        self.last_cross_track_error = self.cross_track_error()
         self.steering_adjustment = 0
         self.steering_mode = mode
       
     def get_steering_feedback(self):
         return self.steering_adjustment
+    
+    # Test sensors
+    def test_sensors(self):
+        self.enable()
+        self.set_steering_mode(STEER_NORMAL)
+        time.sleep(0.1)
+        self.clear_max_min()
+        while not switches.select_button() and not switches.go_button():
+            serial.println("{}, {}, {}, {}, {}".format(self.raw_max_min(), self.radius, self.start_stop, self.cross_track_error(), self.steering_adjustment))
+            time.sleep(0.1)
+        self.disable()
+        self.set_steering_mode(STEERING_OFF)
     
 # Create single instance
 sensors = LineSensors()

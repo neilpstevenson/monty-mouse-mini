@@ -1,6 +1,9 @@
 import ujson
 import os
 
+MOUSE_NAME = "Monty Mini Quad"
+MOUSE_DESC = "Four-wheeled fast mouse based on Neil's mini controller"
+
 # ============================================================================
 # Configuration
 # ============================================================================
