@@ -48,7 +48,6 @@ def dragster_run():
     #  - Go rest of predicted distance, with deceleration at end to cross finish line
     #  - Slow to a halt
     debug_log.open("_log.csv")
-    start_tick_time = time.ticks_ms()
 
     sensors.set_steering_mode(STEER_NORMAL)
     encoders.reset()
@@ -56,43 +55,46 @@ def dragster_run():
 
     sensors.clear_markers()
     forward_profile.start(distance=200.0, top_speed=track_config.TOP_SPEED, final_speed=track_config.TOP_SPEED, acceleration=track_config.ACCELERATION)
+
     debug_log.log('a')
-    while not forward_profile.is_finished() and not sensors.radius_seen() and not sensors.start_stop_seen() and not sensors.crossover_seen():
+    while not forward_profile.is_finished() and not sensors.any_marker_seen():
         time.sleep(0.001)
         debug_log.log('a')
         #time.sleep(0.01)
         #print(systick.last_tick_loop_us())
-        #print("a, {}, {:.1f}, {:.1f}, {:.3f}, {:.3f}, {:.2f}, {:.2f}, {:.2f}, {}".format(time.ticks_ms() - start_tick_time,
-        #                                                                  forward_profile.position(), encoders.robot_distance(),
-        #                                                                  forward_profile.speed(), encoders.robot_speed(),
-        #                                                                  motors.get_left_motor_volts(), motors.get_right_motor_volts(),
-        #                                                                  motors.get_fwd_error(),
-        #                                                                  sensors.get_steering_feedback()))
-        #print("{}, {}, {}".format(sensors.radius, sensors.start_stop, sensors.line_error()))
+
+    start_marker_seen = sensors.any_marker_seen()
+    start_timed_position = encoders.robot_distance()
+    start_timed_time = time.ticks_ms()
+
+    sensors.clear_markers()
+    forward_profile.start(distance=track_config.TRACK_MEASURED_LENGTH / 3, top_speed=track_config.TOP_SPEED, final_speed=track_config.TOP_SPEED, acceleration=track_config.ACCELERATION)
 
     indicators.show_colour((0,64,64))	# magenta
     indicators.green_on(False)
     indicators.red_on(False)
 
-    sensors.clear_markers()
-    forward_profile.start(distance=track_config.TRACK_MEASURED_LENGTH / 3, top_speed=track_config.TOP_SPEED, final_speed=track_config.TOP_SPEED, acceleration=track_config.ACCELERATION)
-    while not forward_profile.is_finished() and not sensors.radius_seen() and not sensors.start_stop_seen() and not sensors.crossover_seen():
+    while not forward_profile.is_finished() and not sensors.any_marker_seen():
         time.sleep(0.001)
         debug_log.log('t')
-        #print(systick.last_tick_loop_us(), encoders.robot_distance())
 
     forward_profile.start(distance=track_config.TRACK_MEASURED_LENGTH * 2/3, top_speed=track_config.TOP_SPEED, final_speed=track_config.FINISH_LINE_SPEED, acceleration=track_config.DECELERATION)
-    while not forward_profile.is_finished() and not sensors.radius_seen() and not sensors.start_stop_seen() and not sensors.crossover_seen():
+
+    while not forward_profile.is_finished() and not sensors.any_marker_seen():
         time.sleep(0.001)
         debug_log.log('T')
-        #print(systick.last_tick_loop_us(), encoders.robot_distance())
 
+    end_timed_time = time.ticks_ms()
+    end_timed_position = encoders.robot_distance()
+    end_marker_seen = sensors.any_marker_seen()
+
+    sensors.clear_markers()
+    forward_profile.start(distance=track_config.TRACK_STOPPING_TARGET, top_speed=track_config.FINISH_LINE_SPEED, final_speed=0.0, acceleration=track_config.DECELERATION)
+    
     indicators.show_colour((64,64,0))	# yellow
     indicators.green_on(True)
     indicators.red_on(True)
 
-    sensors.clear_markers()
-    forward_profile.start(distance=track_config.TRACK_STOPPING_TARGET, top_speed=track_config.FINISH_LINE_SPEED, final_speed=0.0, acceleration=track_config.DECELERATION)
     while not forward_profile.is_finished():
         time.sleep(0.001)
         debug_log.log('s')
@@ -104,10 +106,11 @@ def dragster_run():
     indicators.green_on(False)
     indicators.red_on(False)
 
-    print("elapsed={:.2f}s, prof={}, act={}".format((time.ticks_ms() - start_tick_time)/1000, forward_profile.position(), encoders.robot_distance()))
+    serial.println("timed={:.2f}s, distance={}, start_seen={}, end_seen={}".format((end_timed_time - start_timed_time)/1000,
+                                                        end_timed_position - start_timed_position, start_marker_seen, end_marker_seen))
 
-    sensors.disable()
     motors.disable_controllers()
+    sensors.disable()
     motors.stop()
 
 
@@ -139,44 +142,40 @@ def dragster_track_calibrate():
     sensors.clear_markers()
     forward_profile.start(distance=200.0, top_speed=SPEED_FOR_CALIBRATE, final_speed=SPEED_FOR_CALIBRATE, acceleration=ACCEL_FOR_CALIBRATE)
     #debug_log.log('a')
-    while not forward_profile.is_finished() and not sensors.radius_seen() and not sensors.start_stop_seen() and not sensors.crossover_seen():
+    while not forward_profile.is_finished() and not sensors.any_marker_seen():
         time.sleep(0.001)
         #debug_log.log('a')
         #time.sleep(0.01)
-        #print(systick.last_tick_loop_us())
-        #print("a, {}, {:.1f}, {:.1f}, {:.3f}, {:.3f}, {:.2f}, {:.2f}, {:.2f}, {}".format(time.ticks_ms() - start_tick_time,
-        #                                                                  forward_profile.position(), encoders.robot_distance(),
-        #                                                                  forward_profile.speed(), encoders.robot_speed(),
-        #                                                                  motors.get_left_motor_volts(), motors.get_right_motor_volts(),
-        #                                                                  motors.get_fwd_error(),
-        #                                                                  sensors.get_steering_feedback()))
-        #print("{}, {}, {}".format(sensors.radius, sensors.start_stop, sensors.line_error()))
 
+    start_marker_seen = sensors.any_marker_seen()
+    start_timed_position = encoders.robot_distance()
+    start_timed_time = time.ticks_ms()
+
+    sensors.clear_markers()
+    forward_profile.start(distance=7500, top_speed=SPEED_FOR_CALIBRATE, final_speed=SPEED_FOR_CALIBRATE, acceleration=ACCEL_FOR_CALIBRATE)
+    
     indicators.show_colour((0,64,64))	# magenta
     indicators.green_on(False)
     indicators.red_on(False)
 
-    sensors.clear_markers()
-    start_timed_position = encoders.robot_distance()
-    
-    forward_profile.start(distance=7500, top_speed=SPEED_FOR_CALIBRATE, final_speed=SPEED_FOR_CALIBRATE, acceleration=ACCEL_FOR_CALIBRATE)
-    while not forward_profile.is_finished() and not sensors.radius_seen() and not sensors.start_stop_seen() and not sensors.crossover_seen():
+    while not forward_profile.is_finished() and not sensors.any_marker_seen():
         time.sleep(0.001)
         #debug_log.log('T')
-        #print(systick.last_tick_loop_us(), encoders.robot_distance())
 
+    end_timed_time = time.ticks_ms()
     end_timed_position = encoders.robot_distance()
+    end_marker_seen = sensors.any_marker_seen()
+
+    sensors.clear_markers()
+    forward_profile.start(distance=track_config.TRACK_STOPPING_TARGET, top_speed=SPEED_FOR_CALIBRATE, final_speed=0.0, acceleration=ACCEL_FOR_CALIBRATE)
 
     indicators.show_colour((64,64,0))	# yellow
     indicators.green_on(True)
     indicators.red_on(True)
 
-    sensors.clear_markers()
-    forward_profile.start(distance=track_config.TRACK_STOPPING_TARGET, top_speed=SPEED_FOR_CALIBRATE, final_speed=0.0, acceleration=ACCEL_FOR_CALIBRATE)
     while not forward_profile.is_finished():
         time.sleep(0.001)
         #debug_log.log('s')
-        #print(systick.last_tick_loop_us())
 
     #debug_log.close()
 
@@ -184,10 +183,10 @@ def dragster_track_calibrate():
     indicators.green_on(False)
     indicators.red_on(False)
 
-    print("elapsed={:.2f}s, prof={}, act={}".format((time.ticks_ms() - start_tick_time)/1000, forward_profile.position(), encoders.robot_distance()))
+    serial.println("timed={:.2f}s, distance={}, start_seen={}, end_seen={}".format((end_timed_time - start_timed_time)/1000,
+                                                        end_timed_position - start_timed_position, start_marker_seen, end_marker_seen))
 
-    serial.println("Drag track timed distance: {}mm".format(end_timed_position - start_timed_position))
     
-    sensors.disable()
     motors.disable_controllers()
+    sensors.disable()
     motors.stop()
