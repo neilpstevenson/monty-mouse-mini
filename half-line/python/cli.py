@@ -2,7 +2,7 @@ import time
 from config import *
 from serial import serial
 from sensors import sensors
-from dragster import dragster_run
+from dragster import dragster_run, dragster_track_calibrate
 
 # ------------------------------------------------------------------
 # CLI Configuration
@@ -254,5 +254,6 @@ CLI_SHORT_COMMANDS = {
         "F": ("Run user function n", cli.run_function)
         }
 CLI_FUNCTIONS = {
-        1: ("Dragster Run", dragster_run)
+        1: ("Dragster Run", dragster_run),
+        2: ("Calibrate drag track", dragster_track_calibrate)
         }

@@ -16,7 +16,7 @@ LOOP_INTERVAL = 1/LOOP_FREQUENCY      # Control loop period
 # =============================================================================
 
 MM_PER_COUNT = 0.310
-MM_PER_COUNT_BIAS = -0.0527	# Bigger to turn more left
+MM_PER_COUNT_BIAS = 0 #-0.0527	# Bigger to turn more left
 MM_PER_COUNT_LEFT = MM_PER_COUNT * (1 + MM_PER_COUNT_BIAS/2)
 MM_PER_COUNT_RIGHT = MM_PER_COUNT * (1 - MM_PER_COUNT_BIAS/2)
 
@@ -24,7 +24,7 @@ DEG_PER_MM_DIFFERENCE = 1.0
 
 ENCODER_AVERAGER_LENGTH = 4
 
-PROFILE_FINISH_TOLERANCE = 2*MM_PER_COUNT       # finish tolerance
+PROFILE_FINISH_TOLERANCE = 4*MM_PER_COUNT       # finish tolerance
 
 # =============================================================================
 # Configuration constants
@@ -54,11 +54,15 @@ class Config:
 
     def load(self):
         global config
-        with open("config.json", "r") as file:
-            dict = ujson.load(file)
-        # Update all
-        for setting in dict:
-            setattr(self, setting, dict[setting])
+        try:
+            with open("config.json", "r") as file:
+                dict = ujson.load(file)
+            # Update all
+            for setting in dict:
+                setattr(self, setting, dict[setting])
+        except OSError as e:
+            # Assume file is missing, just save a default version
+            self.save()
 
 # Create single instance
 config = Config()

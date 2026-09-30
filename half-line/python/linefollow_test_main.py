@@ -1,7 +1,5 @@
 import time
 import sys
-from machine import UART
-import neopixel
 #from hardware import *
 from config import *
 from track_config import track_config
@@ -25,11 +23,13 @@ motors.begin()
 sensors.begin()
 
 # Load the config from file
-#config.save()
-#track_config.save()
 config.load()
 track_config.load()
+# Update with any new items
+config.save()
+track_config.save()
 
+'''
 def print_debug(type, time):
     #print("{}, {}, {:.1f}, {:.1f}, {:.3f}, {:.3f}, {:.2f}, {:.2f}, {:.2f}, {}".format(type, time,
     #                                                                  forward_profile.position(), encoders.robot_distance(),
@@ -51,7 +51,7 @@ def print_debug(type, time):
     uart.write(', ')
     uart.write(str(motors.get_fwd_error()))
     uart.write('\n')
-     
+'''     
 
 #uart = UART(0, baudrate=115200, tx=Pin(0), rx=Pin(1))
 #uart.write(b'Monty Mini Quad\n')
@@ -82,4 +82,7 @@ while True:
     if serial.read_line():
         cli.interpret_line(serial.get_read_line())
     time.sleep_ms(10)
+    # Current only one direct option
+    if switches.go_button():
+        dragster_run()
         

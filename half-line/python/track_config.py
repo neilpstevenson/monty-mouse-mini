@@ -24,11 +24,15 @@ class TrackConfig:
             ujson.dump(self.__dict__, file)
 
     def load(self):
-        with open("track.json", "r") as file:
-            dict = ujson.load(file)
-        # Update all
-        for setting in dict:
-            setattr(self, setting, dict[setting])
+        try:
+            with open("track.json", "r") as file:
+                dict = ujson.load(file)
+            # Update all
+            for setting in dict:
+                setattr(self, setting, dict[setting])
+        except OSError as e:
+            # Assume file is missing, just save a default version
+            self.save()
 
 # Create single instance
 track_config = TrackConfig()
