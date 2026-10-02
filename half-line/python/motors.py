@@ -21,6 +21,7 @@ battery = Battery()
 class Motors:
     controller_output_enabled: bool = False
     feedforward_enabled: bool = True
+    feedforward_to_motors_enabled: bool = False
 
     previous_fwd_error: float = 0.0
     previous_rot_error: float = 0.0
@@ -198,6 +199,9 @@ class Motors:
         if self.controller_output_enabled:
             self.set_left_motor_volts(left_output)
             self.set_right_motor_volts(right_output)
+        elif self.feedforward_to_motors_enabled:
+            self.set_left_motor_volts(self.left_ff)
+            self.set_right_motor_volts(self.right_ff)
 
     # -------------------------------------------------------------------------
     # PWM / Voltage conversion
@@ -303,10 +307,16 @@ class Motors:
         self.omega = omega
 
     def enable_feed_forward(self):
-        feedforward_enabled = True
+        self.feedforward_enabled = True
         
     def disable_feed_forward(self):
-        feedforward_enabled = False
+        self.feedforward_enabled = False
+
+    def enable_feed_forward_to_motors(self):
+        self.feedforward_to_motors_enabled = True
+        
+    def disable_feed_forward_to_motors(self):
+        self.feedforward_to_motors_enabled = False
 
     def get_position_control_output(self):
         return self.pos_output

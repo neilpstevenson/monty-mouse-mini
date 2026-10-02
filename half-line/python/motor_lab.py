@@ -171,6 +171,7 @@ class MotorLab:
             serial.print("# Only Feedforward\r\n")
             motors.enable_feed_forward()
             motors.disable_controllers()
+            motors.enable_feed_forward_to_motors()
 
         self.report_controller_header()
 

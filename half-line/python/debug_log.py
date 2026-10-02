@@ -1,5 +1,6 @@
 import time
 import sys
+from config import config
 from encoders import encoders
 from profile import forward_profile, rotation_profile
 from motors import motors
@@ -14,7 +15,7 @@ class DebugLog:
         # Header
         self.f.write('time_ms,type,profile_pos,actual_pos,profile_speed,actual_speed,motor_v_left,motor_v_right,pos_error,rot_error\n')
         self.log_data = []
-        self.log_frequency = 10
+        self.log_frequency = config.LOG_FREQUENCY
         self.last_log = 0
         
     def close(self):

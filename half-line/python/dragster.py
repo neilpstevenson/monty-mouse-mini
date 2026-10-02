@@ -32,7 +32,7 @@ def wait_for_start():
         time.sleep_ms(10)
     sensors.clear_markers()
 
-def dragster_run(args):
+def dragster_run():
     sensors.enable()
     sensors.set_steering_mode(STEERING_OFF)
     wait_for_start()
@@ -119,7 +119,7 @@ def dragster_run(args):
     motors.stop()
 
 
-def dragster_track_calibrate(args):
+def dragster_track_calibrate():
     SPEED_FOR_CALIBRATE = 1500
     ACCEL_FOR_CALIBRATE = 4000
     

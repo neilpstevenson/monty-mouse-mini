@@ -34,6 +34,9 @@ MOTOR_PWM_PERIOD = 1.0 / 20000.0
 
 class Config:
     def __init__(self):
+        self.DEBUG_ENABLED = True
+        self.LOG_FREQUENCY = 15	# nominally ms
+
         self.FWD_KP = 0.012
         self.FWD_KD = 0.0005
 
