@@ -100,6 +100,11 @@ def dragster_run():
         debug_log.log('s')
         #print(systick.last_tick_loop_us())
 
+    # Allow a bit of extra time to come to a complete halt
+    for x in range(1000):
+        time.sleep(0.001)
+        debug_log.log('h')
+    
     debug_log.close()
 
     indicators.show_colour((4,4,4))	# dim white

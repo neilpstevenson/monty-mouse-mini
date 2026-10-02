@@ -12,7 +12,7 @@ class DebugLog:
         self.f = open(filename, 'w')
         self.start_tick_time = time.ticks_ms()
         # Header
-        self.f.write('time_ms,type,profile_pos,actual_pos,profile_speed,actual_speed,motor_v_left,motor_v_right,pos_error\n')
+        self.f.write('time_ms,type,profile_pos,actual_pos,profile_speed,actual_speed,motor_v_left,motor_v_right,pos_error,rot_error\n')
         self.log_data = []
         self.log_frequency = 10
         self.last_log = 0
@@ -31,7 +31,7 @@ class DebugLog:
                              forward_profile.position(), encoders.robot_distance(),
                              forward_profile.speed(), encoders.robot_speed(),
                              motors.get_left_motor_volts(), motors.get_right_motor_volts(),
-                             motors.get_fwd_error()))
+                             motors.get_fwd_error(), motors.get_rot_error()))
 
     def write_data(self):
         for line in self.log_data:

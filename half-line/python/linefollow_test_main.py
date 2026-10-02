@@ -14,10 +14,10 @@ from serial import serial
 from cli import cli
 from globals import *
 from debug_log import debug_log
-from dragster import dragster_run
+# Mouse run actions
+from dragster import dragster_run, dragster_track_calibrate
 
 indicators.begin()
-switches.begin()
 encoders.begin()
 motors.begin()
 sensors.begin()
@@ -72,6 +72,13 @@ indicators.blink(2, 0x1f)
 # Start the worker SysTick thread
 systick.begin()
 
+# Add mouse-specific menus
+cli.add_menu_item("S", "Test sensors", sensors.test_sensors)
+cli.add_menu_function(1, "Dragster Run", dragster_run)
+cli.add_menu_function(2, "Calibrate drag track", dragster_track_calibrate)
+
+switches.begin(2)
+
 # ------------------------------------------------------------------
 # Main Loop
 # ------------------------------------------------------------------
@@ -79,10 +86,20 @@ systick.begin()
 
 cli.prompt()
 while True:
+    # Handle serial CLI
     if serial.read_line():
         cli.interpret_line(serial.get_read_line())
-    time.sleep_ms(10)
-    # Current only one direct option
-    if switches.go_button():
-        dragster_run()
+        # Update the indicator in case command changed it
+        indicators.show_colour_index(switches.get_menu_selected())
         
+    # Switches as select
+    if switches.update_menu_select_button():
+        # Update the indicator
+        indicators.show_colour_index(switches.get_menu_selected())
+        
+    if switches.go_button():
+        cli.run_function(switches.get_menu_selected())
+        # Update the indicator in case command changed it
+        indicators.show_colour_index(switches.get_menu_selected())
+
+    time.sleep_ms(10)

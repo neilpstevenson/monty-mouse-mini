@@ -1,8 +1,6 @@
 import time
 from config import *
 from serial import serial
-from sensors import sensors
-from dragster import dragster_run, dragster_track_calibrate
 
 # ------------------------------------------------------------------
 # CLI Configuration
@@ -60,6 +58,12 @@ class Args:
 # ------------------------------------------------------------------
 
 class CommandLineInterface:
+
+    def add_menu_item(self, command, description, run_function):
+        CLI_SHORT_COMMANDS[command] = (description, run_function)
+
+    def add_menu_function(self, func, description, run_function):
+        CLI_FUNCTIONS[func] = (description, run_function)
 
     # --------------------------------------------------------------
     # Parse and run command
@@ -200,7 +204,8 @@ class CommandLineInterface:
 
         # Run the numbered funtion
         if func in CLI_FUNCTIONS:
-            serial.println(CLI_FUNCTIONS[func][0])
+            if func != 'F':
+                serial.println(CLI_FUNCTIONS[func][0])
             CLI_FUNCTIONS[func][1]()
         else:
             serial.println("Unknown function")
@@ -250,10 +255,6 @@ cli = CommandLineInterface()
 # ------------------------------------------------------------------
 CLI_SHORT_COMMANDS = {
         "?": ("This help text", cli.help),
-        "S": ("Test sensors", sensors.test_sensors),
         "F": ("Run user function n", cli.run_function)
         }
-CLI_FUNCTIONS = {
-        1: ("Dragster Run", dragster_run),
-        2: ("Calibrate drag track", dragster_track_calibrate)
-        }
+CLI_FUNCTIONS = {}

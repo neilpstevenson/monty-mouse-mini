@@ -184,14 +184,17 @@ class LineSensors:
     # Test sensors
     def test_sensors(self):
         self.enable()
-        self.set_steering_mode(STEER_NORMAL)
+        #self.set_steering_mode(STEER_NORMAL)
         time.sleep(0.1)
         self.clear_max_min()
         while not switches.select_button() and not switches.go_button():
             serial.println("{}, {}, {}, {}, {}".format(self.raw_max_min(), self.radius, self.start_stop, self.cross_track_error(), self.steering_adjustment))
             time.sleep(0.1)
         self.disable()
-        self.set_steering_mode(STEERING_OFF)
+        # Wait for the button release
+        while switches.select_button() or switches.go_button():
+            time.sleep(0.1)
+        #self.set_steering_mode(STEERING_OFF)
     
 # Create single instance
 sensors = LineSensors()

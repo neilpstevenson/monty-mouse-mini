@@ -289,6 +289,9 @@ class Motors:
     def get_fwd_error(self):
         return self.fwd_error
 
+    def get_rot_error(self):
+        return self.rot_error
+
     def set_speeds(self, velocity, omega):
         self.velocity = velocity
         self.omega = omega
