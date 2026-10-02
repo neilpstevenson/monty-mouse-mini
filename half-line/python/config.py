@@ -64,6 +64,14 @@ class Config:
             # Assume file is missing, just save a default version
             self.save()
 
+    def get_by_name(self, name):
+        if hasattr(self, name):
+            return getattr(self, name)
+        return 0
+    
+    def set_by_name(self, name, value):
+        setattr(self, name, value)
+    
 # Create single instance
 config = Config()
 

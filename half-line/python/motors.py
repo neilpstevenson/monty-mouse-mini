@@ -36,7 +36,12 @@ class Motors:
 
     _left_old_speed: float = 0.0
     _right_old_speed: float = 0.0
-    
+
+    pos_output: float = 0.0
+    rot_output: float = 0.0
+    left_ff: float = 0.0
+    right_ff: float = 0.0
+
     #last_fwd_update_us: int = 0
     #last_rot_update_us: int = 0
     
@@ -170,11 +175,11 @@ class Motors:
         self.velocity = velocity
         self.omega = omega
 
-        pos_output = self.position_controller()
-        rot_output = self.angle_controller(steering_adjustment)
+        self.pos_output = self.position_controller()
+        self.rot_output = self.angle_controller(steering_adjustment)
         
-        left_output = pos_output - rot_output
-        right_output = pos_output + rot_output
+        left_output = self.pos_output - self.rot_output
+        right_output = self.pos_output + self.rot_output
 
         tangent_speed = (
             self.omega
@@ -184,10 +189,11 @@ class Motors:
 
         left_speed = self.velocity - tangent_speed
         right_speed = self.velocity + tangent_speed
-
+        self.left_ff = self.left_feed_forward(left_speed)
+        self.right_ff = self.right_feed_forward(right_speed)
         if self.feedforward_enabled:
-            left_output += self.left_feed_forward(left_speed)
-            right_output += self.right_feed_forward(right_speed)
+            left_output += self.left_ff
+            right_output += self.right_ff
 
         if self.controller_output_enabled:
             self.set_left_motor_volts(left_output)
@@ -295,6 +301,24 @@ class Motors:
     def set_speeds(self, velocity, omega):
         self.velocity = velocity
         self.omega = omega
+
+    def enable_feed_forward(self):
+        feedforward_enabled = True
+        
+    def disable_feed_forward(self):
+        feedforward_enabled = False
+
+    def get_position_control_output(self):
+        return self.pos_output
+
+    def get_rotation_control_output(self):
+        return self.rot_output
+
+    def get_left_feed_forward(self):
+        return self.left_ff
+
+    def get_right_feed_forward(self):
+        return self.right_ff
 
 # Create single instance
 motors = Motors()

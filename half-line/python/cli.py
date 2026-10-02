@@ -60,7 +60,7 @@ class Args:
 class CommandLineInterface:
 
     def add_menu_item(self, command, description, run_function):
-        CLI_SHORT_COMMANDS[command] = (description, run_function)
+        CLI_COMMANDS[command] = (description, run_function)
 
     def add_menu_function(self, func, description, run_function):
         CLI_FUNCTIONS[func] = (description, run_function)
@@ -74,11 +74,7 @@ class CommandLineInterface:
         args = self.get_tokens(line)
 
         if args.argc > 0:
-
-            if len(args.argv[0]) == 1:
-                self.run_short_cmd(args)
-            else:
-                self.run_long_cmd(args)
+            self.run_command(args)
 
         self.prompt()
 
@@ -103,7 +99,7 @@ class CommandLineInterface:
     # --------------------------------------------------------------
     # Long commands
     # --------------------------------------------------------------
-
+    '''
     def run_long_cmd(self, args):
 
         cmd = args.argv[0]
@@ -131,28 +127,28 @@ class CommandLineInterface:
             )
 
             # mouse.search_to(Location(x, y))
-
+    '''
     # --------------------------------------------------------------
     # Single character commands
     # --------------------------------------------------------------
 
-    def run_short_cmd(self, args):
+    def run_command(self, args):
 
         cmd = args.argv[0]
         
         # Run the letter command
-        if cmd in CLI_SHORT_COMMANDS:
-            serial.println(CLI_SHORT_COMMANDS[cmd][0])
+        if cmd in CLI_COMMANDS:
+            #serial.println(CLI_COMMANDS[cmd][0])
             # Special cases
             if cmd == 'F':
                 if args.argc > 1:
                     ok, function = read_integer(args.argv[1])
                     if ok:
-                        CLI_SHORT_COMMANDS[cmd][1](function)
+                        CLI_COMMANDS[cmd][1](function)
             else:
-                CLI_SHORT_COMMANDS[cmd][1]()
+                CLI_COMMANDS[cmd][1](args)
         else:
-            serial.println("Unknown command")
+            serial.println("Unknown command: {}".format(cmd))
     '''        
         if c == '?':
             self.help()
@@ -219,14 +215,16 @@ class CommandLineInterface:
         serial.println()
         serial.print("> ")
 
-    def help(self):
+    def help(self, args):
 
         serial.println()
         serial.println(MOUSE_NAME)
         serial.println(MOUSE_DESC)
         serial.println()
-        for f in sorted(CLI_SHORT_COMMANDS):
-            serial.println(f + "   : " + CLI_SHORT_COMMANDS[f][0])
+        for f in sorted(CLI_COMMANDS):
+            serial.println("{:7} : {}".format(f, CLI_COMMANDS[f][0]))
+        #for f in sorted(CLI_LONG_COMMANDS):
+        #    serial.println(f + "   : " + CLI_LONG_COMMANDS[f][0])
         '''        serial.println("?   : this text")
         serial.println("X   : reset maze")
         serial.println("W   : display maze walls")
@@ -253,8 +251,11 @@ cli = CommandLineInterface()
 # ------------------------------------------------------------------
 # CLI function definitions
 # ------------------------------------------------------------------
-CLI_SHORT_COMMANDS = {
+CLI_COMMANDS = {
         "?": ("This help text", cli.help),
         "F": ("Run user function n", cli.run_function)
         }
+#CLI_LONG_COMMANDS = {
+#        "SEARCH": ("Search to location x y", cli.help)
+#        }
 CLI_FUNCTIONS = {}

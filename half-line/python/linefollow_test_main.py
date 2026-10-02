@@ -16,6 +16,7 @@ from globals import *
 from debug_log import debug_log
 # Mouse run actions
 from dragster import dragster_run, dragster_track_calibrate
+from motor_lab import *
 
 indicators.begin()
 encoders.begin()
@@ -76,6 +77,7 @@ systick.begin()
 cli.add_menu_item("S", "Test sensors", sensors.test_sensors)
 cli.add_menu_function(1, "Dragster Run", dragster_run)
 cli.add_menu_function(2, "Calibrate drag track", dragster_track_calibrate)
+add_motor_lab_cli_menus()
 
 switches.begin(2)
 
