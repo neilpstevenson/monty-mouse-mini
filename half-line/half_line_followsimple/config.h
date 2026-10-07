@@ -5,7 +5,7 @@
 #define MOTORS_USE_BREAK_MODE
 
 static const float kp = 0.2; //0.009;
-static const float kd = 0.02; //0.0005;
+static const float kd = 0.015; //0.0005;
 
 static const float encode_calibrate_l = 0.123;// 0.132; // smaller = bigger turns
 static const float encode_calibrate_r = 0.123;// 0.132;

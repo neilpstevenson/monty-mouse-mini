@@ -304,7 +304,8 @@ void loop()
     }
     else if(mode == 3)
     {
-      testSensors();
+      simple_line_follow(500000, forward_speed * 1.8);
+      //testSensors();
     }
     else if(mode == 4)
     {
