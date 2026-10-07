@@ -5,9 +5,12 @@ from profile import forward_profile, rotation_profile
 from motors import motors
 from sensors import sensors, STEER_NORMAL, STEERING_OFF
 from serial import serial
+from debug_log import debug_log
 from cli import *
 
 CLI_OK = 0
+OMEGA_SPIN_TURN_DEFAULT = 360
+ALPHA_SPIN_TURN_DEFAULT = 3600
 
 class MotorLab:
 
@@ -108,22 +111,6 @@ class MotorLab:
 
         motors.set_closed_loop(True)
 
-    def report_controller_header(self):
-        serial.println("$time set_pos robot_pos set_speed robot_speed ctrl_volts ff_volts motor_volts")
-        self.start_time = ticks_ms()
-        
-    def report_controller(self):
-        setPos = forward_profile.position();
-        robot_pos = encoders.robot_distance()
-        setSpeed = forward_profile.speed()
-        robot_speed = encoders.robot_speed()
-        ctrl_volts = motors.get_position_control_output()
-        ff_volts = motors.get_left_feed_forward()
-        motor_volts = motors.get_left_motor_volts() #; //motors.get_rotation_control_output(); 
-        elapsed = ticks_diff(ticks_ms(), self.start_time)
-        serial.println("{} {} {} {} {} {} {} {} ".format(
-            elapsed, setPos, robot_pos, setSpeed, robot_speed, ctrl_volts, ff_volts, motor_volts))
-
     def do_move_trial(self, args):
 
         mode = int(args.argv[1]) if args.argc > 1 else 0
@@ -173,7 +160,7 @@ class MotorLab:
             motors.disable_controllers()
             motors.enable_feed_forward_to_motors()
 
-        self.report_controller_header()
+        debug_log.start_report_controller_log()
 
         forward_profile.start(
             dist,
@@ -183,7 +170,8 @@ class MotorLab:
         )
 
         while not forward_profile.is_finished():
-            self.report_controller()
+            time.sleep_ms(10)
+            debug_log.report_controller_log()
 
         motors.stop()
         motors.disable_controllers()
@@ -191,23 +179,24 @@ class MotorLab:
         end_time = ticks_ms()
 
         while ticks_diff(ticks_ms(), end_time) < 200:
-            self.report_controller()
+            time.sleep_ms(10)
+            debug_log.report_controller_log()
 
         self.disable_drive()
 
+        debug_log.print_report_controller_log()
         serial.print("#\r\n")
 
     def do_turn_trial(self, args):
 
-        mode = int(args.argv[1])
-
-        ang = float(args.argv[2])
-        rot_speed = float(args.argv[3])
-        rot_accel = float(args.argv[4])
-        fwd_speed = float(args.argv[5])
-        fwd_accel = float(args.argv[6])
-        lead_in = float(args.argv[7])
-        lead_out = float(args.argv[8])
+        mode = int(args.argv[1]) if args.argc > 1 else 0
+        ang = float(args.argv[2]) if args.argc > 2 else 0
+        rot_speed = float(args.argv[3]) if args.argc > 3 else 0
+        rot_accel = float(args.argv[4]) if args.argc > 4 else 0
+        fwd_speed = float(args.argv[5]) if args.argc > 5 else 0
+        fwd_accel = float(args.argv[6]) if args.argc > 6 else 0
+        lead_in = float(args.argv[7]) if args.argc > 7 else 0
+        lead_out = float(args.argv[8]) if args.argc > 8 else 0
 
         if ang == 0:
             ang = 90
@@ -219,10 +208,10 @@ class MotorLab:
             rot_accel = ALPHA_SPIN_TURN_DEFAULT
 
         if fwd_speed == 0:
-            fwd_speed = SEARCH_SPEED_DEFAULT
+            fwd_speed = 1000 #SEARCH_SPEED_DEFAULT
 
         if fwd_accel == 0:
-            fwd_accel = SEARCH_ACCEL_HALF_CELL(fwd_speed)
+            fwd_accel = 4000 #SEARCH_ACCEL_HALF_CELL(fwd_speed)
 
         if lead_in == 0:
             lead_in = 100
@@ -246,8 +235,9 @@ class MotorLab:
             serial.print("# Only Feedforward\r\n")
             motors.enable_feed_forward()
             motors.disable_controllers()
+            motors.enable_feed_forward_to_motors()
 
-        reporter.report_rotation_controller_header()
+        debug_log.report_rotation_controller_header()
 
         forward_profile.start(
             lead_in,
@@ -257,10 +247,8 @@ class MotorLab:
         )
 
         while not forward_profile.is_finished():
-            reporter.report_rotation_controller(
-                forward,
-                rotation
-            )
+            time.sleep_ms(10)
+            debug_log.report_rotation_controller()
 
         rotation_profile.start(
             ang,
@@ -270,10 +258,8 @@ class MotorLab:
         )
 
         while not rotation_profile.is_finished():
-            reporter.report_rotation_controller(
-                forward,
-                rotation
-            )
+            time.sleep_ms(10)
+            debug_log.report_rotation_controller()
 
         forward_profile.start(
             lead_out,
@@ -283,10 +269,8 @@ class MotorLab:
         )
 
         while not forward_profile.is_finished():
-            reporter.report_rotation_controller(
-                forward,
-                rotation
-            )
+            time.sleep_ms(10)
+            debug_log.report_rotation_controller()
 
         motors.stop()
         motors.disable_controllers()
@@ -294,13 +278,12 @@ class MotorLab:
         end_time = ticks_ms()
 
         while ticks_diff(ticks_ms(), end_time) < 200:
-            reporter.report_rotation_controller(
-                forward,
-                rotation
-            )
+            time.sleep_ms(10)
+            debug_log.report_rotation_controller()
 
         self.disable_drive()
 
+        debug_log.print_report_controller_log()
         serial.print("#\r\n")
 
     def do_step_trial(self, args):
@@ -319,25 +302,29 @@ class MotorLab:
 
         start_time = ticks_ms()
 
-        reporter.self.report_controller_header()
+        reporter.debug_log.start_report_controller_log()
 
         while ticks_diff(ticks_ms(), start_time) < 100:
-            self.report_controller()
+            time.sleep_ms(10)
+            debug_log.report_controller_log()
 
         forward_profile.set_position(dist)
 
         while ticks_diff(ticks_ms(), start_time) < 600:
-            self.report_controller()
+            time.sleep_ms(10)
+            debug_log.report_controller_log()
 
         motors.set_left_motor_volts(0)
 
         end_time = ticks_ms()
 
         while ticks_diff(ticks_ms(), end_time) < 100:
-            self.report_controller()
+            time.sleep_ms(10)
+            debug_log.report_controller_log()
 
         self.disable_drive()
 
+        debug_log.print_report_controller_log()
         serial.print("#\r\n")
 
 

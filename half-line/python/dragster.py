@@ -141,6 +141,9 @@ def dragster_track_calibrate():
     start_tick_time = time.ticks_ms()
 
     sensors.set_steering_mode(STEER_NORMAL)
+    sensors.clear_max_min()
+    sensors.raw_max_min()
+
     encoders.reset()
     motors.enable_controllers()
 
@@ -191,6 +194,7 @@ def dragster_track_calibrate():
     serial.println("timed={:.2f}s, distance={}, start_seen={}, end_seen={}".format((end_timed_time - start_timed_time)/1000,
                                                         end_timed_position - start_timed_position, start_marker_seen, end_marker_seen))
 
+    serial.println("sensors={}".format(sensors.raw_max_min()))
     
     motors.disable_controllers()
     sensors.disable()

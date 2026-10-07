@@ -182,7 +182,7 @@ class LineSensors:
         return self.steering_adjustment
     
     # Test sensors
-    def test_sensors(self):
+    def test_sensors(self, args):
         self.enable()
         #self.set_steering_mode(STEER_NORMAL)
         time.sleep(0.1)
