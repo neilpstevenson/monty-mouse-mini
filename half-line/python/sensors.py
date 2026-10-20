@@ -117,6 +117,9 @@ class LineSensors:
             return self.line_error_left_raw - self.line_error_right_raw
         return 0
 
+    def line_error_raw(self):
+        return self.line_error_left_raw - self.line_error_right_raw
+
     def radius_seen(self):
         # We've seen a radius only once passed and not seen a start/stop as well
         return not self.radius and not self.start_stop and self._radius_seen and not self._start_stop_seen

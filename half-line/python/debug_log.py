@@ -14,10 +14,9 @@ class DebugLog:
         self.f = open(filename, 'w')
         self.start_tick_time = time.ticks_ms()
         # Header
-        self.f.write('time_ms,type,profile_pos,actual_pos,profile_speed,actual_speed,motor_v_left,motor_v_right,pos_error,rot_error\n')
         self.log_data = []
         self.log_frequency = config.LOG_FREQUENCY
-        self.last_log = 0
+        self.last_log = -1
         
     def close(self):
         self.write_data()
@@ -25,6 +24,11 @@ class DebugLog:
         self.f = None
         
     def log(self, type):
+        if self.last_log < 0:
+            # Header once only
+            self.f.write('time_ms,type,profile_pos,actual_pos,profile_speed,actual_speed,motor_v_left,motor_v_right,pos_error,rot_error\n')
+            self.last_log = self.log_frequency
+            
         self.last_log += 1
         if self.last_log >= self.log_frequency:
             self.last_log = 0
@@ -111,5 +115,15 @@ class DebugLog:
         self.log_data.append((elapsed, set_fpos, robot_fpos, set_angle, robot_angle, set_fspeed, robot_fspeed,
                               set_omega, robot_omega, ctrl_fvolts, ctrl_rotvolts, ff_lvolts, motor_lvolts, ff_rvolts, motor_rvolts))
 
+    def log_sensors(self):
+        if self.last_log < 0:
+            # Header once only
+            self.f.write('time_ms,left_edge_min,max,left_mid_min,max,left_cent_min,max,right_cent_min,max,right_mid_min,max,right_edge_min,max,radius,start_stop,cross_track_err,steering\n')
+            self.last_log = self.log_frequency
+            
+        self.log_data.append((time.ticks_ms() - self.start_tick_time,) +
+                              sum(sensors.raw_max_min(),()) +
+                              (sensors.radius, sensors.start_stop, sensors.line_error_raw(), sensors.steering_adjustment))
+        
 # Single instance
 debug_log = DebugLog()

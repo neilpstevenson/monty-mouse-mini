@@ -8,7 +8,7 @@ MOUSE_DESC = "Four-wheeled fast mouse based on Neil's mini controller"
 # Configuration
 # ============================================================================
 
-LOOP_FREQUENCY = 200
+LOOP_FREQUENCY = 250 #200
 LOOP_INTERVAL = 1/LOOP_FREQUENCY      # Control loop period
 
 # =============================================================================

@@ -1,4 +1,6 @@
 import time
+import _thread
+import asyncio
 from config import *
 from track_config import track_config
 from indicators import indicators
@@ -57,12 +59,24 @@ def dragster_run():
     forward_profile.start(distance=200.0, top_speed=track_config.TOP_SPEED, final_speed=track_config.TOP_SPEED, acceleration=track_config.ACCELERATION)
 
     debug_log.log('a')
+    tick_loop_us = []
+    tick_update_time_us = []
     while not forward_profile.is_finished() and not sensors.any_marker_seen():
-        time.sleep(0.001)
+        #asyncio.sleep_ms(1)
+        #time.sleep(0.001)
+        time.sleep_ms(1)
         debug_log.log('a')
-        #time.sleep(0.01)
-        #print(systick.last_tick_loop_us())
-
+        tick_loop_us.append(systick.last_tick_loop_us())
+        tick_update_time_us.append(systick.last_tick_update_time_us())
+        time.sleep_ms(1)
+        #time.sleep(0.005)
+        #asyncio.sleep_ms(5)
+        #print(_thread.get_ident(), systick.thread_id, systick.last_tick_loop_us(), systick.last_tick_update_time_us())
+    print(_thread.get_ident(), systick.thread_id, len(tick_loop_us),
+          min(tick_loop_us), max(tick_loop_us), sum(tick_loop_us)/len(tick_loop_us),
+          min(tick_update_time_us), max(tick_update_time_us), sum(tick_update_time_us)/len(tick_update_time_us))
+    print(tick_loop_us)
+    
     start_marker_seen = sensors.any_marker_seen()
     start_timed_position = encoders.robot_distance()
     start_timed_time = time.ticks_ms()
